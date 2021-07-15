@@ -11,7 +11,7 @@ setuptools.setup(
   description="A Python package for checking equivalence and relations between iterative algorithms",
   long_description=long_description,
   long_description_content_type="text/markdown",
-  url="https://github.com/QCGroup/linnaeus",
+  url="https://github.com/udellgroup/Linnaeus_software",
   packages=setuptools.find_packages(),
   install_requires=['sympy >= 1.5.1',
                     'numpy >= 1.16',
