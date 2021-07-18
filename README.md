@@ -13,7 +13,7 @@ Linnaeus can check algorithm relations including
 * Conjugation (algorithm calls conjugate function oracles, i.e. Fenchel conjugate)
 * Duality (conjugation on all algorithm oracles)
 
-For more information about algorithm equivalence and relations, see our paper. 
+For more information about algorithm equivalence and relations, see [our paper](https://arxiv.org/abs/2105.04684). 
 
 The documentation is available at [linnaeus-doc.github.io](https://linnaeus-doc.github.io)
 
