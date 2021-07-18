@@ -22,7 +22,7 @@ The documentation is available at [linnaeus-doc.github.io](https://linnaeus-doc.
 To install using pip, run:
 
 ```python
-pip install git+https://github.com/QCGroup/linnaeus
+pip install git+https://github.com/udellgroup/Linnaeus_software
 ```
 
 To install from source, first make sure setuptools has been installed. Then,
