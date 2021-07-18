@@ -13,6 +13,7 @@ import copy
 from IPython.display import display, Latex
 
 """Normsq: the square norm of its argument"""
+
 class norm_square(Function):
     is_commutative = True
 
@@ -26,7 +27,7 @@ class norm_square(Function):
     def fdiff(self, argindex=1):
         return 2*T(self.args[0])
 
-
+    
 """Grad: the transpose of the derivative"""
 
 # internal gradient calculation
@@ -61,21 +62,26 @@ def add_generalvar(varname, commutative = False):
     generalvariable_set.append(var)
     return var
 
-
 proxvar = add_generalvar("proxvar")
 
 # proximal
-#def prox(expr, var1, var2, comp = 1, var3 = proxvar):
-#    expr1 = expr(comp*var3) + 1/(2*var1)*norm_square(var3 - var2)
-#    eq = Eq(grad_0(expr1, var3), 0)
-#    return eq
+# def prox(expr, var1, var2, comp = 1, var3 = proxvar):
+# expr1 = expr(comp*var3) + 1/(2*var1)*norm_square(var3 - var2)
+# eq = Eq(grad_0(expr1, var3), 0)
+# return eq
 
-# change of prox check tomorrow 
+equation_oracle_set = []
+
 def prox(expr, var1, comp = 1):
     if expr.__class__ == sympy.core.function.UndefinedFunction:
         def F(var2, var3 = proxvar):
             expr1 = expr(comp*var3) + 1/(2*var1)*norm_square(var3 - var2)
             eq = Eq(_grad(expr1, var3), 0)
+            if comp == 1:
+                prox_str = 'prox' + '_' + '{' + latex(var1) + ' ' + latex(expr) + '}' + '(' + latex(var2) + ')' 
+            else:
+                prox_str = 'prox' + '_' + '{' + latex(var1) + '(' + latex(expr) + '\circ ' + latex(comp) + ')' + '}' + '(' + latex(var2) + ')' 
+            equation_oracle_set.append(prox_str)
             return eq
         return F
     else:
@@ -86,24 +92,32 @@ argminvar = add_generalvar("argminvar")
 # minimization, argmin
 def argmin(var, expr):
     if var not in generalvariable_set:
+        argmin_str = 'argmin' + '_' + '{' + latex(var) + '}' + '\{' + latex(expr) + '\}'
         expr = expr.subs(var, argminvar)
         eq = Eq(_grad(expr, argminvar), 0)
+        equation_oracle_set.append(argmin_str)
     else:
         eq = Eq(_grad(expr, var), 0)
+        argmin_str = 'argmin' + '_' + '{' + latex(var) + '}' + '\{' + latex(expr) + '\}'
+        equation_oracle_set.append(argmin_str)
     return eq
 
 # projection 
+
 def proj(expr):
     if expr.__class__ == sympy.core.function.UndefinedFunction:
         def F(var2, var3 = proxvar):
             expr1 = expr(var3) + 1/2 * norm_square(var3 - var2)
             eq = Eq(_grad(expr1, var3), 0)
+            proj_str = 'proj' + '_' + '{' + latex(expr) + '}' + '(' + latex(var2) + ')'
+            equation_oracle_set.append(proj_str)
             return eq
         return F
     else:
         raise ValueError("Invalid projection")
 
 """Transpose"""
+
 class T(Function):
     is_commutative = False
         
@@ -225,7 +239,7 @@ class AbstractAlgorithm:
         else:
             raise ValueError("Invalid transfer function")
     
-    def __init__(self, algoname = "new algorithm", algostr = "new"):
+    def __init__(self, algoname = "new algorithm", algostr = "new", eq_set = equation_oracle_set):
         self.name = algoname
         self.namestr = algostr
         self.state_vars = []    # state variables
@@ -262,8 +276,9 @@ class AbstractAlgorithm:
         # second way to represent oracle eg. gradf(x1)
         self.oracle_set = []
         self.in_library = False
-        self.equation_string = None
+        self.equation_string = []
         self.set_set = []
+        eq_set.clear()
             
 
     def __str__(self):
@@ -275,13 +290,17 @@ class AbstractAlgorithm:
             print(self.name)
             return r'${%s}$' % self.equation_string
         else:
-            print(self.name)
-            equation_string = ''
-            for i in range(len(self.update_eqs)):
-                equation_string = equation_string + latex(self.update_eqs[i])
-                if i != len(self.update_eqs):
-                    equation_string = equation_string + '\\\\'
-            return r'${%s}$' % equation_string
+            try:
+                self._parse()
+                print(self.name)
+                print_string = ''
+                for i in range(len(self.equation_string)):
+                    print_string = print_string + self.equation_string[i]
+                    if i != len(self.equation_string):
+                        print_string = print_string + '\\\\'
+                return r'${%s}$' % print_string
+            except:
+                return self.name
     
     def add_parameter(self, *varname, commutative = True): 
         if varname.__class__ == str:
@@ -464,6 +483,7 @@ class AbstractAlgorithm:
             return update_list
     
     def add_update(self, var, expr):
+            
         update_eq_len1 = len(self.update_eqs)
         if var.__class__ != list:
             if var in self.update_vars or var in self.state_vars:
@@ -486,9 +506,20 @@ class AbstractAlgorithm:
                             if var1 in generalvariable_set and var1 not in self.symbol_set:
                                 expr1 = expr[i].subs(var1, var[i])
                                 self.update_eqs.append(expr1)
+                                
+                    self.equation_string.append(var[i])
+                        
                 else:
                     eq = Eq(var[i], expr[i])
                     self.update_eqs.append(eq)
+                    
+                    if self.auto == True:
+                        for un_update_var in self.state_vars:
+                            if self.update_map[un_update_var] == var[i]:
+                                self.equation_string.append("%s & \gets %s" % (latex(un_update_var), latex(expr[i])))
+                                break
+                    else:
+                        self.equation_string.append("%s & = %s" % (latex(var[i]), latex(expr[i])))
             else:
                 raise ValueError("Invalid update equations!")
                     
@@ -538,9 +569,9 @@ class AbstractAlgorithm:
         num_eqs = len(self.update_eqs)
         num_vars = len(self.state_vars)
         if num_eqs < num_vars:
-            raise ValueError("Free variables not used")
+            raise ValueError("Free variables not used!")
         elif num_eqs > num_vars:
-            raise ValueError("Invaild update equations")
+            raise ValueError("Invaild update equations!")
         elif num_eqs == num_vars:
             var_index = np.zeros(len(self.state_vars))
             while np.sum(var_index) < len(self.state_vars):
@@ -555,9 +586,28 @@ class AbstractAlgorithm:
                                 self.update_eqs[j] = self.update_eqs[j].subs(self.state_vars[i], self.update_map[self.state_vars[i]])
             
             self.update_eqs = new_eqs
-                
+    
+    def _update_string(self, eq_set = equation_oracle_set):
+        len_eq_oracle = len(eq_set)
+        eq_oracle = 0
+        for i in range(len(self.equation_string)):
+            if self.equation_string[i] in self.update_vars:
+                if self.auto:
+                    for no_update_var in self.state_vars:
+                        if self.update_map[no_update_var] == self.equation_string[i]:
+                            eq_string = "%s & \gets %s" % (latex(no_update_var), eq_set[eq_oracle])
+                            eq_oracle = eq_oracle + 1
+                            self.equation_string[i] = eq_string
+                else:
+                    eq_string = "%s & = %s" % (latex(self.equation_string[i]), eq_set[eq_oracle])
+                    eq_oracle = eq_oracle + 1
+                    self.equation_string[i] = eq_string
+        eq_set.clear()          
+                        
     
     def _linearize(self):
+        self._update_string()
+        
         self.input_eqs = []
         self.output_eqs = []
         self.input_vars = []
@@ -793,12 +843,14 @@ class AbstractAlgorithm:
         eq2_right2 = MatMul(D, Matrix(right2))
         
         return eq1_left, eq1_right1, eq1_right2, eq2_left, eq2_right1, eq2_right2
-
+    
     def _realize(self, expr):
     
         for var in self.matrix_set:
             expr = expr.subs(var, self.noncommut_map[var])
         expr = simplify(expr)
+        
+        # realize a constant, i.e. de_degree = 0, update 
 
         numerator = expr.as_numer_denom()[0]
         denominator = expr.as_numer_denom()[1]
@@ -854,7 +906,6 @@ class AbstractAlgorithm:
                 D = simplify(D)
 
         return A, B, C, D
-
     
     def _tf_to_ss(self, ss_type = 'c'):
         
@@ -921,6 +972,7 @@ class AbstractAlgorithm:
         
         return A, B, C, D
 
+
 """  Algorithm class  """
 
 
@@ -929,19 +981,14 @@ class Algorithm(AbstractAlgorithm):
     def parse(self):
         print("--------------------------------------------------------------")
         if self.is_parsed == False:
-            print("Parse " + self.name + ".")
+            print("Parse " + self.name + ":")
             self.ss_const, self.ss = self._get_ss()
             self.A, self.B, self.C, self.D = self._split_matrix(self.ss_const) 
             self.tf = self._get_tf()
             self.oraclenumber = self.tf.shape[0] # matrix version
             self.is_parsed = True
-            print("State-space realization:")
-            eq1_left, eq1_right1, eq1_right2, eq2_left, eq2_right1, eq2_right2 = self._print_ss()
-            
-            print_string = []
-            print_string.append("%s & = %s" % (latex(eq1_left), latex(eq1_right1) + '+' + latex(eq1_right2)))
-            print_string.append("%s & = %s" % (latex(eq2_left), latex(eq2_right1) + '+' + latex(eq2_right2)))
-            result = r"\begin{align} %s \end{align}" % r" \\ ".join(print_string)
+           
+            result = r"\begin{align} %s \end{align}" % r" \\ ".join(self.equation_string)
             
             display(Latex(result))
         else:
@@ -1074,7 +1121,27 @@ class Algorithm(AbstractAlgorithm):
             new_algo.output_eqs.append(self.output_eqs[i])
         new_algo.is_parsed = True
         return new_algo
+    
+    def _commutative_algo(self):
+        self._parse()
+        new_algo = Algorithm(self.name, self.namestr)
+        new_algo.tf = copy.deepcopy(self.tf)
+        new_algo.oraclenumber = copy.deepcopy(self.oraclenumber)
+        new_algo.parameter_set = copy.deepcopy(self.parameter_set)
+        new_algo.matrix_set = copy.deepcopy(self.matrix_set)
+        new_algo.compare_map = copy.deepcopy(self.compare_map)
+        new_algo.noncommut_map = copy.deepcopy(self.noncommut_map)
         
+        for var in new_algo.matrix_set:
+            new_algo.tf = new_algo.tf.subs(var, new_algo.noncommut_map[var])
+        new_algo.tf = simplify(new_algo.tf)
+        new_algo.input_vars = copy.deepcopy(self.input_vars)
+        for i in range(new_algo.oraclenumber):
+            new_algo.output_eqs.append(self.output_eqs[i])
+        new_algo.is_parsed = True
+        return new_algo
+        
+    
     def permute(self, step = 0):
         self._parse()
         if step + 1 > 0 and step + 1 <= self.oraclenumber - 1 and self.oraclenumber > 1:
@@ -1104,16 +1171,47 @@ class Algorithm(AbstractAlgorithm):
             raise ValueError("Invalid permutation!")
 
 
-    def repeat(self):
+    def repeat(self, times = 2):
         self._parse()
         if self.A != None and self.B != None and self.C != None and self.D != None:
             new_algo = Algorithm("repetition " + "of " + self.name, "r_" + self.namestr)
-            new_algo.oraclenumber = 2 * self.oraclenumber
-            new_algo.A = self.A * self.A
-            new_algo.B = Matrix(BlockMatrix([[self.A * self.B, self.B]]))
-            new_algo.C = Matrix(BlockMatrix([[self.C], [self.C * self.A]]))
-            new_algo.D = Matrix(BlockMatrix([[self.D, zeros(self.C.shape[0], self.B.shape[1])], [self.C * self.B, self.D]]))
-            new_algo.tf = simplify(new_algo.C * (z * eye(new_algo.A.shape[0]) - new_algo.A)**(-1) * new_algo.B + new_algo.D)
+            if times == 1:
+                new_algo.oraclenumber = copy.deepcopy(self.oraclenumber)
+                new_algo.A = copy.deepcopy(self.A)
+                new_algo.B = copy.deepcopy(self.B)
+                new_algo.C = copy.deepcopy(self.C)
+                new_algo.D = copy.deepcopy(self.D)
+                new_algo.tf = copy.deepcopy(self.tf)
+            elif times == 2:
+                new_algo.oraclenumber = times * self.oraclenumber
+                new_algo.A = self.A * self.A
+                new_algo.B = Matrix(BlockMatrix([[self.A * self.B, self.B]]))
+                new_algo.C = Matrix(BlockMatrix([[self.C], [self.C * self.A]]))
+                new_algo.D = Matrix(BlockMatrix([[self.D, zeros(self.C.shape[0], self.B.shape[1])], [self.C * self.B, self.D]]))
+                new_algo.tf = simplify(new_algo.C * (z * eye(new_algo.A.shape[0]) - new_algo.A)**(-1) * new_algo.B + new_algo.D)
+            elif times > 2:
+                new_algo.oraclenumber = times * self.oraclenumber
+                new_algo.A = (self.A)**times
+                new_algo.B = zeros(self.A.shape[0], times*self.D.shape[0])
+                new_algo.C = zeros(times*self.D.shape[0], self.A.shape[0])
+                new_algo.D = zeros(times*self.D.shape[0], times*self.D.shape[0])
+                for i in range(times):
+                    new_algo.B[:, (times - i - 1)*self.D.shape[0] : (times - i)*self.D.shape[0]] = (self.A**i)*self.B
+                    new_algo.C[i*self.D.shape[0] : (i + 1)*self.D.shape[0], :] = self.C*(self.A**i)
+                    
+                    if i == times - 1:
+                        for j in range(times):
+                            new_algo.D[(times - i - 1 + j)*self.D.shape[0] : (times - i - 1 + j + 1)*self.D.shape[0], 
+                                       j*self.D.shape[0] : (j + 1)*self.D.shape[0]] = self.D
+                    else:
+                        for j in range(i + 1):
+                            new_algo.D[(times - i - 1 + j)*self.D.shape[0] : (times - i - 1 + j + 1)*self.D.shape[0], 
+                                       j*self.D.shape[0] : (j + 1)*self.D.shape[0]] = self.C*(self.A**(times - i - 2))*self.B  
+                    
+                new_algo.tf = simplify(new_algo.C * (z * eye(new_algo.A.shape[0]) - new_algo.A)**(-1) * new_algo.B + new_algo.D) 
+            else:
+                raise ValueError("Invalid repeat!")
+                
             new_algo.parameter_set = copy.deepcopy(self.parameter_set)
             new_algo.matrix_set = copy.deepcopy(self.matrix_set)
             new_algo.compare_map = copy.deepcopy(self.compare_map)
@@ -1136,7 +1234,7 @@ class Algorithm(AbstractAlgorithm):
                 for var in self.matrix_set:
                     expr = expr.subs(var, self.noncommut_map[var])
                 expr = simplify(expr)
-
+                
                 nu_degree = degree(expr.as_numer_denom()[0], gen = z)
                 de_degree = degree(expr.as_numer_denom()[1], gen = z)
                 

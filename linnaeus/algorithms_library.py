@@ -28,39 +28,40 @@ algo_library = library("Algorithm library")
 
 Admm = Algorithm("ADMM", "Admm")
 f, g = Admm.add_function("f", "g")
-t = Admm.add_parameter("t")
+rho = Admm.add_parameter("rho")
+A, B, c = Admm.add_parameter("A", "B", "c")
 x1, x2, x3 = Admm.add_var("x1", "x2", "x3")
 
 def L(x, zz, y):
-    return f(x) + g(zz) + 1/2 * t * norm_square(x + zz + y)
+    return f(x) + g(zz) + 1/2 * rho * norm_square(A * x + B * zz + y - c)
     
 x = add_generalvar("x")  
 Admm.add_update(x1, argmin(x, L(x, x2, x3))) 
 Admm.add_update(x2, argmin(x, L(x1, x, x3))) 
-Admm.add_update(x3, x3 + x1 + x2)  
+Admm.add_update(x3, x3 + A*x1 + B*x2 - c)  
 Admm._parse()
 Admm.equation_string = r"""
- x_1^+ = \text{argmin}_x \{f(x) + \frac{t}{2} 
+ x_1^+ = \text{argmin}_x \{f(x) + \frac{\rho}{2} 
 \left\| Ax + Bx_2 - c + x_3 \|\right \} \\
-x_2^+ = \text{argmin}_x \{g(x) + \frac{t}{2} 
+x_2^+ = \text{argmin}_x \{g(x) + \frac{\rho}{2} 
 \left\| Ax_1^+ + Bx - c + x_3 \|\right \} \\
 x_3^+ = x_3 + Ax_1^+ + Bx_2^+ - c"""
 algo_library.library_insert(Admm)
 
 
-Dr2 = Algorithm("Douglas-Rachford splitting method version 2", "Dr2")
-f, g = Dr2.add_function("f", "g")
-t = Dr2.add_parameter("t")
-x1, x2, x3 = Dr2.add_var("x1", "x2", "x3")
-Dr2.add_update(x1, prox(f, t)(x2 - x3)) 
-Dr2.add_update(x2, prox(g, t)(x1 + x3))
-Dr2.add_update(x3, x3 + x1 - x2)
-Dr2._parse()
-Dr2.equation_string = r"""
+Dr_p = Algorithm("Douglas-Rachford splitting method permutation", "Dr_p")
+f, g = Dr_p.add_function("f", "g")
+t = Dr_p.add_parameter("t")
+x1, x2, x3 = Dr_p.add_var("x1", "x2", "x3")
+Dr_p.add_update(x1, prox(f, t)(x2 - x3)) 
+Dr_p.add_update(x2, prox(g, t)(x1 + x3))
+Dr_p.add_update(x3, x3 + x1 - x2)
+Dr_p._parse()
+Dr_p.equation_string = r"""
  x_1^+ = \text{prox}_{tf} (x_2 - x_3) \\
  x_2^+ = \text{prox}_{tg} (x_1^{+} + x_3) \\
  x_3^+ = x_3 + x_1^{+} - x_2^{+} """
-algo_library.library_insert(Dr2)
+algo_library.library_insert(Dr_p)
 
 Cp = Algorithm("Chambolle-Pock method", "Cp")
 f, g = Cp.add_function("f", "g")
@@ -144,7 +145,6 @@ Hb.equation_string = r"""
 p^+ = \beta p - \nabla f (x) \\
 x^+ = x + \alpha p
 """
-
 algo_library.library_insert(Hb)
 
 Pg = Algorithm("Proximal gradient method", "Pg")
@@ -160,27 +160,27 @@ algo_library.library_insert(Pg)
 
 Dr = Algorithm("Douglas-Rachford splitting method","Dr")
 x1, x2, x3 = Dr.add_var("x1", "x2", "x3")
-t, alpha = Dr.add_parameter("t", "alpha")
+t = Dr.add_parameter("t")
 Dr.add_update(x1, prox(f, t)(x3))
 Dr.add_update(x2, prox(g, t)(2 * x1 - x3)) 
-Dr.add_update(x3, x3 + 2 * alpha * (x2 - x1)) 
+Dr.add_update(x3, x3 + x2 - x1) 
 Dr._parse()
 Dr.equation_string = r"""
  x_1^+ = \text{prox}_{tf} (x_3) \\
  x_2^+ = \text{prox}_{tg} (2x_1^+ - x_3) \\
- x_3^+ = x_3 + 2\alpha (x_2^{+} - x_1^{+}) """
+ x_3^+ = x_3 + x_2^{+} - x_1^{+} """
 algo_library.library_insert(Dr)
 
-Pp2 = Algorithm("Relaxed proximal point method", "Pp2")
-theta, t = Pp2.add_parameter("theta", "t")
-x1, x2 = Pp2.add_var("x1", "x2")
-Pp2.add_update(x2, prox(f, t)(x1))
-Pp2.add_update(x1, (1 - theta) * x1 + theta * x2)
-Pp2._parse()
-Dr.equation_string = r"""
+Pp_r = Algorithm("Proximal point method relaxation", "Pp_r")
+theta, t = Pp_r.add_parameter("theta", "t")
+x1, x2 = Pp_r.add_var("x1", "x2")
+Pp_r.add_update(x2, prox(f, t)(x1))
+Pp_r.add_update(x1, (1 - theta) * x1 + theta * x2)
+Pp_r._parse()
+Pp_r.equation_string = r"""
 x^+ = (1 - \theta) x + \theta \text{prox}_{tf} (x)
 """
-algo_library.library_insert(Pp2)
+algo_library.library_insert(Pp_r)
 
 Pr = Algorithm("Peaceman-Rachford splitting method", "Pr")
 x1, x2, x3 = Pr.add_var("x1", "x2", "x3")
@@ -189,7 +189,7 @@ Pr.add_update(x1, prox(f, t)(x3))
 Pr.add_update(x2, prox(g, t)(2 * x1 - x3)) 
 Pr.add_update(x3, x3 + 2 * (x2 - x1)) 
 Pr._parse()
-Dr.equation_string = r"""
+Pr.equation_string = r"""
  x_1^+ = \text{prox}_{tf} (x_3) \\
  x_2^+ = \text{prox}_{tg} (2x_1^+ - x_3) \\
  x_3^+ = x_3 + 2 (x_2^{+} - x_1^{+})
@@ -224,45 +224,45 @@ x^+ = \text{prox}_{\beta g} (x - \beta \nabla f(y^+))
 """
 algo_library.library_insert(Eg)
 
-Eg2 = Algorithm("Extragradient method by Korpelevich and Antipin", "Eg2")
-f = Eg2.add_function("f")
-C = Eg2.add_set("C")
-t = Eg2.add_parameter("t")
-x, y = Eg2.add_var("x", "y")
-Eg2.add_update(y, proj(C)(x - t*grad(f)(x)))
-Eg2.add_update(x, proj(C)(x - t*grad(f)(y)))
-Eg2._parse()
-Eg2.equation_string = r"""
+Eg_ka = Algorithm("Extragradient method by Korpelevich and Antipin", "Eg_ka")
+f = Eg_ka.add_function("f")
+C = Eg_ka.add_set("C")
+t = Eg_ka.add_parameter("t")
+x, y = Eg_ka.add_var("x", "y")
+Eg_ka.add_update(y, proj(C)(x - t*grad(f)(x)))
+Eg_ka.add_update(x, proj(C)(x - t*grad(f)(y)))
+Eg_ka._parse()
+Eg_ka.equation_string = r"""
 y^+ = P_C (x - t \nabla f(x)) \\
 x^+ = P_C (x - t \nabla f(y^+))
 """
-algo_library.library_insert(Eg2)
+algo_library.library_insert(Eg_ka)
 
-Eg3 = Algorithm("Extragradient method by Tseng", "Eg3")
-f = Eg3.add_function("f")
-C = Eg3.add_set("C")
-t = Eg3.add_parameter("t")
-x, y = Eg3.add_var("x", "y")
-Eg3.add_update(y, proj(C)(x - t*grad(f)(x)))
-Eg3.add_update(x, y + t*(grad(f)(x) - grad(f)(y)))
-Eg3._parse()
-Eg3.equation_string = r"""
+Eg_t = Algorithm("Extragradient method by Tseng", "Eg_t")
+f = Eg_t.add_function("f")
+C = Eg_t.add_set("C")
+t = Eg_t.add_parameter("t")
+x, y = Eg_t.add_var("x", "y")
+Eg_t.add_update(y, proj(C)(x - t*grad(f)(x)))
+Eg_t.add_update(x, y + t*(grad(f)(x) - grad(f)(y)))
+Eg_t._parse()
+Eg_t.equation_string = r"""
 y^+ = P_C (x - t \nabla f(x)) \\
 x^+ = y^+ + t (\nabla f(x) - \nabla f(y^+))
 """
-algo_library.library_insert(Eg3)
+algo_library.library_insert(Eg_t)
 
-Eg4 = Algorithm("Extragradient method (reflected gradient method) by Malitsky", "Eg4")
-f = Eg4.add_function("f")
-C = Eg4.add_set("C")
-t = Eg4.add_parameter("t")
-x1, x2, y = Eg4.add_var("x1", "x2", "y")
-Eg4.add_update(y, 2*x1 - x2)
-Eg4.add_update(x2, x1)
-Eg4.add_update(x1, proj(C)(x1 - t*grad(f)(y)))
-Eg4._parse()
-Eg4.equation_string = r"""
+Eg_rl = Algorithm("Extragradient method (reflected gradient method) by Malitsky", "Eg_rl")
+f = Eg_rl.add_function("f")
+C = Eg_rl.add_set("C")
+t = Eg_rl.add_parameter("t")
+x1, x2, y = Eg_rl.add_var("x1", "x2", "y")
+Eg_rl.add_update(y, 2*x1 - x2)
+Eg_rl.add_update(x2, x1)
+Eg_rl.add_update(x1, proj(C)(x1 - t*grad(f)(y)))
+Eg_rl._parse()
+Eg_rl.equation_string = r"""
 x_1^+ = P_C (x_1^+ - t \nabla f(2x_1 - x_2)) \\
 x_2^+ = x_1
 """
-algo_library.library_insert(Eg4)
+algo_library.library_insert(Eg_rl)

@@ -77,6 +77,9 @@ def _algo_test(algo1, algo_list):
     permlist = list(perms)
     for var in algo1.parameter_set + algo1.matrix_set:
         test_tf1 = test_tf1.subs(var, algo1.compare_map[var])
+    for var in algo1.matrix_set:
+        test_tf1 = test_tf1.subs(algo1.noncommut_map[var], algo1.compare_map[var])
+    test_tf1 = simplify(test_tf1)
     compare_para_set = [algo1.compare_map[var] for var in algo1.parameter_set + algo1.matrix_set]
     
     for i in range(len(algo_list)):
@@ -164,6 +167,12 @@ def _algo_test_detailed(algo1, algo_list):
     permlist = list(perms)
     for var in algo1.parameter_set + algo1.matrix_set:
         test_tf1 = test_tf1.subs(var, algo1.compare_map[var])
+        
+    for var in algo1.matrix_set:
+        test_tf1 = test_tf1.subs(algo1.noncommut_map[var], algo1.compare_map[var])
+    
+    test_tf1 = simplify(test_tf1)
+    
     compare_para_set = [algo1.compare_map[var] for var in algo1.parameter_set + algo1.matrix_set]
     
     sol_list = []
@@ -199,6 +208,10 @@ def _algo_test_detailed(algo1, algo_list):
                             solution1 = sol1[para1]
                             for var1 in algo1.parameter_set + algo1.matrix_set:
                                 solution1 = solution1.subs(algo1.compare_map[var1], var1)
+                                
+                            for var1 in algo.matrix_set:
+                                solution1 = solution1.subs(algo.noncommut_map[var1], var1)
+                            
                             solution.append(simplify(solution1))
                         sol_list.append(solution)
                         sol_index.append(1)
@@ -210,6 +223,10 @@ def _algo_test_detailed(algo1, algo_list):
                                 solution1 = sol1[s_i][s_j]
                                 for var1 in algo1.parameter_set + algo1.matrix_set:
                                     solution1 = solution1.subs(algo1.compare_map[var1], var1)
+                                    
+                                for var1 in algo.matrix_set:
+                                    solution1 = solution1.subs(algo.noncommut_map[var1], var1)
+                                
                                 solution.append(simplify(solution1))                        
                             sol_list.append(solution)
                             sol_index.append(1)
@@ -222,6 +239,10 @@ def _algo_test_detailed(algo1, algo_list):
                                 solution2 = sol2[para1]
                                 for var1 in algo.matrix_set:
                                     solution2 = solution2.subs(algo.noncommut_map[var1], var1)
+                                
+                                for var1 in algo1.parameter_set + algo1.matrix_set:
+                                    solution2 = solution2.subs(algo1.compare_map[var1], var1)
+                                    
                                 solution.append(simplify(solution2))
                             sol_list.append(solution)
                             sol_index.append(2)
@@ -233,6 +254,10 @@ def _algo_test_detailed(algo1, algo_list):
                                     solution2 = sol2[s_i][s_j]
                                     for var1 in algo.matrix_set:
                                         solution2 = solution2.subs(algo.noncommut_map[var1], var1)
+                                    
+                                    for var1 in algo1.parameter_set + algo1.matrix_set:
+                                        solution2 = solution2.subs(algo1.compare_map[var1], var1)
+                                    
                                     solution.append(simplify(solution2))                        
                                 sol_list.append(solution)
                                 sol_index.append(2)
@@ -455,7 +480,6 @@ def is_permutation(algo1, algo_list = algo_library.library, verbose = False):
     else:
         return boollist
 
-
 def test_conjugation(algo1, algo_list = algo_library.library):
     print("--------------------------------------------------------------")
     if algo_list.__class__ == Algorithm:
@@ -506,11 +530,12 @@ def is_conjugation(algo1, algo_list = algo_library.library, verbose = False):
     else:
         return boollist        
     
-def test_repetition(algo1, algo_list = algo_library.library):
+def test_repetition(algo1, algo_list = algo_library.library, times = 2):
+    repeat_time = times
     if algo_list.__class__ == Algorithm:
         algo_list = [algo_list]
     try:
-        test_algo = algo1.repeat()
+        test_algo = algo1.repeat(repeat_time)
         algo_index, sol_list, sol_index = _algo_test_detailed(test_algo, algo_list)
     except:
         algo_index = np.zeros(len(algo_list))
@@ -521,11 +546,12 @@ def test_repetition(algo1, algo_list = algo_library.library):
         _print_test_result(algo_index, sol_list, sol_index, test_algo, algo_list, algo1, " is a repetition of ")
     print("--------------------------------------------------------------")  
 
-def is_repetition(algo1, algo_list = algo_library.library, verbose = False):
+def is_repetition(algo1, algo_list = algo_library.library, times = 2, verbose = False):
+    repeat_time = times
     if algo_list.__class__ == Algorithm:
         algo_list = [algo_list]
     try:
-        test_algo = algo1.repeat()
+        test_algo = algo1.repeat(repeat_time)
         algo_index = _algo_test(test_algo, algo_list)
     except:
         algo_index = np.zeros(len(algo_list))
@@ -547,16 +573,17 @@ def is_repetition(algo1, algo_list = algo_library.library, verbose = False):
         return boollist[0]
     else:
         return boollist
-       
-    
+
+
 def is_conjugate_permutation(algo1, algo_list = algo_library.library, verbose = False):
     if algo_list.__class__ == Algorithm:
         algo_list = [algo_list]
     algo_index = np.zeros(len(algo_list))
+    test_algo = algo1._commutative_algo()
     for j in range(algo1.oraclenumber - 1):
         for k in range(algo1.oraclenumber):    
-            try:            
-                test_algo = algo1.permute(j).conjugate(k)
+            try:
+                test_algo = test_algo.permute(j).conjugate(k)
                 algo_index2 = _algo_test(test_algo, algo_list)
             except:
                 algo_index2 = np.zeros(len(algo_list))
@@ -593,10 +620,11 @@ def test_conjugate_permutation(algo1, algo_list = algo_library.library):
     if algo_list.__class__ == Algorithm:
         algo_list = [algo_list]
     algo_index = np.zeros(len(algo_list))
+    commutative_algo1 = algo1._commutative_algo()
     for j in range(algo1.oraclenumber - 1):
         for k in range(algo1.oraclenumber):
-            try:            
-                test_algo = algo1.permute(j).conjugate(k)
+            try:
+                test_algo = commutative_algo1.permute(j).conjugate(k)
                 algo_index2, sol_list, sol_index = _algo_test_detailed(test_algo, algo_list)
             except:
                 algo_index2 = np.zeros(len(algo_list))    
@@ -605,7 +633,7 @@ def test_conjugate_permutation(algo1, algo_list = algo_library.library):
             for i in range(len(algo_list)):
                 algo_index[i] = algo_index[i] + algo_index2[i]
         try:
-            test_algo = algo1.permute(j).dual()
+            test_algo = commutative_algo1.permute(j).dual()
             algo_index2, sol_list, sol_index = _algo_test_detailed(test_algo, algo_list)
         except:
             algo_index2 = np.zeros(len(algo_list))    
@@ -618,18 +646,10 @@ def test_conjugate_permutation(algo1, algo_list = algo_library.library):
         print("No conjugate permutation algorithm found.")
     print("--------------------------------------------------------------")
 
-def is_conjugate_repetition(algo1, algo_list = algo_library.library, verbose = False):
-    pass
-def test_conjugate_repetition(algo1, algo_list = algo_library.library):
-    pass
-def is_permuted_repetition(algo1, algo_list = algo_library.library, verbose = False):
-    pass
-def test_permuted_repetition(algo1, algo_list = algo_library.library):
-    pass
-
 def analyze(algo1, algo_list = algo_library.library):
     test_equivalent(algo1, algo_list)
     test_duality(algo1, algo_list)
     test_permutation(algo1, algo_list)
     test_repetition(algo1, algo_list)
     test_conjugation(algo1, algo_list)
+    test_conjugate_permutation(algo1, algo_list)

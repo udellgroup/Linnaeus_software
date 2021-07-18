@@ -24,28 +24,27 @@ class LinTest(unittest.TestCase):
         tf = Matrix([[t * (-2 * alpha - z + 1) / (z - 1), -2 * alpha * t / (z - 1)], [2 * t * (-alpha - z + 1) / (z - 1), t * (-2 * alpha - z + 1) / (z - 1)]])
         self.assertTrue(simplify(tf - test_algo.tf) == zeros(2))
 
-    def test_statespace(self):
-        ss = Matrix([[0, -1, -1, -1 / t, 0], [0, 1, 0, 1 / t, -1 / t], [0, 0, 0, 0, -1 / t], [0, -1, -1, -1 / t, 0], [0, 1, 0, 1 / t, -1 / t]])
-        self.assertTrue(simplify(ss - lin.Admm.ss) == zeros(5, 5))
-
     def test_transferfunction(self):
-        tf = Matrix([[t * (-2 * alpha - z + 1) / (z - 1), -2 * alpha * t / (z - 1)], [2* t * (-alpha - z + 1) / (z - 1), t*(-2 * alpha - z + 1) / (z - 1)]])
+        tf = Matrix([[t * (-z) / (z - 1), - t / (z - 1)], [t * (1 - 2*z) / (z - 1), t*(- z) / (z - 1)]])
         self.assertTrue(simplify(tf - lin.Dr.tf) == zeros(2))
         
     def test_equivalent(self):
-        self.assertTrue(lin.is_equivalent(lin.Pp, lin.Pp2))
-        self.assertTrue(lin.is_equivalent(lin.Dr, lin.Pr))
-        self.assertTrue(lin.is_equivalent(lin.Dr.permute(0), lin.Dr2))
+        self.assertTrue(lin.is_equivalent(lin.Pp, lin.Pp_r))
+        self.assertTrue(lin.is_equivalent(lin.Dr.permute(0), lin.Dr_p))
         
     def test_duality(self):
-        self.assertTrue(lin.is_duality(lin.Admm, lin.Dr2))
+        self.assertTrue(lin.is_duality(lin.Admm, lin.Dr_p))
         
     def test_permutation(self):
-        self.assertTrue(lin.is_permutation(lin.Dr, lin.Dr2))
+        self.assertTrue(lin.is_permutation(lin.Dr, lin.Dr_p))
         self.assertTrue(lin.is_permutation(lin.Cp.permute(), lin.Cp))
+        self.assertTrue(lin.is_permutation(lin.Dr, lin.Admm))
         
     def test_repetition(self):
         self.assertTrue(lin.is_repetition(lin.Dr, lin.Dr.repeat()))
         
     def test_conjugation(self):
         self.assertTrue(lin.is_conjugation(lin.Dr, lin.Cp))
+    
+    def test_conjugate_permutation(self):
+        self.assertTrue(lin.is_conjugate_permutation(lin.Dr, lin.Admm))
