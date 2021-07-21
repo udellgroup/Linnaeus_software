@@ -150,7 +150,7 @@ which means that `algo1` and `algo2` are oracle-equivalent.
 ## Citing Linnaeus
 
 If you use Linnaeus for published work,
-we encourage you to cite the software.
+we encourage you to cite the software
 
 Use the following BibTeX citation:
 
