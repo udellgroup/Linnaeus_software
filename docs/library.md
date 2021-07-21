@@ -24,12 +24,17 @@ Currently, the algorithm library includes:
 * [Extragradient method by Tseng](https://epubs.siam.org/doi/abs/10.1137/S0363012998338806?casa_token=RML0YD1nSUAAAAAA:sFhDEPYjlpkR2Nv5EjzDawca_yST1_qkn0QkWKVuqwwkbJ2Ig1XIT8exbADL3wnSZkrb6a93f0A3), accessed by `Eg_t`
 * [Reflected gradient method by Malitsky](https://arxiv.org/abs/1502.04968), accessed by `Rg`
 
+The whole library is accessed by `algo_library.library`.
+
 The following code checks equivalence between 
 Gradient descent method and Triple momentum method in the library. 
-
 ```python
 import linnaeus as lin
 lin.is_equivalent(lin.Gr, lin.Tm)
 ```
-
 The results are the same as the [previous example](https://linnaeus-doc.github.io/detection/#detection). 
+
+Further, the next example checks equivalence of Gradient descent method among all the algorithms in the library. 
+```python
+lin.is_equivalent(lin.Gr, lin.algo_library.library)
+```
