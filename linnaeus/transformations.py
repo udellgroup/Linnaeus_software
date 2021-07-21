@@ -54,10 +54,17 @@ def _is_solve(test_equation_set, algo_parameter_set):
         elif type(test_sol) == list:
             para_index2 = np.zeros(len(test_sol))
             for i in range(len(test_sol)):
-                if len(algo_parameter_set) == len(test_sol[i]):
+                try:
+                    sol_length = len(test_sol[i])
+                except:
+                    sol_length = 1
+                if len(algo_parameter_set) == sol_length:
                     para_index3 = np.zeros(len(algo_parameter_set))
                     for j in range(len(algo_parameter_set)):
-                        test_para3 = simplify(test_sol[i][j])
+                        if sol_length == 1:
+                            test_para3 = simplify(test_sol[i])
+                        else:
+                            test_para3 = simplify(test_sol[i][j])
                         if z in test_para3.free_symbols:
                             para_index3[j] = 1
                     if np.sum(para_index3) == 0:
@@ -144,10 +151,17 @@ def _is_solve_detailed(test_equation_set, algo_parameter_set):
         elif type(test_sol) == list:
             para_index2 = np.zeros(len(test_sol))
             for i in range(len(test_sol)):
-                if len(algo_parameter_set) == len(test_sol[i]):
+                try:
+                    sol_length = len(test_sol[i])
+                except:
+                    sol_length = 1
+                if len(algo_parameter_set) == sol_length:
                     para_index3 = np.zeros(len(algo_parameter_set))
                     for j in range(len(algo_parameter_set)):
-                        test_para3 = simplify(test_sol[i][j])
+                        if sol_length == 1:
+                            test_para3 = simplify(test_sol[i])
+                        else:
+                            test_para3 = simplify(test_sol[i][j])
                         if z in test_para3.free_symbols:
                             para_index3[j] = 1
                     if np.sum(para_index3) == 0:
