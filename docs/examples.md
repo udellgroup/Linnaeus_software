@@ -111,17 +111,16 @@ ADMM.add_update(xi3, xi3 + xi1 + xi2)
 
 DR.parse()
 ADMM.parse()
-# get a permutation of DR
-test_algo = DR.permute()
-lin.test_duality(test_algo, ADMM)
+# check conjugation and permutation
+lin.test_conjugate_permutation(DR, ADMM)
 ```
 <img src="/Figures/dr_title.svg?invert_in_darkmode" align=middle width="200" height="200"/>
 
-<img src="/Figures/dr_ss.svg?invert_in_darkmode" align=middle width="340" height="340"/>
+<img src="/Figures/dr_eq.svg?invert_in_darkmode" align=middle width="150" height="150"/>
 
-<img src="/Figures/admm_title.svg?invert_in_darkmode" align=middle width="140" height="140"/>
+<img src="/Figures/admm_title.svg?invert_in_darkmode" align=middle width="90" height="90"/>
 
-<img src="/Figures/admm_ss.svg?invert_in_darkmode" align=middle width="330" height="330"/>
+<img src="/Figures/admm_eq.svg?invert_in_darkmode" align=middle width="330" height="330"/>
 
 <img src="/Figures/dr_admm.svg?invert_in_darkmode" align=middle width="550" height="550"/>
 
@@ -147,10 +146,10 @@ CP.parse()
 lin.test_conjugation(DR, CP)
 ```
 
-<img src="/Figures/cp_title.svg?invert_in_darkmode" align=middle width="180" height="180"/>
+<img src="/Figures/cp_title.svg?invert_in_darkmode" align=middle width="190" height="190"/>
 
-<img src="/Figures/cp_ss.svg?invert_in_darkmode" align=middle width="350" height="350"/>
+<img src="/Figures/cp_eq.svg?invert_in_darkmode" align=middle width="210" height="210"/>
 
-<img src="/Figures/dr_cp.svg?invert_in_darkmode" align=middle width="550" height="550"/>
+<img src="/Figures/dr_cp.svg?invert_in_darkmode" align=middle width="580" height="580"/>
 
 

@@ -2,8 +2,8 @@
 
 Linnaeus is a python package for the classification of iterative algorithms and 
 identification of relations between algorithms. 
-Algorithms are described with variables, 
-parameters, functions, oracles and update equations. 
+An algorithm is specified by defining variables, 
+parameters, functions, oracles, and update equations. 
 Linnaeus can check algorithm relations including
 
 * Oracle equivalence (algorithms generate identical sequence of oracle calls)
@@ -13,14 +13,14 @@ Linnaeus can check algorithm relations including
 * Conjugation (algorithm calls conjugate function oracles, i.e. Fenchel conjugate)
 * Duality (conjugation on all algorithm oracles)
 
-For more information about algorithm equivalence and relations, see our paper. 
+For more information about algorithm equivalence and relations, see [our paper](https://arxiv.org/abs/2105.04684). 
 
 ## Installation
 
 To install using pip, run:
 
 ```python
-pip install git+https://github.com/QCGroup/linnaeus
+pip install git+https://github.com/udellgroup/Linnaeus_software
 ```
 
 To install from source, first make sure setuptools has been installed. Then,
@@ -48,7 +48,7 @@ The requirements are:
 
 ## Algorithm library
 
-Linnaeus include an algorithm library to serve as a reference. Users can check the 
+Linnaeus includes an algorithm library to serve as a reference. Users can check the 
 potential relations between the input algorithm and reference algorithms in the library. 
 Currently, the algorithm library includes:
 

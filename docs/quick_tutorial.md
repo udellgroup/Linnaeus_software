@@ -1,7 +1,7 @@
 Quick Tutorial
 ==============
 
-In this quick tutorial, we define two algorithms and check oracle equivalence. 
+In this quick tutorial, we define two algorithms and show that they are oracle-equivalent. 
 
 The first algorithm, 
 
@@ -20,7 +20,7 @@ Add variables `x1`, `x2`, and `x3` to `algo1`,
 ```python
 x1, x2, x3 = algo1.add_var("x1", "x2", "x3")
 ```
-Add oracle `gradf`, gradient of `f`:
+Add oracle `gradf`, gradient of `f` to `algo1`,
 ```python
 gradf = algo1.add_oracle("gradf")
 ```
@@ -37,11 +37,11 @@ Parse `algo1`:
 ```python
 algo1.parse()
 ```
-Systerm returns the state-space realization of `algo1`, 
+System parses `algo1` and returns the update equations, 
 
-<img src="/Figures/title1.svg?invert_in_darkmode" align=middle width="140" height="140"/>
+<img src="/Figures/title1.svg?invert_in_darkmode" align=middle width="75" height="75"/>
 
-<img src="/Figures/output1.svg?invert_in_darkmode" align=middle width="320" height="320"/>
+<img src="/Figures/output1.svg?invert_in_darkmode" align=middle width="170" height="170"/>
 
 The second algorithm,
 
@@ -62,11 +62,11 @@ algo2.add_update(xi2, xi2 + 1/10*gradf(xi3))
 
 algo2.parse()
 ```
-System returns the state-space realization of `algo2`,
+System parses `algo2` and returns the update equations,
 
-<img src="/Figures/title2.svg?invert_in_darkmode" align=middle width="140" height="140"/>
+<img src="/Figures/title2.svg?invert_in_darkmode" align=middle width="75" height="75"/>
 
-<img src="/Figures/output2.svg?invert_in_darkmode" align=middle width="320" height="320"/>
+<img src="/Figures/output2.svg?invert_in_darkmode" align=middle width="175" height="175"/>
 
 Check oracle equivalence : 
 ```python
@@ -77,4 +77,4 @@ System returns
 ```python
 True
 ```
-which means that `algo1` and `algo2` are oracle-equivalent. 
+which shows that `algo1` and `algo2` are oracle-equivalent. 

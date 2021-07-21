@@ -1,17 +1,17 @@
 Basic Types
 ===========
 
-The major building block is called an algorithm. An algorithm consists of expressions 
-including variables, parameters, functions, oracles, and update equations. Linnaeus is 
-developed based on python symbolic package sympy, and all the expressions are defined symbolically.
+The major building block is called an algorithm. An algorithm is defined with 
+variables, parameters, functions, oracles, and update equations. 
+All the expressions in Linnaeus are defined symbolically using SymPy. 
 
 Algorithms
 ----------
 
-Algorithm is defined using the keyword `Algorithm`
+Algorithm is defined using keyword `Algorithm`
 along with the name of the algorithm. 
 
-For example, we define an `Algorithm` as `new_algo` named `my new algorithm`.
+The following code defines an `Algorithm` as `new_algo` named `my new algorithm`.
 ```python
 new_algo = Algorithm("my new algorithm")
 ```
@@ -23,18 +23,18 @@ An algorithm must be defined before other expressions are defined and added to i
 Variables
 ---------
 
-Variables are algorithm states. Variables are declared and added to an algorithm
-using syntax `add_var` along with the names of variables. 
+Variables are algorithm states. They are declared and added to an algorithm
+using syntax `add_var` along with the names of the variables. 
 
-For example, we add variables `x1` and `x2` to `new_algo`.
+In the following example, we add variables `x1` and `x2` to `new_algo`.
 ```python
 x1, x2 = new_algo.add_var("x1", "x2")
 ```
 
-Each algorithm state must be updated at each iteration. The
+Each algorithm state (each variable) must be updated at each iteration. The
 updated variables can be accessed by syntax `update`. 
 
-For example, we access the updated `x1` with `x1u` and updated `x2` with `x2u`. 
+Here we access the updated `x1` with `x1u` and updated `x2` with `x2u` in the following code. 
 ```python
 x1u, x2u = new_algo.update(x1, x2)
 ```
@@ -42,19 +42,25 @@ x1u, x2u = new_algo.update(x1, x2)
 Parameters
 ---------
 
-Parameters can be a scalar, a vector, or a matrix. The main difference between a scalar and
-a vector or a matrix is whether it is commutative. Parameters can be declared and added 
-to an algorithm using syntax `add_parameter` along with the names of parameters. 
-To add a vector or a matrix, the argument `commutative` should be set as `False`. 
+Parameters of an algorithm can be declared as scalar (commutative) or vector or matrix (noncommutative). 
+Parameters are declared and added to an algorithm using syntax `add_parameter` along with the names of parameters. 
+To add a vector or matrix, the argument `commutative` should be set as `False`. 
 The default setting of argument `commutative` is `True`. 
-It is unnecessary to specify the size of the vector or the matrix, since they are all 
-regarded as abstract expressions. 
+There is no need to specialize the dimensions of vectors or matrices, since they are symbolic. 
 
-For example, we add a scalar `t` and matrix `L` to `new_algo`.
+The following code shows how to add scalar `t` and matrix `L` to `new_algo`.
 ```python
 t = new_algo.add_parameter("t")
 L = new_algo.add_parameter("L", commutative = False)
 ```
+
+#### Warning for noncommutative parameters
+
+Due to limited support for noncommutative symbol calculation in SymPy, 
+Linnaeus may not correctly parse extremely complex algorithms including noncommutative symbols. 
+It is also possible that Linnaeus may not get the parameter mapping for noncommutative symbols (matrices or vectors) 
+when detecting equivalence for such algorithms. 
+In such cases, we recommand users to declare all the parameters as commutative symbols! 
 
 Oracles
 -----------
@@ -64,27 +70,26 @@ to an algorithm.
 
 #### Black-box approach
 
-The first approach is to define oracles as black boxes. 
-When parsing the algorithm, the system treats each oracle as a whole and does not care what 
-happens inside each oracle. 
-Under this approach, an oracle can be declared using syntax `add_oracle`.
+The black-box approach is to define oracles as black boxes. 
+When parsing the algorithm, the system treats each oracle as a distinct entity unrelated to any other oracle. 
+An oracle declared using syntax `add_oracle` uses the black-box approach
 
-For example, we declare oracles gradient of `f` and proximal operator of `g`.
+For example, we declare oracles gradient of `f` and proximal operator of `g` with the following code.
 ```python
 gradf = new_algo.add_oracle("gradf")
 proxg = new_algo.add_oracle("proxg")
 ```
 
-#### (Sub)gradient approach
+#### Functional approach
 
-The second approach is to define oracles in the level of (sub)gradients. 
-This approach is important especially when detecting conjugation between algorithms. 
+The functional approach is to define oracles in terms of the (sub)gradient of a function. 
 When parsing an algorithm, all the oracles will be decomposed into (sub)gradients. 
-This [example](#check-conjugation-and-permutation-douglas-rachford-splitting-and-admm) shows the details. 
-Under this approach, functions must be defined and added to the algorithm before defining 
-oracles. Syntax `add_function` is used to declare and add functions to an algorithm. 
+This approach is important to allow detection algorithm conjugation. 
+This [example](https://linnaeus-doc.github.io/examples/#check-conjugation-and-permutation-douglas-rachford-splitting-and-admm) shows the details. 
+With the functional approach, functions must be defined and added to the algorithm 
+using syntax `add_function` before defining oracles.
 
-For example, we define function `f` and add it to `new_algo`
+The following example shows to define function `f` and add it to `new_algo`
 ```python
 f = new_algo.add_function("f")
 ```
@@ -119,16 +124,16 @@ An update equation is defined with syntax `add_update`.
 new_algo.add_update(x1, x2 - gradf(x2)) 
 new_algo.add_update(x2, x1 + proxg(x1)) 
 ```
-The update equations in the example are interpreted as 
+The update equations in the above example are interpreted as 
 
-<img src="/docs/Figures/interpretation1.svg?invert_in_darkmode" align=middle width="140" height="140"/>
+<img src="/Figures/interpretation1.svg?invert_in_darkmode" align=middle width="140" height="140"/>
 
-Or using equalities, 
+Or interpreted as equalities, 
 
-<img src="/docs/Figures/interpretation2.svg?invert_in_darkmode" align=middle width="140" height="140"/>
+<img src="/Figures/interpretation2.svg?invert_in_darkmode" align=middle width="140" height="140"/>
 
 By default setting, variables which have already been updated will be substituted with their
-updated versions. Thus, `x1` in the second update equation is interpreted as the updated `x1`, as the `x1^+` in 
+updated versions. Thus, `x1` in the second update equation is considered as the updated `x1`, as the `x1^+` in 
 the second equality interpretation. 
 
 
@@ -144,7 +149,7 @@ Under this setting, we have a different interpretation of the update equations,
 
 Warning!
 ---------
-To avoid overlap and misleading in expressions, it is highly recommanded that each algorithm should have its own expressions such as own variables, parameters, etc, and those expressions should only be used within this algorithm!
+To avoid overlap and misleading in expressions, it is highly recommanded that each algorithm should have its own variables, parameters, etc, and those expressions should only be used within this algorithm!
 
 For example, 
 ```python
