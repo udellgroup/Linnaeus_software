@@ -252,17 +252,17 @@ x^+ = y^+ + t (\nabla f(x) - \nabla f(y^+))
 """
 algo_library.library_insert(Eg_t)
 
-Eg_rl = Algorithm("Extragradient method (reflected gradient method) by Malitsky", "Eg_rl")
-f = Eg_rl.add_function("f")
-C = Eg_rl.add_set("C")
-t = Eg_rl.add_parameter("t")
-x1, x2, y = Eg_rl.add_var("x1", "x2", "y")
-Eg_rl.add_update(y, 2*x1 - x2)
-Eg_rl.add_update(x2, x1)
-Eg_rl.add_update(x1, proj(C)(x1 - t*grad(f)(y)))
-Eg_rl._parse()
-Eg_rl.equation_string = r"""
+Rg = Algorithm("Reflected gradient method by Malitsky", "Rg")
+f = Rg.add_function("f")
+C = Rg.add_set("C")
+t = Rg.add_parameter("t")
+x1, x2, y = Rg.add_var("x1", "x2", "y")
+Rg.add_update(y, 2*x1 - x2)
+Rg.add_update(x2, x1)
+Rg.add_update(x1, proj(C)(x1 - t*grad(f)(y)))
+Rg._parse()
+Rg.equation_string = r"""
 x_1^+ = P_C (x_1^+ - t \nabla f(2x_1 - x_2)) \\
 x_2^+ = x_1
 """
-algo_library.library_insert(Eg_rl)
+algo_library.library_insert(Rg)

@@ -22,7 +22,7 @@ Currently, the algorithm library includes:
 * [Extragradient method](https://arxiv.org/abs/1609.08177), accessed by `Eg`
 * [Extragradient method by Korpelevich and Antipin](https://link.springer.com/article/10.3103/S0278641910030039), accessed by `Eg_ka`
 * [Extragradient method by Tseng](https://epubs.siam.org/doi/abs/10.1137/S0363012998338806?casa_token=RML0YD1nSUAAAAAA:sFhDEPYjlpkR2Nv5EjzDawca_yST1_qkn0QkWKVuqwwkbJ2Ig1XIT8exbADL3wnSZkrb6a93f0A3), accessed by `Eg_t`
-* [Reflected gradient method by Malitsky](https://arxiv.org/abs/1502.04968), accessed by `Rl`
+* [Reflected gradient method by Malitsky](https://arxiv.org/abs/1502.04968), accessed by `Rg`
 
 The following code checks equivalence between 
 Gradient descent method and Triple momentum method in the library. 
