@@ -105,11 +105,11 @@ Parse `algo1`:
 ```python
 algo1.parse()
 ```
-Systerm returns the state-space realization of `algo1`, 
+Systerm parses `algo1` and returns the update equations, 
 
-<img src="/docs/Figures/title1.svg?invert_in_darkmode" align=middle width="140" height="140"/>
+<img src="/docs/Figures/title1.svg?invert_in_darkmode" align=middle width="75" height="75"/>
 
-<img src="/docs/Figures/output1.svg?invert_in_darkmode" align=middle width="320" height="320"/>
+<img src="/docs/Figures/output1.svg?invert_in_darkmode" align=middle width="170" height="170"/>
 
 The second algorithm,
 
@@ -130,11 +130,11 @@ algo2.add_update(xi2, xi2 + 1/10*gradf(xi3))
 
 algo2.parse()
 ```
-System returns the state-space realization of `algo2`,
+System parses `algo2` and returns the update equations,
 
-<img src="/docs/Figures/title2.svg?invert_in_darkmode" align=middle width="140" height="140"/>
+<img src="/docs/Figures/title2.svg?invert_in_darkmode" align=middle width="75" height="75"/>
 
-<img src="/docs/Figures/output2.svg?invert_in_darkmode" align=middle width="320" height="320"/>
+<img src="/docs/Figures/output2.svg?invert_in_darkmode" align=middle width="175" height="175"/>
 
 Check oracle equivalence : 
 ```python
@@ -150,7 +150,7 @@ which means that `algo1` and `algo2` are oracle-equivalent.
 ## Citing Linnaeus
 
 If you use Linnaeus for published work,
-we encourage you to cite the software
+we encourage you to cite the software. 
 
 Use the following BibTeX citation:
 
