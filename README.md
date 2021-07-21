@@ -66,6 +66,7 @@ Currently, the algorithm library includes:
 * Davis-Yin splitting method
 * Extragradient method (with different versions)
 
+The whole library is accessed by `algo_library.library`. 
 
 ## Quick start
 
