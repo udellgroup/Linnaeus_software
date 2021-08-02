@@ -148,7 +148,7 @@ True
 ```
 which means that `algo1` and `algo2` are oracle-equivalent. 
 
-## Add new algorithm to library
+## Add new algorithm to the library
 
 If you believe that an algorithm is important and not included in the library of Linnaeus, 
 you are welcome to submit a GitHub pull request named as `Adding new algorithm XXX`, 
@@ -159,7 +159,7 @@ New algorithm should be added at the end of the file.
 The procedures to add a new algorithm are generally the same 
 as the steps to input and parse an algorithm in Linnaeus as stated in [quick tutorial](https://linnaeus-doc.github.io/quick_tutorial/). 
 
-The following code shows to add Chambolle-Pock method to the library. 
+The following code shows how to add the Chambolle-Pock method to the library. 
 
 ```python
 # define name "Chambolle-Pock method" and name string "Cp"
