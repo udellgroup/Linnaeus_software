@@ -153,7 +153,8 @@ which means that `algo1` and `algo2` are oracle-equivalent.
 If you believe that an algorithm is important and not included in the library of Linnaeus, 
 you are welcome to submit a GitHub pull request named as `Adding new algorithm XXX`, 
 where `XXX` is the name of the new algorithm. 
-To add a new algorithm, you need to edit the `algorithms_library.py` file under `linnaeus/` directory. 
+
+To add a new algorithm, you need to edit the `algorithms_library.py` file under `linnaeus/` directory as the following Chambolle-Pock method example. 
 New algorithm should be added at the end of the file. 
 
 The procedures to load a new algorithm are generally the same 
@@ -195,6 +196,8 @@ To avoid overlap in algorithms, we highly recommand you to [check equivalence an
 between the new algorithm and existing algorithms in the library to ensure uniqueness. 
 
 Function `analyze()` can be used to detect possible connections between the new algorithm and existing algorithms in the library. 
+
+
 
 ## Citing Linnaeus
 
