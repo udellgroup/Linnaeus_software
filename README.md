@@ -193,6 +193,7 @@ algo_library.load_algo(Cp)
 
 To avoid overlap in algorithms, we highly recommand you to [check equivalence and relations](https://linnaeus-doc.github.io/detection/#detection)
 between the new algorithm and existing algorithms in the library to ensure uniqueness. 
+
 Function `analyze()` can be used to detect possible connections between the new algorithm and existing algorithms in the library. 
 
 ## Citing Linnaeus
