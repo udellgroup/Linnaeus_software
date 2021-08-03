@@ -6,7 +6,7 @@ class library:
         self.name = libraryname
         self.library = []
     
-    def library_insert(self, algo):
+    def load_algo(self, algo):
         if algo.__class__ == Algorithm:
             if algo.in_library == False:
                 self.library.append(algo)
@@ -16,7 +16,7 @@ class library:
         else:
             raise ValueError("Invalid algorithm!")
         
-    def library_remove(self, algo):
+    def remove_algo(self, algo):
         if algo in self.library:
             self.library.remove(algo)
             algo.in_library = False
@@ -46,7 +46,7 @@ Admm.equation_string = r"""
 x_2^+ = \text{argmin}_x \{g(x) + \frac{\rho}{2} 
 \left\| Ax_1^+ + Bx - c + x_3 \|\right \} \\
 x_3^+ = x_3 + Ax_1^+ + Bx_2^+ - c"""
-algo_library.library_insert(Admm)
+algo_library.load_algo(Admm)
 
 
 Dr_p = Algorithm("Douglas-Rachford splitting method permutation", "Dr_p")
@@ -61,7 +61,7 @@ Dr_p.equation_string = r"""
  x_1^+ = \text{prox}_{tf} (x_2 - x_3) \\
  x_2^+ = \text{prox}_{tg} (x_1^{+} + x_3) \\
  x_3^+ = x_3 + x_1^{+} - x_2^{+} """
-algo_library.library_insert(Dr_p)
+algo_library.load_algo(Dr_p)
 
 Cp = Algorithm("Chambolle-Pock method", "Cp")
 f, g = Cp.add_function("f", "g")
@@ -78,7 +78,7 @@ Cp.equation_string = r"""
  x_3^+ = x_3 + \theta (x_1^{+} - x_3) \\ 
  x_4^+ = x_4 + \theta (x_2^+ - x_4) 
     """
-algo_library.library_insert(Cp)
+algo_library.load_algo(Cp)
 
 Gr = Algorithm("Gradient method", "Gr")
 f = Gr.add_function("f")
@@ -89,7 +89,7 @@ Gr._parse()
 Gr.equation_string = r"""
 x^+ = x - \alpha \nabla f(x)
 """
-algo_library.library_insert(Gr)
+algo_library.load_algo(Gr)
 
 Ng = Algorithm("Nesterov’s accelerated gradient method", "Ng")
 f = Ng.add_function("f")
@@ -104,7 +104,7 @@ x_1^+ = y - \alpha \nabla f(y) \\
 x_2^+ = x_1 \\
 y = (1 + \beta) x_1 - \beta x_2
 """
-algo_library.library_insert(Ng)
+algo_library.load_algo(Ng)
 
 Tm = Algorithm("Triple momentum method", "Tm")
 f = Tm.add_function("f")
@@ -121,7 +121,7 @@ x_1^+ = (1 + \beta) * x1 - \beta * x2 - \alpha \nabla f(y) \\
 x_2^+ = x_1 \\
 y = (1 + \eta) x_1 - \eta x_2
 """
-algo_library.library_insert(Tm)
+algo_library.load_algo(Tm)
 
 Pp = Algorithm("Proximal point method", "Pp")
 f = Pp.add_function("f")
@@ -132,7 +132,7 @@ Pp._parse()
 Pp.equation_string = r"""
 x^+ = \text{prox}_{tf} (x)
 """
-algo_library.library_insert(Pp)
+algo_library.load_algo(Pp)
 
 Hb = Algorithm("Heavy ball method", "Hb")
 f = Hb.add_function("f")
@@ -145,7 +145,7 @@ Hb.equation_string = r"""
 p^+ = \beta p - \nabla f (x) \\
 x^+ = x + \alpha p
 """
-algo_library.library_insert(Hb)
+algo_library.load_algo(Hb)
 
 Pg = Algorithm("Proximal gradient method", "Pg")
 f, g = Pg.add_function("f", "g")
@@ -156,7 +156,7 @@ Pg._parse()
 Pg.equation_string = r"""
 x^+ = \text{prox}_{tg}(x - t\nabla f(x))
 """
-algo_library.library_insert(Pg)
+algo_library.load_algo(Pg)
 
 Dr = Algorithm("Douglas-Rachford splitting method","Dr")
 x1, x2, x3 = Dr.add_var("x1", "x2", "x3")
@@ -169,7 +169,7 @@ Dr.equation_string = r"""
  x_1^+ = \text{prox}_{tf} (x_3) \\
  x_2^+ = \text{prox}_{tg} (2x_1^+ - x_3) \\
  x_3^+ = x_3 + x_2^{+} - x_1^{+} """
-algo_library.library_insert(Dr)
+algo_library.load_algo(Dr)
 
 Pp_r = Algorithm("Proximal point method relaxation", "Pp_r")
 theta, t = Pp_r.add_parameter("theta", "t")
@@ -180,7 +180,7 @@ Pp_r._parse()
 Pp_r.equation_string = r"""
 x^+ = (1 - \theta) x + \theta \text{prox}_{tf} (x)
 """
-algo_library.library_insert(Pp_r)
+algo_library.load_algo(Pp_r)
 
 Pr = Algorithm("Peaceman-Rachford splitting method", "Pr")
 x1, x2, x3 = Pr.add_var("x1", "x2", "x3")
@@ -194,7 +194,7 @@ Pr.equation_string = r"""
  x_2^+ = \text{prox}_{tg} (2x_1^+ - x_3) \\
  x_3^+ = x_3 + 2 (x_2^{+} - x_1^{+})
 """
-algo_library.library_insert(Pr)
+algo_library.load_algo(Pr)
 
 Dy = Algorithm("Davis-Yin splitting method", "Dy")
 f, g, h = Dy.add_function("f", "g", "h")
@@ -209,7 +209,7 @@ x_B^+ = \text{prox}_{\gamma g} (x) \\
 x_A^+ = \text{prox}_{\gamma f} (2 x_B^+ - x - \gamma \nabla h (x_B^+)) \\
 x^+ = x + t (x_A^+ - x_B^+)
 """
-algo_library.library_insert(Dy)
+algo_library.load_algo(Dy)
 
 Eg = Algorithm("Extragradient method for two functions", "Eg")
 f, g = Eg.add_function("f", "g")
@@ -222,7 +222,7 @@ Eg.equation_string = r"""
 y^+ = \text{prox}_{\alpha g} (x - \alpha \nabla f(x)) \\
 x^+ = \text{prox}_{\beta g} (x - \beta \nabla f(y^+)) 
 """
-algo_library.library_insert(Eg)
+algo_library.load_algo(Eg)
 
 Eg_ka = Algorithm("Extragradient method by Korpelevich and Antipin", "Eg_ka")
 f = Eg_ka.add_function("f")
@@ -236,7 +236,7 @@ Eg_ka.equation_string = r"""
 y^+ = P_C (x - t \nabla f(x)) \\
 x^+ = P_C (x - t \nabla f(y^+))
 """
-algo_library.library_insert(Eg_ka)
+algo_library.load_algo(Eg_ka)
 
 Eg_t = Algorithm("Extragradient method by Tseng", "Eg_t")
 f = Eg_t.add_function("f")
@@ -250,7 +250,7 @@ Eg_t.equation_string = r"""
 y^+ = P_C (x - t \nabla f(x)) \\
 x^+ = y^+ + t (\nabla f(x) - \nabla f(y^+))
 """
-algo_library.library_insert(Eg_t)
+algo_library.load_algo(Eg_t)
 
 Rg = Algorithm("Reflected gradient method by Malitsky", "Rg")
 f = Rg.add_function("f")
@@ -265,4 +265,4 @@ Rg.equation_string = r"""
 x_1^+ = P_C (x_1^+ - t \nabla f(2x_1 - x_2)) \\
 x_2^+ = x_1
 """
-algo_library.library_insert(Rg)
+algo_library.load_algo(Rg)

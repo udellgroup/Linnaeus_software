@@ -384,11 +384,12 @@ def is_equivalent(algo1, algo_list = algo_library.library, verbose = False):
         algo_index = np.zeros(len(algo_list))
     
     if verbose == True:
-        print("--------------------------------------------------------------")
-        for i in range(len(algo_list)):
-            if algo_index[i] > 0:
-                print(algo1.name + " is equivalent to " + algo_list[i].name + ".")
-        print("--------------------------------------------------------------")
+        if np.sum(algo_index) > 0:
+            print("--------------------------------------------------------------")
+            for i in range(len(algo_list)):
+                if algo_index[i] > 0:
+                    print(algo1.name + " is equivalent to " + algo_list[i].name + ".")
+            print("--------------------------------------------------------------")
     
     boollist = []
     for i in range(len(algo_list)):
@@ -427,11 +428,12 @@ def is_duality(algo1, algo_list = algo_library.library, verbose = False):
         algo_index = np.zeros(len(algo_list))
         
     if verbose == True:
-        print("--------------------------------------------------------------")
-        for i in range(len(algo_index)):
-            if algo_index[i] > 0:
-                print(algo1.name + " is dual to " + algo_list[i].name + ".")
-        print("--------------------------------------------------------------")
+        if np.sum(algo_index) > 0:
+            print("--------------------------------------------------------------")
+            for i in range(len(algo_index)):
+                if algo_index[i] > 0:
+                    print(algo1.name + " is dual to " + algo_list[i].name + ".")
+            print("--------------------------------------------------------------")
             
     boollist = []
     for i in range(len(algo_list)):
@@ -477,11 +479,12 @@ def is_permutation(algo1, algo_list = algo_library.library, verbose = False):
             algo_index[i] = algo_index[i] + algo_index2[i]
             
     if verbose == True:
-        print("--------------------------------------------------------------")
-        for i in range(len(algo_index)):
-            if algo_index[i] > 0:
-                print(algo1.name + " is a permutation of " + algo_list[i].name + ".")
-        print("--------------------------------------------------------------")
+        if np.sum(algo_index) > 0:
+            print("--------------------------------------------------------------")
+            for i in range(len(algo_index)):
+                if algo_index[i] > 0:
+                    print(algo1.name + " is a permutation of " + algo_list[i].name + ".")
+            print("--------------------------------------------------------------")
 
     boollist = []
     for i in range(len(algo_list)):
@@ -527,11 +530,12 @@ def is_conjugation(algo1, algo_list = algo_library.library, verbose = False):
             algo_index[i] = algo_index[i] + algo_index2[i]
      
     if verbose == True:
-        print("--------------------------------------------------------------")
-        for i in range(len(algo_index)):
-            if algo_index[i] > 0:
-                print(algo1.name + " is conjugate to " + algo_list[i].name + ".")
-        print("--------------------------------------------------------------")
+        if np.sum(algo_index) > 0:
+            print("--------------------------------------------------------------")
+            for i in range(len(algo_index)):
+                if algo_index[i] > 0:
+                    print(algo1.name + " is conjugate to " + algo_list[i].name + ".")
+            print("--------------------------------------------------------------")
 
     boollist = []
     for i in range(len(algo_list)):
@@ -571,11 +575,12 @@ def is_repetition(algo1, algo_list = algo_library.library, times = 2, verbose = 
         algo_index = np.zeros(len(algo_list))
         
     if verbose == True:
-        print("--------------------------------------------------------------")
-        for i in range(len(algo_index)):
-            if algo_index[i] > 0:
-                print(algo1.name + " is a repetition of " + algo_list[i].name + ".")
-        print("--------------------------------------------------------------")
+        if np.sum(algo_index) > 0:
+            print("--------------------------------------------------------------")
+            for i in range(len(algo_index)):
+                if algo_index[i] > 0:
+                    print(algo1.name + " is a repetition of " + algo_list[i].name + ".")
+            print("--------------------------------------------------------------")
     
     boollist = []
     for i in range(len(algo_list)):
@@ -612,11 +617,12 @@ def is_conjugate_permutation(algo1, algo_list = algo_library.library, verbose = 
             algo_index[i] = algo_index[i] + algo_index2[i]    
             
     if verbose == True:
-        print("--------------------------------------------------------------")
-        for i in range(len(algo_index)):
-            if algo_index[i] > 0:
-                print(algo1.name + " is a conjugate permutation " + algo_list[i].name + ".")
-        print("--------------------------------------------------------------")
+        if np.sum(algo_index) > 0:
+            print("--------------------------------------------------------------")
+            for i in range(len(algo_index)):
+                if algo_index[i] > 0:
+                    print(algo1.name + " is a conjugate permutation " + algo_list[i].name + ".")
+            print("--------------------------------------------------------------")
 
     boollist = []
     for i in range(len(algo_list)):
@@ -661,9 +667,14 @@ def test_conjugate_permutation(algo1, algo_list = algo_library.library):
     print("--------------------------------------------------------------")
 
 def analyze(algo1, algo_list = algo_library.library):
-    test_equivalent(algo1, algo_list)
-    test_duality(algo1, algo_list)
-    test_permutation(algo1, algo_list)
-    test_repetition(algo1, algo_list)
-    test_conjugation(algo1, algo_list)
-    test_conjugate_permutation(algo1, algo_list)
+    equivalence_list = is_equivalent(algo1, algo_list, verbose = True)
+    duality_list = is_duality(algo1, algo_list, verbose = True)
+    permutation_list = is_permutation(algo1, algo_list, verbose = True)
+    repetition_list = is_repetition(algo1, algo_list, verbose = True)
+    conjugation_list = is_conjugation(algo1, algo_list, verbose = True)
+    conjugate_permutation_list = is_conjugate_permutation(algo1, algo_list, verbose = True)
+    
+    if (not any(equivalence_list)) and (not any(duality_list)) and (not any(permutation_list)) and (not any(repetition_list)) and (not any(conjugation_list)) and (not any(conjugate_permutation_list)):
+        print("--------------------------------------------------------------")
+        print("No connection found!")
+        print("--------------------------------------------------------------")
