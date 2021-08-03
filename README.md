@@ -156,10 +156,10 @@ where `XXX` is the name of the new algorithm.
 To add a new algorithm, you need to edit the `algorithms_library.py` file under `linnaeus/` directory. 
 New algorithm should be added at the end of the file. 
 
-The procedures to add a new algorithm are generally the same 
+The procedures to load a new algorithm are generally the same 
 as the steps to input and parse an algorithm in Linnaeus as stated in [quick tutorial](https://linnaeus-doc.github.io/quick_tutorial/). 
 
-The following code shows how to add the Chambolle-Pock method to the library. 
+The following code shows how to load the Chambolle-Pock method to the library. 
 
 ```python
 # define name "Chambolle-Pock method" and name string "Cp"
@@ -186,13 +186,14 @@ Cp.equation_string = r"""
  x_3^+ = x_3 + \theta (x_1^{+} - x_3) \\ 
  x_4^+ = x_4 + \theta (x_2^+ - x_4) 
     """
-# insert Chambolle-Pock method to library
-algo_library.library_insert(Cp)
+# load the Chambolle-Pock method to library
+algo_library.load_algo(Cp)
 
 ```
 
 To avoid overlap in algorithms, we highly recommand you to [check equivalence and relations](https://linnaeus-doc.github.io/detection/#detection)
 between the new algorithm and existing algorithms in the library to ensure uniqueness. 
+Function `analyze()` can be used to detect possible connections between the new algorithm and existing algorithms in the library. 
 
 ## Citing Linnaeus
 
