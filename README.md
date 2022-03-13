@@ -119,7 +119,7 @@ The second algorithm,
 Define the second algorithm as `algo2` and parse it:
 ```python
 algo2 = Algorithm("Algorithm 2")
-xi1 = algo2.add_var("xi1")
+xi1, xi2, xi3 = algo2.add_var("xi1", "xi2", "xi3")
 gradf = algo2.add_oracle("gradf")
 
 # xi3 <- xi1
