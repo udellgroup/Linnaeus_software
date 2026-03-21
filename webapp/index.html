@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Linnaeus — Algorithm Equivalence Detector</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css"
+        crossorigin="anonymous">
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+  <!-- Header -->
+  <header class="header">
+    <div class="header-left">
+      <h1 class="header-title">LINNAEUS</h1>
+      <span class="header-subtitle">Algorithm Equivalence Detector</span>
+    </div>
+    <div class="header-right">
+      Based on <a href="https://arxiv.org/abs/2501.04972" target="_blank" rel="noopener" style="color:#aaa;text-decoration:underline;">Lessard &amp; Udell (2025)</a>
+    </div>
+  </header>
+
+  <!-- Tab Bar -->
+  <nav class="tab-bar">
+    <button class="tab active" data-tab="check">Check Algorithm</button>
+    <button class="tab" data-tab="library">Browse Library</button>
+    <button class="tab" data-tab="about">About</button>
+  </nav>
+
+  <!-- Loading Overlay -->
+  <div class="loading-overlay" id="loading-overlay">
+    <div class="loading-content">
+      <div class="spinner"></div>
+      <p class="loading-text">Computing...</p>
+      <div class="progress-bar-container">
+        <div class="progress-bar" id="progress-bar"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Tab: Check Algorithm -->
+  <div class="tab-content active" id="tab-check">
+    <div class="check-layout">
+
+      <!-- Input Panel -->
+      <div class="panel input-panel">
+        <h2 class="panel-title">Define Your Algorithm</h2>
+        <textarea id="algo-input" class="algo-textarea"
+                  placeholder="y[k] = x[k] + beta * (x[k] - x[k-1])
+x[k+1] = y[k] - alpha * grad_f(y[k])"></textarea>
+        <div class="example-chips" id="example-chips">
+          <!-- Populated dynamically -->
+        </div>
+        <button class="btn btn-primary" id="btn-check" disabled>Check Equivalence</button>
+        <div class="oracle-reference" id="oracle-reference">
+          <!-- Oracle info populated dynamically -->
+        </div>
+      </div>
+
+      <!-- Results Panel -->
+      <div class="panel results-panel" id="results-panel">
+        <h2 class="panel-title">Results</h2>
+        <div class="results-placeholder">
+          <p>Enter an algorithm and click <strong>Check Equivalence</strong> to see results.</p>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- Tab: Browse Library -->
+  <div class="tab-content" id="tab-library">
+    <div class="library-controls" id="library-controls">
+      <!-- Filter chips populated dynamically -->
+    </div>
+    <div class="library-grid" id="library-grid">
+      <!-- Algorithm cards populated dynamically -->
+    </div>
+  </div>
+
+  <!-- Tab: About -->
+  <div class="tab-content" id="tab-about">
+    <div class="about-content">
+      <h2>What is Linnaeus?</h2>
+      <p>
+        Linnaeus is a tool for detecting equivalence between iterative optimization algorithms.
+        Many algorithms that appear different on the surface &mdash; different names, different papers,
+        different update rules &mdash; turn out to compute exactly the same iterates. Linnaeus
+        finds these hidden equivalences automatically.
+      </p>
+
+      <h3>How It Works</h3>
+      <p>
+        Every iterative oracle-based algorithm can be expressed as a linear dynamical system
+        in feedback with a nonlinearity (the oracle). Linnaeus parses your algorithm's update
+        equations, computes a <strong>transfer function</strong> H(z), and compares it against
+        a library of known methods:
+      </p>
+      <ol>
+        <li><strong>Parse:</strong> Your update equations are converted to a state-space realization (A, B, C, D).</li>
+        <li><strong>Transfer function:</strong> H(z) = D + C(zI &minus; A)<sup>&minus;1</sup>B is computed via z-transform.</li>
+        <li><strong>Equivalence test:</strong> H(z) is compared against all library entries using three tests:
+          <strong>oracle equivalence</strong> (identical H(z)),
+          <strong>shift equivalence</strong> (H(z) related by a diagonal shift), and
+          <strong>LFT equivalence</strong> (related oracles, e.g., prox vs. conjugate prox).
+        </li>
+      </ol>
+
+      <h3>Equation Syntax</h3>
+      <p>Enter one update equation per line using <code>[k]</code>, <code>[k+1]</code>, <code>[k-1]</code> for time indices. Use <code>*</code> for explicit multiplication.</p>
+      <pre><code># Nesterov's Accelerated Method
+y[k] = x[k] + beta * (x[k] - x[k-1])
+x[k+1] = y[k] - alpha * grad_f(y[k])
+
+# Douglas-Rachford Splitting
+x1[k+1] = prox_f(x3[k])
+x2[k+1] = prox_g(2 * x1[k+1] - x3[k])
+x3[k+1] = x3[k] + x2[k+1] - x1[k+1]</code></pre>
+
+      <h3>Supported Oracles</h3>
+      <table class="oracle-table">
+        <thead>
+          <tr><th>Syntax</th><th>Description</th></tr>
+        </thead>
+        <tbody>
+          <tr><td><code>grad_f(x)</code></td><td>Gradient of f</td></tr>
+          <tr><td><code>prox_f(x)</code>, <code>prox_g(x)</code></td><td>Proximal operator</td></tr>
+          <tr><td><code>prox_fstar(x)</code>, <code>prox_gstar(x)</code></td><td>Proximal operator of the conjugate</td></tr>
+          <tr><td><code>subgrad_f(x)</code></td><td>Subdifferential</td></tr>
+        </tbody>
+      </table>
+
+      <h3>About the Project</h3>
+      <p>
+        Linnaeus is based on the paper
+        <em>&ldquo;Algebraic characterization of equivalence between optimization algorithms&rdquo;</em>
+        by Laurent Lessard and Madeleine Udell
+        (<a href="https://arxiv.org/abs/2501.04972" target="_blank" rel="noopener">arXiv:2501.04972</a>, 2025).
+        The name honors
+        <a href="https://en.wikipedia.org/wiki/Carl_Linnaeus" target="_blank" rel="noopener">Carl Linnaeus</a>,
+        the father of biological taxonomy, reflecting the tool's goal of classifying algorithms.
+      </p>
+    </div>
+  </div>
+
+  <!-- Scripts -->
+  <script src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"
+          crossorigin="anonymous"></script>
+  <script src="https://cdn.jsdelivr.net/pyodide/v0.25.0/full/pyodide.js"></script>
+  <script src="js/results.js"></script>
+  <script src="js/library-ui.js"></script>
+  <script src="js/app.js"></script>
+</body>
+</html>

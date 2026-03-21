@@ -1,0 +1,547 @@
+/* ============================================================
+   Linnaeus — Algorithm Equivalence Detector
+   Complete stylesheet for the static SPA shell
+   ============================================================ */
+
+/* ----------------------------------------------------------
+   Reset & Base
+   ---------------------------------------------------------- */
+*, *::before, *::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html {
+  font-size: 16px;
+  -webkit-text-size-adjust: 100%;
+}
+
+body {
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
+    Oxygen-Sans, Ubuntu, Cantarell, "Helvetica Neue", sans-serif;
+  color: #222;
+  background: #f0f2f5;
+  line-height: 1.6;
+  min-height: 100vh;
+}
+
+/* ----------------------------------------------------------
+   Header
+   ---------------------------------------------------------- */
+.header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: #1a1a2e;
+  color: #fff;
+  padding: 0.75rem 1.5rem;
+}
+
+.header-left {
+  display: flex;
+  align-items: baseline;
+  gap: 1rem;
+}
+
+.header-title {
+  font-size: 1.4rem;
+  font-weight: 700;
+  letter-spacing: 0.15em;
+}
+
+.header-subtitle {
+  font-size: 0.9rem;
+  opacity: 0.8;
+  font-weight: 400;
+}
+
+.header-right {
+  font-size: 0.8rem;
+  opacity: 0.7;
+}
+
+/* ----------------------------------------------------------
+   Tab Bar
+   ---------------------------------------------------------- */
+.tab-bar {
+  display: flex;
+  background: #16213e;
+  padding: 0;
+  gap: 0;
+}
+
+.tab {
+  background: none;
+  border: none;
+  border-bottom: 3px solid transparent;
+  color: rgba(255, 255, 255, 0.65);
+  font-size: 0.9rem;
+  font-family: inherit;
+  padding: 0.75rem 1.5rem;
+  cursor: pointer;
+  transition: color 0.2s, border-color 0.2s;
+}
+
+.tab:hover {
+  color: #fff;
+}
+
+.tab.active {
+  color: #fff;
+  border-bottom-color: #e94560;
+  font-weight: 600;
+}
+
+/* ----------------------------------------------------------
+   Tab Content
+   ---------------------------------------------------------- */
+.tab-content {
+  display: none;
+  padding: 1.5rem;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.tab-content.active {
+  display: block;
+}
+
+/* ----------------------------------------------------------
+   Loading Overlay
+   ---------------------------------------------------------- */
+.loading-overlay {
+  display: none;
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.55);
+  z-index: 1000;
+  align-items: center;
+  justify-content: center;
+}
+
+.loading-overlay.visible {
+  display: flex;
+}
+
+.loading-content {
+  background: #fff;
+  border-radius: 12px;
+  padding: 2.5rem 3rem;
+  text-align: center;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+}
+
+.spinner {
+  width: 48px;
+  height: 48px;
+  border: 4px solid #e0e0e0;
+  border-top-color: #e94560;
+  border-radius: 50%;
+  margin: 0 auto 1rem;
+  animation: spin 0.8s linear infinite;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+.loading-text {
+  font-size: 1rem;
+  color: #444;
+  margin-bottom: 1rem;
+}
+
+.progress-bar-container {
+  width: 240px;
+  height: 6px;
+  background: #e0e0e0;
+  border-radius: 3px;
+  overflow: hidden;
+  margin: 0 auto;
+}
+
+.progress-bar {
+  height: 100%;
+  width: 0%;
+  background: #e94560;
+  border-radius: 3px;
+  transition: width 0.3s ease;
+}
+
+/* ----------------------------------------------------------
+   Panel (shared card style)
+   ---------------------------------------------------------- */
+.panel {
+  background: #fff;
+  border-radius: 8px;
+  padding: 1.5rem;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+}
+
+.panel-title {
+  font-size: 1.1rem;
+  font-weight: 600;
+  margin-bottom: 1rem;
+  color: #1a1a2e;
+}
+
+/* ----------------------------------------------------------
+   Check Tab — Two-column layout
+   ---------------------------------------------------------- */
+.check-layout {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1.5rem;
+  align-items: start;
+}
+
+/* Input Panel */
+.algo-textarea {
+  width: 100%;
+  min-height: 200px;
+  padding: 0.75rem;
+  font-family: "SF Mono", "Fira Code", "Fira Mono", Menlo, Consolas,
+    "DejaVu Sans Mono", monospace;
+  font-size: 0.85rem;
+  line-height: 1.5;
+  border: 1px solid #d0d0d0;
+  border-radius: 6px;
+  resize: vertical;
+  background: #fafafa;
+  color: #222;
+  transition: border-color 0.2s;
+}
+
+.algo-textarea:focus {
+  outline: none;
+  border-color: #4285f4;
+  box-shadow: 0 0 0 3px rgba(66, 133, 244, 0.15);
+}
+
+.algo-textarea::placeholder {
+  color: #999;
+}
+
+/* Button */
+.btn {
+  display: inline-block;
+  padding: 0.6rem 1.4rem;
+  font-size: 0.9rem;
+  font-family: inherit;
+  font-weight: 600;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: background 0.2s, box-shadow 0.2s, opacity 0.2s;
+}
+
+.btn-primary {
+  background: #e94560;
+  color: #fff;
+  margin-top: 1rem;
+}
+
+.btn-primary:hover:not(:disabled) {
+  background: #d63451;
+  box-shadow: 0 2px 8px rgba(233, 69, 96, 0.35);
+}
+
+.btn-primary:disabled {
+  background: #aaa;
+  cursor: not-allowed;
+  opacity: 0.7;
+}
+
+/* Example Chips */
+.example-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-top: 0.75rem;
+}
+
+.chip {
+  display: inline-block;
+  padding: 0.3rem 0.75rem;
+  font-size: 0.8rem;
+  background: #e8eaf6;
+  color: #3949ab;
+  border: none;
+  border-radius: 20px;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.chip:hover {
+  background: #c5cae9;
+}
+
+/* Oracle Reference */
+.oracle-reference {
+  margin-top: 1rem;
+  font-size: 0.82rem;
+  color: #666;
+}
+
+/* Results Panel */
+.results-placeholder {
+  color: #888;
+  font-size: 0.9rem;
+}
+
+.match-badge {
+  display: inline-block;
+  padding: 0.25rem 0.75rem;
+  border-radius: 20px;
+  font-size: 0.8rem;
+  font-weight: 600;
+}
+
+.match-badge.match {
+  background: #c8e6c9;
+  color: #2e7d32;
+}
+
+.match-badge.no-match {
+  background: #ffcdd2;
+  color: #c62828;
+}
+
+.transfer-function-display {
+  background: #fafafa;
+  border: 1px solid #e0e0e0;
+  border-radius: 6px;
+  padding: 1rem;
+  margin-top: 0.75rem;
+  font-family: "SF Mono", "Fira Code", "Fira Mono", Menlo, Consolas,
+    "DejaVu Sans Mono", monospace;
+  font-size: 0.85rem;
+  overflow-x: auto;
+}
+
+/* Error display */
+.error-display {
+  color: #c62828;
+  font-size: 0.9rem;
+  margin-top: 0.75rem;
+  padding: 0.75rem;
+  background: #fff5f5;
+  border: 1px solid #ffcdd2;
+  border-radius: 6px;
+}
+
+/* ----------------------------------------------------------
+   Library Tab
+   ---------------------------------------------------------- */
+.library-controls {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-bottom: 1.25rem;
+}
+
+.filter-chip {
+  display: inline-block;
+  padding: 0.35rem 0.9rem;
+  font-size: 0.82rem;
+  font-family: inherit;
+  background: #e0e0e0;
+  color: #444;
+  border: none;
+  border-radius: 20px;
+  cursor: pointer;
+  transition: background 0.2s, color 0.2s;
+}
+
+.filter-chip:hover {
+  background: #bdbdbd;
+}
+
+.filter-chip.active {
+  background: #1a1a2e;
+  color: #fff;
+}
+
+.library-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 1rem;
+}
+
+/* Algorithm Cards */
+.algo-card {
+  background: #fff;
+  border-radius: 8px;
+  padding: 1.25rem;
+  border-left: 4px solid #4285f4;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.06);
+  cursor: pointer;
+  transition: box-shadow 0.2s, transform 0.15s;
+}
+
+.algo-card:hover {
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.12);
+  transform: translateY(-2px);
+}
+
+.algo-card.gradient {
+  border-left-color: #4285f4;
+}
+
+.algo-card.proximal {
+  border-left-color: #34a853;
+}
+
+.algo-card.mixed {
+  border-left-color: #f9ab00;
+}
+
+.algo-card-title {
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: #1a1a2e;
+  margin-bottom: 0.35rem;
+}
+
+.algo-card-meta {
+  font-size: 0.78rem;
+  color: #888;
+}
+
+/* ----------------------------------------------------------
+   About Tab
+   ---------------------------------------------------------- */
+.about-content {
+  max-width: 740px;
+  line-height: 1.75;
+}
+
+.about-content h2 {
+  font-size: 1.5rem;
+  margin-bottom: 0.75rem;
+  color: #1a1a2e;
+}
+
+.about-content h3 {
+  font-size: 1.15rem;
+  margin-top: 1.75rem;
+  margin-bottom: 0.5rem;
+  color: #1a1a2e;
+}
+
+.about-content p {
+  margin-bottom: 0.75rem;
+  color: #333;
+}
+
+.about-content ol {
+  margin: 0.5rem 0 1rem 1.5rem;
+}
+
+.about-content li {
+  margin-bottom: 0.4rem;
+}
+
+.about-content code {
+  font-family: "SF Mono", "Fira Code", "Fira Mono", Menlo, Consolas,
+    "DejaVu Sans Mono", monospace;
+  font-size: 0.88em;
+  background: #f0f0f0;
+  padding: 0.15em 0.4em;
+  border-radius: 4px;
+}
+
+.about-content pre {
+  background: #1a1a2e;
+  color: #e0e0e0;
+  padding: 1rem 1.25rem;
+  border-radius: 8px;
+  overflow-x: auto;
+  margin: 0.75rem 0 1.25rem;
+  line-height: 1.5;
+}
+
+.about-content pre code {
+  background: none;
+  padding: 0;
+  font-size: 0.85rem;
+  color: inherit;
+}
+
+.about-content a {
+  color: #4285f4;
+  text-decoration: none;
+}
+
+.about-content a:hover {
+  text-decoration: underline;
+}
+
+/* Oracle Table */
+.oracle-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 0.75rem 0 1.25rem;
+  font-size: 0.9rem;
+}
+
+.oracle-table th,
+.oracle-table td {
+  text-align: left;
+  padding: 0.6rem 0.75rem;
+  border-bottom: 1px solid #e0e0e0;
+}
+
+.oracle-table th {
+  background: #f5f5f5;
+  font-weight: 600;
+  color: #1a1a2e;
+}
+
+.oracle-table td code {
+  background: #f0f0f0;
+  padding: 0.1em 0.35em;
+  border-radius: 3px;
+}
+
+/* ----------------------------------------------------------
+   Computing pulse animation
+   ---------------------------------------------------------- */
+.computing {
+  animation: pulse 1.5s ease-in-out infinite;
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.4; }
+}
+
+/* ----------------------------------------------------------
+   Responsive — single column below 900px
+   ---------------------------------------------------------- */
+@media (max-width: 900px) {
+  .check-layout {
+    grid-template-columns: 1fr;
+  }
+
+  .library-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .header {
+    flex-direction: column;
+    gap: 0.25rem;
+    text-align: center;
+  }
+
+  .header-left {
+    flex-direction: column;
+    align-items: center;
+    gap: 0.15rem;
+  }
+
+  .header-right {
+    margin-top: 0.25rem;
+  }
+}
