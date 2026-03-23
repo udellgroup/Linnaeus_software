@@ -84,6 +84,26 @@ def check_oracle_equivalence(H1, H2, z, lib_params=None):
         if val.has(z):
             return {'match': False}
 
+    # Check for unsolved fresh Dummy symbols in the solution values.
+    # If the solver returned a parametric solution (e.g., alpha = user_alpha/(gamma+1)
+    # where gamma is free), resolve by setting free Dummies to 0.
+    fresh_set = set(fresh_params)
+    solved_set = set(sol_fresh.keys())
+    free_dummies = fresh_set - solved_set
+
+    # Also check if solved values reference other fresh Dummies
+    for val in sol_fresh.values():
+        free_dummies |= (val.free_symbols & fresh_set)
+    free_dummies -= solved_set  # only truly free ones
+
+    if free_dummies:
+        # Set free Dummies to 0 and re-substitute
+        zero_sub = {d: 0 for d in free_dummies}
+        sol_fresh = {k: v.subs(zero_sub) for k, v in sol_fresh.items()}
+        # Add the zero-valued params explicitly
+        for d in free_dummies:
+            sol_fresh[d] = 0
+
     # Verify substitution works
     for i in range(rows):
         for j in range(cols):
