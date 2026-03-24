@@ -442,12 +442,10 @@ def check_lft_equivalence(H1, H2, M_hat, z, lib_params=None):
             if entry != 0:
                 return {'match': False}
 
-    # Separate library params from user/oracle params
-    lib_param_set = set(lib_params) if lib_params else set()
-    params = {}
-    for k, v in sol.items():
-        if k in lib_param_set:
-            params[k] = v
+    # Return all solved params (library + user + oracle transformation t).
+    # Exclude the oracle transformation parameter t (internal detail).
+    t_sym = symbols('t')
+    params = {k: v for k, v in sol.items() if k != t_sym}
 
     return {'match': True, 'params': params}
 

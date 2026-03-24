@@ -153,22 +153,58 @@ def check_all_equivalences(H_user, user_oracles, library, z_var):
                     continue
 
         if len(user_oracles) == len(lib_oracles) and user_oracles != lib_oracles:
-            # Different oracle types but same count: try LFT
-            try:
-                M_hat = build_block_m_hat(user_oracles, lib_oracles)
-            except ValueError:
-                M_hat = None
-            if M_hat is not None:
-                result = check_lft_equivalence(
-                    H_user, H_lib, M_hat, z_var,
-                    lib_params=algo.get('param_symbols')
-                )
-                if result['match']:
-                    matches.append({
-                        'algorithm': algo,
-                        'type': 'lft',
-                        'details': result,
-                    })
+            # Different oracle types but same count: try LFT.
+            # Try all permutations of library oracles and shift vectors,
+            # since equivalence may require permutation + LFT + shift.
+            import itertools
+            p = len(lib_oracles)
+            MAX_SHIFT = 2
+            tried_orderings = set()
+            found_lft = False
+            for perm_indices in itertools.permutations(range(p)):
+                if found_lft:
+                    break
+                perm_lib_oracles = [lib_oracles[i] for i in perm_indices]
+                key = tuple(perm_lib_oracles)
+                if key in tried_orderings:
+                    continue
+                tried_orderings.add(key)
+                try:
+                    M_hat = build_block_m_hat(user_oracles, perm_lib_oracles)
+                except ValueError:
+                    continue
+                perm_list = list(perm_indices)
+                H_lib_perm = _permute_tf(H_lib, perm_list) \
+                    if perm_list != list(range(p)) else H_lib
+
+                # Try LFT with each candidate shift vector applied to H_lib
+                for shifts in itertools.product(
+                        range(-MAX_SHIFT, MAX_SHIFT + 1), repeat=p - 1):
+                    m = [0] + list(shifts)
+                    # Apply shift: H_lib_shifted[i,j] = z^{m_i-m_j} * H_lib_perm[i,j]
+                    from sympy import zeros as _zeros
+                    H_lib_shifted = _zeros(p, p)
+                    for i in range(p):
+                        for j in range(p):
+                            H_lib_shifted[i, j] = \
+                                z_var**(m[i] - m[j]) * H_lib_perm[i, j]
+                    result = check_lft_equivalence(
+                        H_user, H_lib_shifted, M_hat, z_var,
+                        lib_params=algo.get('param_symbols')
+                    )
+                    if result['match']:
+                        # Normalize shift
+                        min_m = min(m)
+                        m_norm = [mi - min_m for mi in m]
+                        if any(mi != 0 for mi in m_norm):
+                            result['shift_vector'] = m_norm
+                        matches.append({
+                            'algorithm': algo,
+                            'type': 'lft',
+                            'details': result,
+                        })
+                        found_lft = True
+                        break
 
     # Sort: oracle first, then shift, then lft
     type_order = {'oracle': 0, 'shift': 1, 'lft': 2}
