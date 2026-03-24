@@ -243,8 +243,13 @@ def check_shift_equivalence(H1, H2, z, lib_params=None):
             if h1_zero != h2_zero:
                 return {'match': False, 'shift_vector': None}
 
-    # For nonzero off-diagonal entries, compute ratio and extract z-power
+    # For nonzero off-diagonal entries, compute ratio and extract z-power.
+    # If ratios still contain free parameters (user params), try to solve
+    # for parameter values that make each ratio a pure z-power.
     b = {}
+    extra_param_equations = []
+    free_in_ratios = set()
+
     for i in range(p):
         for j in range(p):
             if i == j:
@@ -253,9 +258,65 @@ def check_shift_equivalence(H1, H2, z, lib_params=None):
                 continue
             ratio = cancel(H1[i, j] / H2_resolved[i, j])
             power = _extract_z_power(ratio, z)
-            if power is None:
+            if power is not None:
+                b[(i, j)] = power
+                continue
+
+            # Ratio has free params — try to find z-power by solving for them.
+            # Express ratio as polynomial/polynomial in z, then try z^m for
+            # small m: set ratio = z^m and collect coefficient equations.
+            ratio_free = ratio.free_symbols - {z}
+            if not ratio_free:
                 return {'match': False, 'shift_vector': None}
-            b[(i, j)] = power
+            free_in_ratios |= ratio_free
+
+            found = False
+            for m_try in range(-p, p + 1):
+                diff = cancel(ratio - z**m_try)
+                if diff == 0:
+                    b[(i, j)] = m_try
+                    found = True
+                    break
+                num_diff = numer(diff)
+                try:
+                    poly_diff = Poly(num_diff, z)
+                    coeffs = poly_diff.all_coeffs()
+                except Exception:
+                    coeffs = [num_diff]
+                # Check if setting these coefficients to zero is consistent
+                try:
+                    trial_sol = solve(coeffs, list(ratio_free), dict=True)
+                except Exception:
+                    continue
+                if trial_sol and all(not v.has(z) for v in trial_sol[0].values()):
+                    extra_param_equations.extend(coeffs)
+                    b[(i, j)] = m_try
+                    found = True
+                    break
+            if not found:
+                return {'match': False, 'shift_vector': None}
+
+    # If off-diagonal constraints added equations for user params, solve them
+    if extra_param_equations and free_in_ratios:
+        try:
+            extra_sol = solve(extra_param_equations, list(free_in_ratios), dict=True)
+        except Exception:
+            return {'match': False, 'shift_vector': None}
+        if not extra_sol:
+            return {'match': False, 'shift_vector': None}
+        user_param_sol = extra_sol[0]
+        # Verify no z in solution
+        for val in user_param_sol.values():
+            if val.has(z):
+                return {'match': False, 'shift_vector': None}
+        # Add user param values to param_solution and re-substitute
+        param_solution.update(user_param_sol)
+        # Verify the full substitution works for diagonals too
+        H1_sub = H1.subs(user_param_sol)
+        H2_sub = H2_resolved.subs(user_param_sol)
+        for i in range(p):
+            if cancel(H1_sub[i, i] - H2_sub[i, i]) != 0:
+                return {'match': False, 'shift_vector': None}
 
     # Solve for m_i - m_j = b[i,j] consistently
     m = [None] * p
