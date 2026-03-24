@@ -13,6 +13,91 @@ ORACLE_CALL_PATTERN = re.compile(r'(\w+)\(([^)]+)\)')
 
 MAX_EQUATIONS = 20  # Guard against pathological input
 
+# Pattern for a simple variable reference as a full match (for oracle arg parsing)
+SIMPLE_VAR_REF = re.compile(r'(\w+)\[k([+-]\d+)?\]$')
+
+
+def _merge_shifted_oracles(equations):
+    """Pre-process equations to merge shifted oracle calls into single oracles.
+
+    Detects when the same oracle function is called at different time shifts of
+    the same variable (e.g., grad_f(q[k]) and grad_f(q[k-1])) and rewrites the
+    equations to use a single oracle with shifted output references.
+
+    For example:
+        grad_f(q[k-1]) and grad_f(q[k]) in the same system
+    become:
+        __orcl_1[k] = grad_f(q[k])   (new equation)
+        ...with grad_f(q[k-1]) replaced by __orcl_1[k-1] in original equations
+    """
+    # Collect all oracle calls with parsed arguments
+    # Key: (func_name, var_name) -> list of (offset, original_text)
+    oracle_groups = {}
+
+    for eq_str in equations:
+        for match in ORACLE_CALL_PATTERN.finditer(eq_str):
+            func_name = match.group(1)
+            if func_name not in KNOWN_ORACLES:
+                continue
+            arg_str = match.group(2).strip()
+            orig_text = match.group(0)
+
+            # Only merge when argument is a simple variable reference
+            var_match = SIMPLE_VAR_REF.match(arg_str)
+            if var_match:
+                var_name = var_match.group(1)
+                offset = int(var_match.group(2)) if var_match.group(2) else 0
+                key = (func_name, var_name)
+                if key not in oracle_groups:
+                    oracle_groups[key] = []
+                # Avoid duplicate entries for same original text
+                if not any(o[1] == orig_text for o in oracle_groups[key]):
+                    oracle_groups[key].append((offset, orig_text))
+
+    # Find groups with multiple distinct offsets (shifted oracle calls)
+    merges = {}  # original_text -> replacement_text
+    extra_equations = []
+    merge_counter = 0
+
+    for (func_name, var_name), calls in oracle_groups.items():
+        offsets = set(c[0] for c in calls)
+        if len(offsets) <= 1:
+            continue  # All calls at same offset, nothing to merge
+
+        merge_counter += 1
+        orcl_var = f'__orcl_{merge_counter}'
+
+        # Base offset: prefer 0, otherwise use the maximum
+        base_offset = 0 if 0 in offsets else max(offsets)
+
+        # Format offset string for variable references
+        def _offset_str(off):
+            if off == 0:
+                return '[k]'
+            return f'[k{off:+d}]'
+
+        # Add equation defining the oracle variable at base offset
+        base_arg = f'{var_name}{_offset_str(base_offset)}'
+        extra_equations.append(
+            f'{orcl_var}{_offset_str(base_offset)} = {func_name}({base_arg})'
+        )
+
+        # Build replacement map for each call
+        for offset, orig_text in calls:
+            merges[orig_text] = f'{orcl_var}{_offset_str(offset)}'
+
+    if not merges:
+        return equations
+
+    # Rewrite original equations (NOT the extra equations)
+    new_equations = []
+    for eq_str in equations:
+        for orig, repl in merges.items():
+            eq_str = eq_str.replace(orig, repl)
+        new_equations.append(eq_str)
+
+    return extra_equations + new_equations
+
 
 def parse_equations(equations):
     """Parse iterative equations into z-domain format for compute_transfer_function.
@@ -24,6 +109,9 @@ def parse_equations(equations):
         dict with keys: state_vars, oracle_inputs, oracle_outputs,
         oracle_types, z_equations, parameters
     """
+    # Pre-process: merge shifted oracle calls into single oracles
+    equations = _merge_shifted_oracles(equations)
+
     if not equations:
         raise ValueError("No equations provided. Enter at least one update equation.")
     if len(equations) > MAX_EQUATIONS:

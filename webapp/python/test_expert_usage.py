@@ -705,3 +705,58 @@ class TestLinearTransformations:
         from sympy import symbols
         alpha = symbols('alpha')
         assert gd['details']['params'][alpha] == 2 * alpha
+
+
+class TestOracleReuse:
+    """Test recognition of trivial oracle re-use (shifted oracle calls)."""
+
+    def test_nesterov_with_reused_gradient(self):
+        """Nesterov's method written with explicit gradient re-use.
+
+        v[k+1] = beta*(v[k] + alpha*grad_f(q[k-1]) - alpha*grad_f(q[k])) - alpha*grad_f(q[k])
+        q[k+1] = q[k] + v[k+1]
+
+        Here grad_f(q[k-1]) is the previous iteration's gradient of grad_f(q[k]),
+        not a separate oracle. The parser should detect this and merge them into
+        one oracle, enabling a match to Nesterov's Accelerated Method.
+        """
+        H, matches = run_pipeline([
+            "v[k+1] = beta*(v[k] + alpha*grad_f(q[k-1]) - alpha*grad_f(q[k])) - alpha*grad_f(q[k])",
+            "q[k+1] = q[k] + v[k+1]",
+        ])
+        names = [m['algorithm']['name'] for m in matches]
+        assert "Nesterov's Accelerated Method" in names, (
+            f"Expected Nesterov's Accelerated Method in matches, got: {names}"
+        )
+
+    def test_oracle_merge_preserves_non_shifted(self):
+        """Oracle calls to different variables should NOT be merged.
+
+        grad_f(x[k]) and grad_f(y[k]) are distinct oracles even though
+        the function name is the same.
+        """
+        from parser import _merge_shifted_oracles
+        equations = [
+            "x[k+1] = x[k] - alpha * grad_f(x[k])",
+            "y[k+1] = y[k] - beta * grad_f(y[k])",
+        ]
+        result = _merge_shifted_oracles(equations)
+        # Should be unchanged — different argument variables
+        assert result == equations
+
+    def test_oracle_merge_simple_shift(self):
+        """Verify pre-processing correctly rewrites shifted oracle calls."""
+        from parser import _merge_shifted_oracles
+        equations = [
+            "v[k+1] = v[k] + alpha*grad_f(q[k-1]) - alpha*grad_f(q[k])",
+            "q[k+1] = q[k] + v[k+1]",
+        ]
+        result = _merge_shifted_oracles(equations)
+        # Should have 3 equations: the new oracle def + 2 rewritten originals
+        assert len(result) == 3
+        # First equation defines the oracle variable
+        assert 'grad_f(q[k])' in result[0]
+        assert '__orcl_' in result[0]
+        # Original oracle calls should be replaced
+        assert 'grad_f' not in result[1]
+        assert 'grad_f' not in result[2]
