@@ -11,6 +11,32 @@ VAR_REF_PATTERN = re.compile(r'(\w+)\[k([+-]\d+)?\]')
 ORACLE_CALL_PATTERN = re.compile(r'(\w+)\(([^)]+)\)')
 
 
+def _find_oracle_calls(eq_str):
+    """Find known oracle calls in eq_str, handling arbitrarily nested parentheses.
+
+    Returns list of (func_name, arg_str, orig_text).
+    """
+    results = []
+    for oracle in KNOWN_ORACLES:
+        for m in re.finditer(r'\b' + oracle + r'\(', eq_str):
+            paren_start = m.end() - 1
+            depth = 0
+            j = paren_start
+            while j < len(eq_str):
+                if eq_str[j] == '(':
+                    depth += 1
+                elif eq_str[j] == ')':
+                    depth -= 1
+                    if depth == 0:
+                        break
+                j += 1
+            if depth == 0:
+                orig_text = eq_str[m.start():j + 1]
+                arg_str = eq_str[paren_start + 1:j].strip()
+                results.append((oracle, arg_str, orig_text))
+    return results
+
+
 MAX_EQUATIONS = 20  # Guard against pathological input
 
 # Pattern for a simple variable reference as a full match (for oracle arg parsing)
@@ -35,12 +61,7 @@ def _merge_shifted_oracles(equations):
     oracle_groups = {}
 
     for eq_str in equations:
-        for match in ORACLE_CALL_PATTERN.finditer(eq_str):
-            func_name = match.group(1)
-            if func_name not in KNOWN_ORACLES:
-                continue
-            arg_str = match.group(2).strip()
-            orig_text = match.group(0)
+        for func_name, arg_str, orig_text in _find_oracle_calls(eq_str):
 
             # Only merge when argument is a simple variable reference
             var_match = SIMPLE_VAR_REF.match(arg_str)
@@ -168,14 +189,10 @@ def parse_equations(equations):
 
         # Extract oracle calls (deduplicate by original text, since the same
         # oracle called on the same argument in multiple equations is one oracle)
-        for match in ORACLE_CALL_PATTERN.finditer(eq_str):
-            func_name = match.group(1)
-            if func_name in KNOWN_ORACLES:
-                orig_text = match.group(0)
-                if orig_text not in oracle_calls_seen:
-                    arg_str = match.group(2)
-                    oracle_calls.append((func_name, arg_str, orig_text))
-                    oracle_calls_seen.add(orig_text)
+        for func_name, arg_str, orig_text in _find_oracle_calls(eq_str):
+            if orig_text not in oracle_calls_seen:
+                oracle_calls.append((func_name, arg_str, orig_text))
+                oracle_calls_seen.add(orig_text)
 
     # Classify variables
     # State: appears at [k+1] (LHS target) or at multiple offsets

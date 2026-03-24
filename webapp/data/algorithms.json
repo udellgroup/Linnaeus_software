@@ -200,14 +200,11 @@
     "oracles": ["prox_f", "prox_gstar"],
     "oracleType": "proximal",
     "equations": [
-      "x1[k+1] = prox_f(x3[k] - tau * x4[k])",
-      "w[k] = x4[k] + 2 * sigma * x1[k+1] - sigma * x3[k]",
-      "x2[k+1] = prox_gstar(w[k])",
-      "x3[k+1] = x3[k] + theta * x1[k+1] - theta * x3[k]",
-      "x4[k+1] = x4[k] + theta * x2[k+1] - theta * x4[k]"
+      "x1[k+1] = prox_f(x1[k] - tau * x2[k])",
+      "x2[k+1] = prox_gstar(x2[k] + sigma * ((1 + theta) * x1[k+1] - theta * x1[k]))"
     ],
     "parameters": ["sigma", "tau", "theta"],
-    "transferFunction": "Matrix([[theta/(theta + z - 1), -tau*theta/(theta + z - 1)], [(sigma*theta + 2*sigma*z - 2*sigma)/(theta + z - 1), theta/(theta + z - 1)]])",
+    "transferFunction": "Matrix([[1/z, -tau/z], [(sigma*theta*z + sigma*z - sigma*theta)/z, 1/z]])",
     "tfIsMatrix": true,
     "equivalences": { "oracle": [], "shift": [], "lft": [] },
     "catalogOnly": false
