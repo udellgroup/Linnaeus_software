@@ -112,44 +112,30 @@ function displayResults(result) {
       card.appendChild(libTf);
     }
 
-    // Parameter mapping — filter trivial identities, disambiguate collisions
+    // Parameter mapping — tuple format: (p1, p2, ...) \mapsfrom (v1, v2, ...)
     if (match.params && Object.keys(match.params).length > 0) {
-      const userParams = result.user_params || [];
-      const algoName = match.name || 'library';
+      const entries = Object.entries(match.params);
 
-      // Filter out trivial identities (e.g., α = α) — they convey no information
-      const entries = Object.entries(match.params).filter(([k, v]) => k !== v);
+      const paramDiv = document.createElement('div');
+      paramDiv.style.cssText =
+        'margin-top:0.5rem;padding:0.5rem 0.75rem;background:#f0f4ff;' +
+        'border:1px solid #c5cae9;border-radius:4px;';
+      const paramLabel = document.createElement('div');
+      paramLabel.style.cssText = 'font-size:0.78rem;color:#666;margin-bottom:0.25rem;font-weight:600;';
+      paramLabel.textContent = 'Parameter mapping:';
+      paramDiv.appendChild(paramLabel);
 
-      if (entries.length > 0) {
-        const paramDiv = document.createElement('div');
-        paramDiv.style.cssText =
-          'margin-top:0.5rem;padding:0.5rem 0.75rem;background:#f0f4ff;' +
-          'border:1px solid #c5cae9;border-radius:4px;';
-        const paramLabel = document.createElement('div');
-        paramLabel.style.cssText = 'font-size:0.78rem;color:#666;margin-bottom:0.25rem;font-weight:600;';
-        paramLabel.textContent = 'Equivalent when:';
-        paramDiv.appendChild(paramLabel);
-
-        const paramMath = document.createElement('div');
-        const paramLatex = entries
-          .map(([k, v]) => {
-            // If user has a param with the same name as this library param,
-            // prefix with algorithm name to disambiguate
-            if (userParams.includes(k)) {
-              return '\\text{' + algoName + "\\textquotesingle s } " + k + ' = ' + v;
-            }
-            return k + ' = ' + v;
-          })
-          .join(', \\quad ');
-        try {
-          katex.render(paramLatex, paramMath, { throwOnError: false, displayMode: false });
-        } catch (e) {
-          paramMath.textContent = entries
-            .map(([k, v]) => k + ' = ' + v).join(', ');
-        }
-        paramDiv.appendChild(paramMath);
-        card.appendChild(paramDiv);
+      const paramMath = document.createElement('div');
+      const keys = entries.map(([k]) => k).join(', ');
+      const vals = entries.map(([, v]) => v).join(', ');
+      const paramLatex = '(' + keys + ') \\leftarrow (' + vals + ')';
+      try {
+        katex.render(paramLatex, paramMath, { throwOnError: false, displayMode: false });
+      } catch (e) {
+        paramMath.textContent = '(' + keys + ') <- (' + vals + ')';
       }
+      paramDiv.appendChild(paramMath);
+      card.appendChild(paramDiv);
     }
 
     // Shift vector
@@ -168,11 +154,11 @@ function displayResults(result) {
     explanation.style.cssText = 'font-size:0.82rem;color:#666;margin-top:0.5rem;font-style:italic;';
     const explanations = {
       oracle:
-        'Your algorithm produces identical iterates to this library entry (for matching parameter values).',
+        'Produces identical iterates for matching parameter values.',
       shift:
-        'Your algorithm is a shifted version of this library entry — it computes the same iterates but at different indices.',
+        'Same iterates as this entry, offset by a fixed index.',
       lft:
-        'Your algorithm is related to this library entry via a linear fractional transformation of the oracle.',
+        'Equivalent via a linear fractional transformation of the oracle.',
     };
     explanation.textContent = explanations[match.type] || '';
     card.appendChild(explanation);
