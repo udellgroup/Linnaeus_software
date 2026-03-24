@@ -112,41 +112,44 @@ function displayResults(result) {
       card.appendChild(libTf);
     }
 
-    // Parameter mapping — always show when present so user can judge
+    // Parameter mapping — filter trivial identities, disambiguate collisions
     if (match.params && Object.keys(match.params).length > 0) {
-      const paramDiv = document.createElement('div');
-      paramDiv.style.cssText =
-        'margin-top:0.5rem;padding:0.5rem 0.75rem;background:#f0f4ff;' +
-        'border:1px solid #c5cae9;border-radius:4px;';
-      const paramLabel = document.createElement('div');
-      paramLabel.style.cssText = 'font-size:0.78rem;color:#666;margin-bottom:0.25rem;font-weight:600;';
-      paramLabel.textContent = 'Equivalent when:';
-      paramDiv.appendChild(paramLabel);
-
-      const paramMath = document.createElement('div');
-      // Approach A: disambiguate only params whose name collides
-      // between user and library and whose value is not a trivial identity
       const userParams = result.user_params || [];
       const algoName = match.name || 'library';
-      const paramLatex = Object.entries(match.params)
-        .map(([k, v]) => {
-          // Check if this library param name also exists in user's params
-          // and the value is not trivially equal (k = k)
-          const needsDisambiguation = userParams.includes(k) && k !== v;
-          if (needsDisambiguation) {
-            return '\\text{Your } ' + v + ' = \\text{' + algoName + "'s } " + k;
-          }
-          return k + ' = ' + v;
-        })
-        .join(', \\quad ');
-      try {
-        katex.render(paramLatex, paramMath, { throwOnError: false, displayMode: false });
-      } catch (e) {
-        paramMath.textContent = Object.entries(match.params)
-          .map(([k, v]) => k + ' = ' + v).join(', ');
+
+      // Filter out trivial identities (e.g., α = α) — they convey no information
+      const entries = Object.entries(match.params).filter(([k, v]) => k !== v);
+
+      if (entries.length > 0) {
+        const paramDiv = document.createElement('div');
+        paramDiv.style.cssText =
+          'margin-top:0.5rem;padding:0.5rem 0.75rem;background:#f0f4ff;' +
+          'border:1px solid #c5cae9;border-radius:4px;';
+        const paramLabel = document.createElement('div');
+        paramLabel.style.cssText = 'font-size:0.78rem;color:#666;margin-bottom:0.25rem;font-weight:600;';
+        paramLabel.textContent = 'Equivalent when:';
+        paramDiv.appendChild(paramLabel);
+
+        const paramMath = document.createElement('div');
+        const paramLatex = entries
+          .map(([k, v]) => {
+            // If user has a param with the same name as this library param,
+            // prefix with algorithm name to disambiguate
+            if (userParams.includes(k)) {
+              return '\\text{' + algoName + "\\textquotesingle s } " + k + ' = ' + v;
+            }
+            return k + ' = ' + v;
+          })
+          .join(', \\quad ');
+        try {
+          katex.render(paramLatex, paramMath, { throwOnError: false, displayMode: false });
+        } catch (e) {
+          paramMath.textContent = entries
+            .map(([k, v]) => k + ' = ' + v).join(', ');
+        }
+        paramDiv.appendChild(paramMath);
+        card.appendChild(paramDiv);
       }
-      paramDiv.appendChild(paramMath);
-      card.appendChild(paramDiv);
     }
 
     // Shift vector

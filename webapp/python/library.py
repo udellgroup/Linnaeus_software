@@ -12,7 +12,14 @@ PARAM_NAMES = [
     'sigma', 'tau', 'theta', 'lam',
     't', 's',
 ]
-PARAMS = {name: symbols(name) for name in PARAM_NAMES}
+PARAMS = {}
+for name in PARAM_NAMES:
+    if name == 'lam':
+        # Use Symbol('lambda') so latex() renders as \lambda.
+        # 'lam' is used in JSON because 'lambda' is a Python keyword.
+        PARAMS[name] = symbols('lambda')
+    else:
+        PARAMS[name] = symbols(name)
 
 
 def load_library(json_path):
