@@ -143,27 +143,25 @@ function renderLibraryCards(data) {
       card.appendChild(eqDiv);
     }
 
-    // Transfer function (simple text rendering)
-    if (algo.transferFunction && !algo.catalogOnly) {
+    // Transfer function — rendered with KaTeX in display mode
+    if (algo.tf_latex && !algo.catalogOnly) {
       const tfDiv = document.createElement('div');
-      tfDiv.style.cssText = 'margin-top:0.5rem;font-size:0.82rem;overflow-x:auto;';
-      const tfMath = document.createElement('span');
+      tfDiv.className = 'transfer-function-display';
+      tfDiv.style.marginTop = '0.6rem';
 
-      if (algo.tfIsMatrix) {
-        // For matrix TFs, just show text representation
-        tfMath.style.cssText = 'font-family:"SF Mono","Fira Code",Menlo,monospace;font-size:0.75rem;color:#555;';
-        tfMath.textContent = 'H(z) = [matrix]';
-      } else {
-        // Scalar TF: render with KaTeX via sympy2Latex
-        const latexStr = sympy2Latex(algo.transferFunction);
-        try {
-          katex.render('H(z) = ' + latexStr, tfMath, {
-            throwOnError: false,
-            displayMode: false,
-          });
-        } catch (e) {
-          tfMath.textContent = 'H(z) = ' + algo.transferFunction;
-        }
+      const tfLabel = document.createElement('div');
+      tfLabel.style.cssText = 'font-size:0.75rem;color:#888;margin-bottom:0.25rem;';
+      tfLabel.textContent = 'Transfer function';
+      tfDiv.appendChild(tfLabel);
+
+      const tfMath = document.createElement('div');
+      try {
+        katex.render('H(z) = ' + algo.tf_latex, tfMath, {
+          throwOnError: false,
+          displayMode: true,
+        });
+      } catch (e) {
+        tfMath.textContent = 'H(z) = ' + algo.tf_latex;
       }
       tfDiv.appendChild(tfMath);
       card.appendChild(tfDiv);
