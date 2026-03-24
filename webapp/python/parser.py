@@ -130,6 +130,11 @@ def parse_equations(equations):
         dict with keys: state_vars, oracle_inputs, oracle_outputs,
         oracle_types, z_equations, parameters
     """
+    # Normalize 'lambda' -> 'lam': 'lambda' is a Python keyword and breaks
+    # parse_expr; 'lam' is the canonical internal name (mapped to Symbol('lambda')
+    # for correct LaTeX rendering, consistent with library.py).
+    equations = [re.sub(r'\blambda\b', 'lam', eq) for eq in equations]
+
     # Pre-process: merge shifted oracle calls into single oracles
     equations = _merge_shifted_oracles(equations)
 
@@ -290,7 +295,7 @@ def parse_equations(equations):
         for tok in tokens:
             if tok not in {'VAR_PLACEHOLDER', 'ORACLE_PLACEHOLDER', 'k'}:
                 parameters.add(tok)
-                all_syms[tok] = symbols(tok)
+                all_syms[tok] = symbols('lambda' if tok == 'lam' else tok)
 
     # Also scan oracle arguments for parameters (e.g., tau in prox_f(x - tau*y))
     for orig_text, (u_name, y_name, arg_str) in oracle_map.items():
@@ -303,7 +308,7 @@ def parse_equations(equations):
             if (tok not in {'VAR_PLACEHOLDER', 'ORACLE_PLACEHOLDER', 'k'}
                     and tok not in known_names):
                 parameters.add(tok)
-                all_syms[tok] = symbols(tok)
+                all_syms[tok] = symbols('lambda' if tok == 'lam' else tok)
 
     # Now process each equation into z-domain
     z_equations = []
