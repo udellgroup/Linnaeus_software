@@ -194,19 +194,23 @@
   {
     "id": "chambolle_pock",
     "name": "Chambolle-Pock",
-    "aliases": [],
+    "aliases": ["Primal-Dual Algorithm"],
     "citation": "Chambolle & Pock 2011",
-    "oracles": ["prox_f", "prox_g"],
+    "notes": "Shown for the case where the linear operator is the identity (L = I). Parameters sigma and tau are the primal and dual step sizes; theta is the relaxation parameter.",
+    "oracles": ["prox_f", "prox_gstar"],
     "oracleType": "proximal",
     "equations": [
-      "x[k+1] = prox_f(x[k] - sigma * L * y[k])",
-      "y[k+1] = prox_g(y[k] + tau * L^T * (2*x[k+1] - x[k]))"
+      "x1[k+1] = prox_f(x3[k] - tau * x4[k])",
+      "w[k] = x4[k] + 2 * sigma * x1[k+1] - sigma * x3[k]",
+      "x2[k+1] = prox_gstar(w[k])",
+      "x3[k+1] = x3[k] + theta * x1[k+1] - theta * x3[k]",
+      "x4[k+1] = x4[k] + theta * x2[k+1] - theta * x4[k]"
     ],
-    "parameters": [],
-    "transferFunction": "",
-    "tfIsMatrix": false,
+    "parameters": ["sigma", "tau", "theta"],
+    "transferFunction": "Matrix([[theta/(theta + z - 1), -tau*theta/(theta + z - 1)], [(sigma*theta + 2*sigma*z - 2*sigma)/(theta + z - 1), theta/(theta + z - 1)]])",
+    "tfIsMatrix": true,
     "equivalences": { "oracle": [], "shift": [], "lft": [] },
-    "catalogOnly": true
+    "catalogOnly": false
   },
   {
     "id": "proximal_gradient",
@@ -245,16 +249,22 @@
   {
     "id": "davis_yin",
     "name": "Davis-Yin Splitting",
-    "aliases": [],
-    "citation": "",
-    "oracles": ["grad_f", "prox_f", "prox_g"],
+    "aliases": ["Three-Operator Splitting"],
+    "citation": "Davis & Yin 2017",
+    "notes": "Minimizes f(x) + g(x) + h(x) where h is smooth (grad_f oracle) and f, g have proximal operators (prox_f, prox_g). Parameter gamma is the proximal step size; t is the relaxation parameter.",
+    "oracles": ["prox_g", "grad_f", "prox_f"],
     "oracleType": "mixed",
-    "equations": [],
-    "parameters": [],
-    "transferFunction": "",
-    "tfIsMatrix": false,
+    "equations": [
+      "xB[k+1] = prox_g(x[k])",
+      "v[k] = 2 * xB[k+1] - x[k] - gamma * grad_f(xB[k+1])",
+      "xA[k+1] = prox_f(v[k])",
+      "x[k+1] = x[k] + t * xA[k+1] - t * xB[k+1]"
+    ],
+    "parameters": ["gamma", "t"],
+    "transferFunction": "Matrix([[-t/(z - 1), 0, t/(z - 1)], [1, 0, 0], [(t + 2*z - 2)/(z - 1), -gamma, -t/(z - 1)]])",
+    "tfIsMatrix": true,
     "equivalences": { "oracle": [], "shift": [], "lft": [] },
-    "catalogOnly": true
+    "catalogOnly": false
   },
   {
     "id": "extragradient",
@@ -277,70 +287,95 @@
     "id": "extragradient_korpelevich",
     "name": "Extragradient (Korpelevich-Antipin)",
     "aliases": [],
-    "citation": "",
-    "oracles": ["grad_f", "proj_C"],
-    "oracleType": "gradient",
-    "equations": [],
-    "parameters": [],
-    "transferFunction": "",
-    "tfIsMatrix": false,
+    "citation": "Korpelevich 1976",
+    "notes": "Projection onto the constraint set C is modeled as prox_g where g is the indicator function of C.",
+    "oracles": ["grad_f", "prox_g", "grad_f", "prox_g"],
+    "oracleType": "mixed",
+    "equations": [
+      "w1[k] = x[k] - t * grad_f(x[k])",
+      "y[k] = prox_g(w1[k])",
+      "w2[k] = x[k] - t * grad_f(y[k])",
+      "x[k+1] = prox_g(w2[k])"
+    ],
+    "parameters": ["t"],
+    "transferFunction": "Matrix([[0, 0, 0, 1/z], [-t, 0, 0, 1/z], [0, 1, 0, 0], [0, 0, -t, 1/z]])",
+    "tfIsMatrix": true,
     "equivalences": { "oracle": [], "shift": [], "lft": [] },
-    "catalogOnly": true
+    "catalogOnly": false
   },
   {
     "id": "extragradient_tseng",
     "name": "Extragradient (Tseng)",
-    "aliases": [],
-    "citation": "",
-    "oracles": ["grad_f", "proj_C"],
-    "oracleType": "gradient",
-    "equations": [],
-    "parameters": [],
-    "transferFunction": "",
-    "tfIsMatrix": false,
+    "aliases": ["Forward-Backward-Forward"],
+    "citation": "Tseng 2000",
+    "notes": "Projection onto the constraint set C is modeled as prox_g where g is the indicator function of C.",
+    "oracles": ["grad_f", "prox_g", "grad_f"],
+    "oracleType": "mixed",
+    "equations": [
+      "w[k] = x[k] - t * grad_f(x[k])",
+      "y[k+1] = prox_g(w[k])",
+      "x[k+1] = y[k+1] + t * grad_f(x[k]) - t * grad_f(y[k+1])"
+    ],
+    "parameters": ["t"],
+    "transferFunction": "Matrix([[t/z, 1/z, -t/z], [(-t*z + t)/z, 1/z, -t/z], [0, 1, 0]])",
+    "tfIsMatrix": true,
     "equivalences": { "oracle": [], "shift": [], "lft": [] },
-    "catalogOnly": true
+    "catalogOnly": false
   },
   {
     "id": "extragradient_malitsky",
     "name": "Extragradient (Malitsky / Reflected Gradient)",
-    "aliases": [],
-    "citation": "",
-    "oracles": ["grad_f", "proj_C"],
-    "oracleType": "gradient",
-    "equations": [],
-    "parameters": [],
-    "transferFunction": "",
-    "tfIsMatrix": false,
+    "aliases": ["Reflected Gradient Method"],
+    "citation": "Malitsky 2015",
+    "notes": "Projection onto the constraint set C is modeled as prox_g where g is the indicator function of C.",
+    "oracles": ["grad_f", "prox_g"],
+    "oracleType": "mixed",
+    "equations": [
+      "y[k] = 2 * x1[k] - x2[k]",
+      "x2[k+1] = x1[k]",
+      "w[k] = x1[k] - t * grad_f(y[k])",
+      "x1[k+1] = prox_g(w[k])"
+    ],
+    "parameters": ["t"],
+    "transferFunction": "Matrix([[0, (2*z - 1)/z**2], [-t, 1/z]])",
+    "tfIsMatrix": true,
     "equivalences": { "oracle": [], "shift": [], "lft": [] },
-    "catalogOnly": true
+    "catalogOnly": false
   },
   {
     "id": "nids",
     "name": "NIDS",
     "aliases": [],
-    "citation": "",
+    "citation": "Li et al. 2019",
+    "notes": "Decentralized algorithm. Parameter lam represents an eigenvalue of the mixing matrix W; the transfer function characterizes behavior per spectral mode.",
     "oracles": ["grad_f"],
     "oracleType": "gradient",
-    "equations": [],
-    "parameters": [],
-    "transferFunction": "",
+    "equations": [
+      "x[k+1] = 2 * lam * x[k] - lam * x[k-1] - lam * alpha * grad_f(x[k]) + lam * alpha * grad_f(x[k-1])"
+    ],
+    "parameters": ["alpha", "lam"],
+    "transferFunction": "-alpha*lam*(z - 1)/(z**2 - 2*lam*z + lam)",
     "tfIsMatrix": false,
-    "equivalences": { "oracle": [], "shift": [], "lft": [] },
-    "catalogOnly": true
+    "equivalences": { "oracle": ["exact_diffusion"], "shift": [], "lft": [] },
+    "catalogOnly": false
   },
   {
     "id": "exact_diffusion",
     "name": "Exact Diffusion",
     "aliases": [],
-    "citation": "",
+    "citation": "Yuan et al. 2018",
+    "notes": "Decentralized algorithm using adapt-correct-combine steps. Parameter lam represents an eigenvalue of the mixing matrix W; the transfer function characterizes behavior per spectral mode. Oracle-equivalent to NIDS.",
     "oracles": ["grad_f"],
     "oracleType": "gradient",
-    "equations": [],
-    "parameters": [],
-    "transferFunction": "",
+    "equations": [
+      "x[k+1] = w[k] - alpha * grad_f(w[k])",
+      "y[k] = x[k+1] + w[k] - x[k]",
+      "w[k+1] = lam * y[k]"
+    ],
+    "parameters": ["alpha", "lam"],
+    "transferFunction": "-alpha*lam*(z - 1)/(z**2 - 2*lam*z + lam)",
     "tfIsMatrix": false,
-    "equivalences": { "oracle": [], "shift": [], "lft": [] },
-    "catalogOnly": true
+    "equivalences": { "oracle": ["nids"], "shift": [], "lft": [] },
+    "catalogOnly": false
   }
 ]

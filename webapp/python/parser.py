@@ -275,6 +275,19 @@ def parse_equations(equations):
                 parameters.add(tok)
                 all_syms[tok] = symbols(tok)
 
+    # Also scan oracle arguments for parameters (e.g., tau in prox_f(x - tau*y))
+    for orig_text, (u_name, y_name, arg_str) in oracle_map.items():
+        cleaned_arg = VAR_REF_PATTERN.sub('VAR_PLACEHOLDER', arg_str)
+        # Remove any nested oracle references (already replaced by oracle merging)
+        for ot in oracle_map:
+            cleaned_arg = cleaned_arg.replace(ot, 'ORACLE_PLACEHOLDER')
+        tokens = re.findall(r'[a-zA-Z_]\w*', cleaned_arg)
+        for tok in tokens:
+            if (tok not in {'VAR_PLACEHOLDER', 'ORACLE_PLACEHOLDER', 'k'}
+                    and tok not in known_names):
+                parameters.add(tok)
+                all_syms[tok] = symbols(tok)
+
     # Now process each equation into z-domain
     z_equations = []
 

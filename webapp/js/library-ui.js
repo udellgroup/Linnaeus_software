@@ -12,7 +12,11 @@ function sympy2Latex(s) {
     .replace(/\bgamma\b/g, '\\gamma')
     .replace(/\bdelta\b/g, '\\delta')
     .replace(/\beta\b/g, '\\eta')
-    .replace(/\bnu\b/g, '\\nu');
+    .replace(/\bnu\b/g, '\\nu')
+    .replace(/\bsigma\b/g, '\\sigma')
+    .replace(/\btau\b/g, '\\tau')
+    .replace(/\btheta\b/g, '\\theta')
+    .replace(/\blam\b/g, '\\lambda');
 }
 
 /**
@@ -113,6 +117,15 @@ function renderLibraryCards(data) {
         'font-size:0.72rem;background:#e0e0e0;color:#666;border-radius:10px;';
       badge.textContent = 'catalog only';
       card.appendChild(badge);
+    }
+
+    // Notes
+    if (algo.notes) {
+      const notesDiv = document.createElement('div');
+      notesDiv.style.cssText =
+        'margin-top:0.4rem;font-size:0.75rem;color:#666;font-style:italic;line-height:1.4;';
+      notesDiv.textContent = algo.notes;
+      card.appendChild(notesDiv);
     }
 
     // Equations
