@@ -4,13 +4,9 @@
  * Convert a SymPy-style string to approximate LaTeX.
  */
 function sympy2Latex(s) {
-  // Replace compound parameter names first to avoid partial matches
   return s
     .replace(/\*\*/g, '^')
     .replace(/\*/g, ' \\cdot ')
-    .replace(/\balpha_rpp\b/g, '\\alpha_{rpp}')
-    .replace(/\bbeta_qhm\b/g, '\\beta_{qhm}')
-    .replace(/\bbeta_sum\b/g, '\\beta_{sum}')
     .replace(/\balpha\b/g, '\\alpha')
     .replace(/\bbeta\b/g, '\\beta')
     .replace(/\bgamma\b/g, '\\gamma')

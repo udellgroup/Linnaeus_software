@@ -168,6 +168,7 @@ for m in matches:
 _result = {
     'tf_latex': _to_display_latex(H_user),
     'oracle_types': parsed['oracle_types'],
+    'user_params': [latex(symbols(p)) for p in parsed['parameters']],
     'matches': _match_list,
 }
 json.dumps(_result)

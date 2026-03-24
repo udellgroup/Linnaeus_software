@@ -159,28 +159,23 @@ class TestEquivalentFormulations:
         The user TF is 1/z (simple delay), while the library's proximal point
         TF is t/(z-1) (which encodes the resolvent relation with implicit
         parameter t). The parametric matching recognizes this matches
-        Relaxed Proximal Point with alpha_rpp=1 (full relaxation = proximal
+        Relaxed Proximal Point with alpha=1 (full relaxation = proximal
         point as a special case).
         """
         H, matches = run_pipeline([
             "x[k+1] = prox_f(x[k])"
         ])
         names = [m['algorithm']['name'] for m in matches]
-        # Matches Relaxed Proximal Point (with alpha_rpp=1, reducing to PP)
+        # Matches Relaxed Proximal Point (with alpha=1, reducing to PP)
         assert 'Relaxed Proximal Point' in names
 
     def test_relaxed_proximal_point(self):
         """Relaxed proximal point with explicit relaxation parameter.
 
-        x[k+1] = (1 - alpha_rpp)*x[k] + alpha_rpp*prox_f(x[k])
-        The library's TF includes an implicit proximal parameter t. When the
-        user uses the same parameter name alpha_rpp, the equivalence checker
-        cannot distinguish user vs library params. This is a known limitation:
-        the user's alpha_rpp symbol IS the library's alpha_rpp symbol (both are
-        Symbol('alpha_rpp')), so the solver tries to solve for alpha_rpp while
-        it also appears in the user's TF.
-
-        Using a different parameter name avoids this issue.
+        x[k+1] = (1 - rho)*x[k] + rho*prox_f(x[k])
+        The library now uses simple parameter name 'alpha' for the relaxation
+        parameter. Using a different user parameter name ('rho') avoids any
+        collision with the library's alpha.
         """
         H, matches = run_pipeline([
             "x[k+1] = (1 - rho) * x[k] + rho * prox_f(x[k])"
@@ -693,10 +688,11 @@ class TestLinearTransformations:
         names = [m['algorithm']['name'] for m in matches]
         assert 'Relaxed Proximal Point' in names
         rpp = next(m for m in matches if m['algorithm']['name'] == 'Relaxed Proximal Point')
-        # Library's alpha_rpp should equal 2 * user's alpha_rpp
+        # Library's alpha should equal 2 * user's alpha_rpp
         from sympy import symbols
+        alpha = symbols('alpha')
         alpha_rpp = symbols('alpha_rpp')
-        assert rpp['details']['params'][alpha_rpp] == 2 * alpha_rpp
+        assert rpp['details']['params'][alpha] == 2 * alpha_rpp
 
     def test_scaled_gradient_descent(self):
         """GD with step = 2*alpha should match GD with alpha(lib) = 2*alpha(user)."""

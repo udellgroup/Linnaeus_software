@@ -124,8 +124,20 @@ function displayResults(result) {
       paramDiv.appendChild(paramLabel);
 
       const paramMath = document.createElement('div');
+      // Approach A: disambiguate only params whose name collides
+      // between user and library and whose value is not a trivial identity
+      const userParams = result.user_params || [];
+      const algoName = match.name || 'library';
       const paramLatex = Object.entries(match.params)
-        .map(([k, v]) => k + ' = ' + v)
+        .map(([k, v]) => {
+          // Check if this library param name also exists in user's params
+          // and the value is not trivially equal (k = k)
+          const needsDisambiguation = userParams.includes(k) && k !== v;
+          if (needsDisambiguation) {
+            return '\\text{Your } ' + v + ' = \\text{' + algoName + "'s } " + k;
+          }
+          return k + ' = ' + v;
+        })
         .join(', \\quad ');
       try {
         katex.render(paramLatex, paramMath, { throwOnError: false, displayMode: false });

@@ -8,8 +8,7 @@ z = symbols('z')
 
 # All possible parameters used across library entries
 PARAM_NAMES = [
-    'alpha', 'beta', 'gamma', 'eta', 't', 'nu', 's',
-    'alpha_rpp', 'beta_qhm', 'beta_sum', 'delta'
+    'alpha', 'beta', 'gamma', 'eta', 't', 'nu', 's', 'delta'
 ]
 PARAMS = {name: symbols(name) for name in PARAM_NAMES}
 
