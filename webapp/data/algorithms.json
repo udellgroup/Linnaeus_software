@@ -121,8 +121,8 @@
     "oracles": ["prox_f"],
     "oracleType": "proximal",
     "equations": ["x[k+1] = prox_f(x[k])"],
-    "parameters": ["t"],
-    "transferFunction": "t/(z - 1)",
+    "parameters": [],
+    "transferFunction": "1/z",
     "tfIsMatrix": false,
     "equivalences": { "oracle": [], "shift": [], "lft": [] },
     "catalogOnly": false
@@ -135,8 +135,8 @@
     "oracles": ["prox_f"],
     "oracleType": "proximal",
     "equations": ["x[k+1] = (1 - alpha) * x[k] + alpha * prox_f(x[k])"],
-    "parameters": ["alpha", "t"],
-    "transferFunction": "alpha*t/(z - (1 - alpha))",
+    "parameters": ["alpha"],
+    "transferFunction": "alpha/(alpha + z - 1)",
     "tfIsMatrix": false,
     "equivalences": { "oracle": [], "shift": [], "lft": [] },
     "catalogOnly": false
@@ -146,15 +146,16 @@
     "name": "Douglas-Rachford Splitting",
     "aliases": [],
     "citation": "Lions & Mercier 1979",
+    "notes": "Parameter alpha is the relaxation (alpha=1 is the standard form).",
     "oracles": ["prox_f", "prox_g"],
     "oracleType": "proximal",
     "equations": [
       "x1[k+1] = prox_f(x3[k])",
       "x2[k+1] = prox_g(2 * x1[k+1] - x3[k])",
-      "x3[k+1] = x3[k] + x2[k+1] - x1[k+1]"
+      "x3[k+1] = x3[k] + alpha * (x2[k+1] - x1[k+1])"
     ],
-    "parameters": [],
-    "transferFunction": "Matrix([[-1/(z-1), 1/(z-1)], [(2*z-1)/(z-1), -1/(z-1)]])",
+    "parameters": ["alpha"],
+    "transferFunction": "Matrix([[-alpha/(z-1), alpha/(z-1)], [(alpha+2*z-2)/(z-1), -alpha/(z-1)]])",
     "tfIsMatrix": true,
     "equivalences": { "oracle": [], "shift": ["admm"], "lft": [] },
     "catalogOnly": false
@@ -162,17 +163,18 @@
   {
     "id": "admm",
     "name": "ADMM",
-    "aliases": [],
+    "aliases": ["Alternating Direction Method of Multipliers"],
     "citation": "Boyd et al. 2011",
+    "notes": "Parameter rho is the penalty parameter in the augmented Lagrangian.",
     "oracles": ["prox_g", "prox_f"],
     "oracleType": "proximal",
     "equations": [
       "x1[k+1] = prox_g(x2[k] - x3[k])",
       "x2[k+1] = prox_f(x1[k+1] + x3[k])",
-      "x3[k+1] = x3[k] + x1[k+1] - x2[k+1]"
+      "x3[k+1] = x3[k] + rho * (x1[k+1] - x2[k+1])"
     ],
-    "parameters": [],
-    "transferFunction": "Matrix([[-1/(z-1), (2*z-1)/(z*(z-1))], [z/(z-1), -1/(z-1)]])",
+    "parameters": ["rho"],
+    "transferFunction": "Matrix([[-rho/(z - 1), (rho*z + z - 1)/(z**2 - z)], [(rho + z - 1)/(z - 1), -rho/(z - 1)]])",
     "tfIsMatrix": true,
     "equivalences": { "oracle": [], "shift": ["douglas_rachford"], "lft": [] },
     "catalogOnly": false
@@ -181,12 +183,16 @@
     "id": "peaceman_rachford",
     "name": "Peaceman-Rachford Splitting",
     "aliases": [],
-    "citation": "",
+    "citation": "Peaceman & Rachford 1955",
     "oracles": ["prox_f", "prox_g"],
     "oracleType": "proximal",
-    "equations": [],
+    "equations": [
+      "x1[k+1] = prox_f(x3[k])",
+      "x2[k+1] = prox_g(2 * x1[k+1] - x3[k])",
+      "x3[k+1] = 2 * x2[k+1] - x3[k]"
+    ],
     "parameters": [],
-    "transferFunction": "Matrix([[-1/(z+1), 2*z/(z+1)], [(2*z-1)/(z+1), -z/(z+1)]])",
+    "transferFunction": "Matrix([[0, 2/(z+1)], [2, -2/(z+1)]])",
     "tfIsMatrix": true,
     "equivalences": { "oracle": [], "shift": [], "lft": [] },
     "catalogOnly": false
@@ -275,7 +281,7 @@
       "x[k+1] = x[k] - t * grad_f(y[k])"
     ],
     "parameters": ["t"],
-    "transferFunction": "Matrix([[t/(z-1), -t/(z-1)], [t*z/(z-1), -t/(z-1)]])",
+    "transferFunction": "Matrix([[0, -t/(z-1)], [-t, -t/(z-1)]])",
     "tfIsMatrix": true,
     "equivalences": { "oracle": [], "shift": [], "lft": [] },
     "catalogOnly": false

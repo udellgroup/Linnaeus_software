@@ -9,7 +9,7 @@ z = symbols('z')
 # All possible parameters used across library entries
 PARAM_NAMES = [
     'alpha', 'beta', 'gamma', 'delta', 'eta', 'nu',
-    'sigma', 'tau', 'theta', 'lam',
+    'rho', 'sigma', 'tau', 'theta', 'lam',
     't', 's',
 ]
 PARAMS = {}
@@ -140,7 +140,10 @@ def check_all_equivalences(H_user, user_oracles, library, z_var):
 
             # Try shift equivalence (only for multi-oracle)
             if H_check.rows > 1:
-                result = check_shift_equivalence(H_check, H_lib, z_var)
+                result = check_shift_equivalence(
+                    H_check, H_lib, z_var,
+                    lib_params=algo.get('param_symbols')
+                )
                 if result['match']:
                     matches.append({
                         'algorithm': algo,

@@ -151,12 +151,15 @@ def _extract_z_power(expr, z):
     return None
 
 
-def check_shift_equivalence(H1, H2, z):
+def check_shift_equivalence(H1, H2, z, lib_params=None):
     """
     Check if H1 = Diag(z^{m_i}) * H2 * Diag(z^{-m_j}), i.e.,
     H1[i,j] = z^{m_i - m_j} * H2[i,j].
 
-    Returns dict with 'match' (bool) and 'shift_vector' (list of ints or None).
+    If lib_params is provided, first solve for library parameter values
+    from diagonal constraints, then verify the shift structure.
+
+    Returns dict with 'match' (bool), 'shift_vector', and optionally 'params'.
     """
     rows, cols = H1.shape
     if H2.shape != (rows, cols) or rows != cols:
@@ -164,9 +167,71 @@ def check_shift_equivalence(H1, H2, z):
 
     p = rows
 
-    # Check diagonals match
+    # If library has free parameters, solve for them from diagonal constraints
+    param_solution = {}
+    H2_resolved = H2
+    if lib_params and len(lib_params) > 0:
+        from sympy import Dummy, Poly, solve as sym_solve
+        fresh_params = []
+        sub_map = {}
+        reverse_map = {}
+        for param in lib_params:
+            fresh = Dummy('_lib_' + param.name)
+            sub_map[param] = fresh
+            reverse_map[fresh] = param
+            fresh_params.append(fresh)
+
+        H2_fresh = H2.subs(sub_map)
+
+        # Solve diagonal constraints: H1[i,i] == H2_fresh[i,i]
+        equations = []
+        for i in range(p):
+            diff = cancel(H1[i, i] - H2_fresh[i, i])
+            if diff == 0:
+                continue
+            num = numer(diff)
+            try:
+                poly = Poly(num, z)
+                equations.extend(poly.all_coeffs())
+            except Exception:
+                equations.append(num)
+
+        if equations:
+            try:
+                solutions = sym_solve(equations, fresh_params, dict=True)
+            except Exception:
+                return {'match': False, 'shift_vector': None}
+            if not solutions:
+                return {'match': False, 'shift_vector': None}
+            sol = solutions[0]
+            # Verify no z in solution
+            for val in sol.values():
+                if val.has(z):
+                    return {'match': False, 'shift_vector': None}
+            # Handle free dummies (set to 0)
+            fresh_set = set(fresh_params)
+            free_dummies = fresh_set - set(sol.keys())
+            for val in sol.values():
+                free_dummies |= (val.free_symbols & fresh_set)
+            free_dummies -= set(sol.keys())
+            if free_dummies:
+                zero_sub = {d: 0 for d in free_dummies}
+                sol = {k: v.subs(zero_sub) for k, v in sol.items()}
+                for d in free_dummies:
+                    sol[d] = 0
+
+            H2_resolved = H2_fresh.subs(sol)
+            param_solution = {reverse_map[k]: v for k, v in sol.items()}
+        else:
+            H2_resolved = H2_fresh
+            # All diag constraints trivially satisfied; params are free
+            for fp in fresh_params:
+                param_solution[reverse_map[fp]] = 0
+            H2_resolved = H2_fresh.subs({fp: 0 for fp in fresh_params})
+
+    # Check diagonals match (should be true after parametric solve)
     for i in range(p):
-        diff = cancel(H1[i, i] - H2[i, i])
+        diff = cancel(H1[i, i] - H2_resolved[i, i])
         if diff != 0:
             return {'match': False, 'shift_vector': None}
 
@@ -174,12 +239,11 @@ def check_shift_equivalence(H1, H2, z):
     for i in range(p):
         for j in range(p):
             h1_zero = (cancel(H1[i, j]) == 0)
-            h2_zero = (cancel(H2[i, j]) == 0)
+            h2_zero = (cancel(H2_resolved[i, j]) == 0)
             if h1_zero != h2_zero:
                 return {'match': False, 'shift_vector': None}
 
     # For nonzero off-diagonal entries, compute ratio and extract z-power
-    # b[i][j] should equal m_i - m_j
     b = {}
     for i in range(p):
         for j in range(p):
@@ -187,14 +251,13 @@ def check_shift_equivalence(H1, H2, z):
                 continue
             if cancel(H1[i, j]) == 0:
                 continue
-            ratio = cancel(H1[i, j] / H2[i, j])
+            ratio = cancel(H1[i, j] / H2_resolved[i, j])
             power = _extract_z_power(ratio, z)
             if power is None:
                 return {'match': False, 'shift_vector': None}
             b[(i, j)] = power
 
     # Solve for m_i - m_j = b[i,j] consistently
-    # Use m[0] = 0 as anchor
     m = [None] * p
     m[0] = 0
 
@@ -214,18 +277,16 @@ def check_shift_equivalence(H1, H2, z):
                 if m[i] - m[j] != bij:
                     return {'match': False, 'shift_vector': None}
 
-    # Check all m values were determined (for connected components)
     if any(mi is None for mi in m):
-        # For disconnected components, set undetermined to 0
         m = [mi if mi is not None else 0 for mi in m]
 
-    # Normalize so min(m) = 0
     min_m = min(m)
     m = [mi - min_m for mi in m]
 
-    # If all shifts are zero, it's just oracle equivalence, not shift equiv
-    # But we still report it as a match
-    return {'match': True, 'shift_vector': m}
+    result = {'match': True, 'shift_vector': m}
+    if param_solution:
+        result['params'] = param_solution
+    return result
 
 
 def check_lft_equivalence(H1, H2, M_hat, z):

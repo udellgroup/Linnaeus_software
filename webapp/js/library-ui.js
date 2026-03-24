@@ -13,6 +13,7 @@ function sympy2Latex(s) {
     .replace(/\bdelta\b/g, '\\delta')
     .replace(/\beta\b/g, '\\eta')
     .replace(/\bnu\b/g, '\\nu')
+    .replace(/\brho\b/g, '\\rho')
     .replace(/\bsigma\b/g, '\\sigma')
     .replace(/\btau\b/g, '\\tau')
     .replace(/\btheta\b/g, '\\theta')
