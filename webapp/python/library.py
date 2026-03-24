@@ -58,6 +58,41 @@ def load_library(json_path):
     return algorithms
 
 
+def _find_oracle_permutation(user_oracles, lib_oracles):
+    """Find a permutation mapping user oracle order to library oracle order.
+
+    Returns list perm where user_oracles[perm[i]] == lib_oracles[i],
+    or None if no valid permutation exists (different oracle multisets).
+    """
+    if sorted(user_oracles) != sorted(lib_oracles):
+        return None
+    used = set()
+    perm = []
+    for lib_oracle in lib_oracles:
+        for j, user_oracle in enumerate(user_oracles):
+            if j not in used and user_oracle == lib_oracle:
+                perm.append(j)
+                used.add(j)
+                break
+        else:
+            return None
+    return perm
+
+
+def _permute_tf(H, perm):
+    """Permute rows and columns of a transfer function matrix.
+
+    perm[i] = j means row/col i of the result comes from row/col j of H.
+    """
+    from sympy import zeros
+    n = len(perm)
+    H_perm = zeros(n, n)
+    for i in range(n):
+        for j in range(n):
+            H_perm[i, j] = H[perm[i], perm[j]]
+    return H_perm
+
+
 def check_all_equivalences(H_user, user_oracles, library, z_var):
     """Check user's H(z) against all library entries.
 
@@ -78,10 +113,21 @@ def check_all_equivalences(H_user, user_oracles, library, z_var):
         H_lib = algo['tf'].subs(z, z_var)
         lib_oracles = algo.get('oracles', [])
 
+        # Determine if oracles match (possibly up to permutation)
         if user_oracles == lib_oracles:
-            # Same oracles: try oracle equivalence
+            H_check = H_user
+        else:
+            # Try permutation: same oracle types but different order
+            perm = _find_oracle_permutation(user_oracles, lib_oracles)
+            if perm is not None:
+                H_check = _permute_tf(H_user, perm)
+            else:
+                H_check = None
+
+        if H_check is not None:
+            # Same oracles (possibly permuted): try oracle equivalence
             result = check_oracle_equivalence(
-                H_user, H_lib, z_var,
+                H_check, H_lib, z_var,
                 lib_params=algo.get('param_symbols')
             )
             if result['match']:
@@ -93,8 +139,8 @@ def check_all_equivalences(H_user, user_oracles, library, z_var):
                 continue
 
             # Try shift equivalence (only for multi-oracle)
-            if H_user.rows > 1:
-                result = check_shift_equivalence(H_user, H_lib, z_var)
+            if H_check.rows > 1:
+                result = check_shift_equivalence(H_check, H_lib, z_var)
                 if result['match']:
                     matches.append({
                         'algorithm': algo,
@@ -103,8 +149,8 @@ def check_all_equivalences(H_user, user_oracles, library, z_var):
                     })
                     continue
 
-        elif len(user_oracles) == len(lib_oracles):
-            # Different but same-count oracles: try LFT
+        if len(user_oracles) == len(lib_oracles) and user_oracles != lib_oracles:
+            # Different oracle types but same count: try LFT
             try:
                 M_hat = build_block_m_hat(user_oracles, lib_oracles)
             except ValueError:
