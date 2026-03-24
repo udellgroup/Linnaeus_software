@@ -156,8 +156,8 @@ def check_shift_equivalence(H1, H2, z, lib_params=None):
     Check if H1 = Diag(z^{m_i}) * H2 * Diag(z^{-m_j}), i.e.,
     H1[i,j] = z^{m_i - m_j} * H2[i,j].
 
-    If lib_params is provided, first solve for library parameter values
-    from diagonal constraints, then verify the shift structure.
+    If the TFs contain free symbols, tries candidate shift vectors and
+    solves for parameter values that make the shift relationship hold.
 
     Returns dict with 'match' (bool), 'shift_vector', and optionally 'params'.
     """
@@ -167,80 +167,100 @@ def check_shift_equivalence(H1, H2, z, lib_params=None):
 
     p = rows
 
-    # If library has free parameters, solve for them from diagonal constraints
-    param_solution = {}
-    H2_resolved = H2
-    if lib_params and len(lib_params) > 0:
-        from sympy import Dummy, Poly, solve as sym_solve
-        fresh_params = []
-        sub_map = {}
-        reverse_map = {}
-        for param in lib_params:
-            fresh = Dummy('_lib_' + param.name)
-            sub_map[param] = fresh
-            reverse_map[fresh] = param
-            fresh_params.append(fresh)
-
-        H2_fresh = H2.subs(sub_map)
-
-        # Solve diagonal constraints: H1[i,i] == H2_fresh[i,i]
-        equations = []
-        for i in range(p):
-            diff = cancel(H1[i, i] - H2_fresh[i, i])
-            if diff == 0:
-                continue
-            num = numer(diff)
-            try:
-                poly = Poly(num, z)
-                equations.extend(poly.all_coeffs())
-            except Exception:
-                equations.append(num)
-
-        if equations:
-            try:
-                solutions = sym_solve(equations, fresh_params, dict=True)
-            except Exception:
-                return {'match': False, 'shift_vector': None}
-            if not solutions:
-                return {'match': False, 'shift_vector': None}
-            sol = solutions[0]
-            # Verify no z in solution
-            for val in sol.values():
-                if val.has(z):
-                    return {'match': False, 'shift_vector': None}
-            # Handle free dummies (set to 0)
-            fresh_set = set(fresh_params)
-            free_dummies = fresh_set - set(sol.keys())
-            for val in sol.values():
-                free_dummies |= (val.free_symbols & fresh_set)
-            free_dummies -= set(sol.keys())
-            if free_dummies:
-                zero_sub = {d: 0 for d in free_dummies}
-                sol = {k: v.subs(zero_sub) for k, v in sol.items()}
-                for d in free_dummies:
-                    sol[d] = 0
-
-            H2_resolved = H2_fresh.subs(sol)
-            param_solution = {reverse_map[k]: v for k, v in sol.items()}
-        else:
-            H2_resolved = H2_fresh
-            # All diag constraints trivially satisfied; params are free
-            for fp in fresh_params:
-                param_solution[reverse_map[fp]] = 0
-            H2_resolved = H2_fresh.subs({fp: 0 for fp in fresh_params})
-
-    # Check diagonals match (should be true after parametric solve)
+    # Collect all free symbols (except z) across both TFs
+    all_free = set()
     for i in range(p):
-        diff = cancel(H1[i, i] - H2_resolved[i, i])
+        for j in range(p):
+            all_free |= H1[i, j].free_symbols
+            all_free |= H2[i, j].free_symbols
+    all_free.discard(z)
+
+    lib_param_set = set(lib_params) if lib_params else set()
+
+    if not all_free:
+        # No free parameters — use exact check
+        return _check_shift_exact(H1, H2, z, p)
+
+    # Parametric: try candidate shift vectors and solve for all free symbols.
+    # For p oracles, m[0]=0 (anchor), m[1],...,m[p-1] range over small integers.
+    from sympy import Poly
+    MAX_SHIFT = 3
+
+    import itertools
+    for shifts in itertools.product(range(-MAX_SHIFT, MAX_SHIFT + 1), repeat=p - 1):
+        m = [0] + list(shifts)
+        if all(mi == 0 for mi in m):
+            continue  # Skip zero shift (that's oracle equivalence)
+
+        # Build equations: H1[i,j] - z^{m_i - m_j} * H2[i,j] = 0
+        equations = []
+        valid = True
+        for i in range(p):
+            for j in range(p):
+                shift_power = m[i] - m[j]
+                diff = cancel(H1[i, j] - z**shift_power * H2[i, j])
+                if diff == 0:
+                    continue
+                num = numer(diff)
+                try:
+                    poly = Poly(num, z)
+                    equations.extend(poly.all_coeffs())
+                except Exception:
+                    equations.append(num)
+
+        if not equations:
+            # Trivially satisfied
+            return {'match': True, 'shift_vector': m, 'params': {}}
+
+        unknowns = sorted(all_free, key=str)
+        try:
+            solutions = solve(equations, unknowns, dict=True)
+        except Exception:
+            continue
+
+        if not solutions:
+            continue
+
+        sol = solutions[0]
+
+        # Verify no z in solution
+        if any(v.has(z) for v in sol.values()):
+            continue
+
+        # Verify substitution works
+        ok = True
+        for i in range(p):
+            for j in range(p):
+                shift_power = m[i] - m[j]
+                diff = cancel((H1[i, j] - z**shift_power * H2[i, j]).subs(sol))
+                if diff != 0:
+                    ok = False
+                    break
+            if not ok:
+                break
+
+        if ok:
+            # Normalize shift vector
+            min_m = min(m)
+            m = [mi - min_m for mi in m]
+            params = {k: v for k, v in sol.items() if k in lib_param_set}
+            return {'match': True, 'shift_vector': m, 'params': params}
+
+    return {'match': False, 'shift_vector': None}
+
+
+def _check_shift_exact(H1, H2, z, p):
+    """Exact (non-parametric) shift equivalence check."""
+    # Check diagonals match
+    for i in range(p):
+        diff = cancel(H1[i, i] - H2[i, i])
         if diff != 0:
             return {'match': False, 'shift_vector': None}
 
-    # Check sparsity pattern matches
+    # Check sparsity pattern
     for i in range(p):
         for j in range(p):
-            h1_zero = (cancel(H1[i, j]) == 0)
-            h2_zero = (cancel(H2_resolved[i, j]) == 0)
-            if h1_zero != h2_zero:
+            if (cancel(H1[i, j]) == 0) != (cancel(H2[i, j]) == 0):
                 return {'match': False, 'shift_vector': None}
 
     # For nonzero off-diagonal entries, compute ratio and extract z-power.
@@ -252,11 +272,9 @@ def check_shift_equivalence(H1, H2, z, lib_params=None):
 
     for i in range(p):
         for j in range(p):
-            if i == j:
+            if i == j or cancel(H1[i, j]) == 0:
                 continue
-            if cancel(H1[i, j]) == 0:
-                continue
-            ratio = cancel(H1[i, j] / H2_resolved[i, j])
+            ratio = cancel(H1[i, j] / H2[i, j])
             power = _extract_z_power(ratio, z)
             if power is not None:
                 b[(i, j)] = power
@@ -318,10 +336,9 @@ def check_shift_equivalence(H1, H2, z, lib_params=None):
             if cancel(H1_sub[i, i] - H2_sub[i, i]) != 0:
                 return {'match': False, 'shift_vector': None}
 
-    # Solve for m_i - m_j = b[i,j] consistently
+    # Solve for consistent shift vector
     m = [None] * p
     m[0] = 0
-
     changed = True
     iterations = 0
     while changed and iterations < p * p:
@@ -338,16 +355,11 @@ def check_shift_equivalence(H1, H2, z, lib_params=None):
                 if m[i] - m[j] != bij:
                     return {'match': False, 'shift_vector': None}
 
-    if any(mi is None for mi in m):
-        m = [mi if mi is not None else 0 for mi in m]
-
+    m = [mi if mi is not None else 0 for mi in m]
     min_m = min(m)
     m = [mi - min_m for mi in m]
 
-    result = {'match': True, 'shift_vector': m}
-    if param_solution:
-        result['params'] = param_solution
-    return result
+    return {'match': True, 'shift_vector': m}
 
 
 def check_lft_equivalence(H1, H2, M_hat, z, lib_params=None):
