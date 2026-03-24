@@ -289,32 +289,104 @@ def check_shift_equivalence(H1, H2, z, lib_params=None):
     return result
 
 
-def check_lft_equivalence(H1, H2, M_hat, z):
+def check_lft_equivalence(H1, H2, M_hat, z, lib_params=None):
     """
     Check LFT equivalence: [I | -H1] * M_hat * [H2; I] == 0.
 
     H1, H2 are p x p transfer function matrices.
-    M_hat is a 2p x 2p transformation matrix.
+    M_hat is a 2p x 2p transformation matrix (may contain symbol 't'
+    for the oracle transformation parameter).
 
-    Returns dict with 'match' (bool).
+    If lib_params is provided, solve for library parameter values (and
+    the oracle transformation parameter t) that make the LFT product zero.
+
+    Returns dict with 'match' (bool) and optionally 'params'.
     """
     p = H1.shape[0]
 
-    # left = [I | -H1], shape p x 2p
+    # Compute LFT product (possibly with parametric solving)
     left = eye(p).row_join(-H1)
-
-    # right = [H2; I], shape 2p x p
     right = H2.col_join(eye(p))
-
-    # product = left * M_hat * right, shape p x p
     product = left * M_hat * right
 
-    # Check all entries are zero
+    # Collect all free symbols except z
+    all_free = set()
+    for i in range(product.rows):
+        for j in range(product.cols):
+            all_free |= product[i, j].free_symbols
+    all_free.discard(z)
+
+    if not all_free:
+        # No free parameters — check if product is zero directly
+        for i in range(product.rows):
+            for j in range(product.cols):
+                entry = cancel(product[i, j])
+                if entry != 0:
+                    entry = simplify(entry)
+                    if entry != 0:
+                        return {'match': False}
+        return {'match': True}
+
+    # Parametric: extract equations and solve for all free symbols
+    from sympy import Poly
+    equations = []
+    for i in range(product.rows):
+        for j in range(product.cols):
+            entry = cancel(product[i, j])
+            if entry == 0:
+                continue
+            num = numer(entry)
+            try:
+                poly = Poly(num, z)
+                equations.extend(poly.all_coeffs())
+            except Exception:
+                equations.append(num)
+
+    if not equations:
+        return {'match': True, 'params': {}}
+
+    unknowns = sorted(all_free, key=str)
+    try:
+        solutions = solve(equations, unknowns, dict=True)
+    except Exception:
+        return {'match': False}
+
+    if not solutions:
+        return {'match': False}
+
+    sol = solutions[0]
+
+    # Verify no z in solution values
+    for val in sol.values():
+        if val.has(z):
+            return {'match': False}
+
+    # Verify substitution makes product zero
+    product_sub = product.subs(sol)
+    for i in range(product_sub.rows):
+        for j in range(product_sub.cols):
+            entry = simplify(cancel(product_sub[i, j]))
+            if entry != 0:
+                return {'match': False}
+
+    # Separate library params from user/oracle params
+    lib_param_set = set(lib_params) if lib_params else set()
+    params = {}
+    for k, v in sol.items():
+        if k in lib_param_set:
+            params[k] = v
+
+    return {'match': True, 'params': params}
+
+    # Non-parametric check
+    left = eye(p).row_join(-H1)
+    right = H2.col_join(eye(p))
+    product = left * M_hat * right
+
     for i in range(product.rows):
         for j in range(product.cols):
             entry = cancel(product[i, j])
             if entry != 0:
-                # Fall back to simplify for more aggressive simplification
                 entry = simplify(entry)
                 if entry != 0:
                     return {'match': False}
@@ -344,16 +416,17 @@ ORACLE_RELATIONS = {
 
 def build_block_m_hat(oracles_1, oracles_2, params=None):
     """
-    Build block-diagonal M_hat from oracle lists.
+    Build block-diagonal M_hat from oracle lists in STACKED ordering.
+
+    The stacked ordering groups all oracle inputs (y) first, then all
+    oracle outputs (u): (y_0, y_1, ..., u_0, u_1, ...).
+    This matches the LFT formula [I | -H] * M * [H; I] = 0.
 
     oracles_1: list of oracle names for algorithm 1
     oracles_2: list of oracle names for algorithm 2
     params: dict of parameter symbols (e.g., {'t': t_symbol})
 
-    For shared oracles (same name), use 2x2 identity block.
-    For differing oracles, look up the transformation in ORACLE_RELATIONS.
-
-    Returns a 2p x 2p block-diagonal Matrix.
+    Returns a 2p x 2p Matrix.
     """
     if params is None:
         params = {}
@@ -377,13 +450,15 @@ def build_block_m_hat(oracles_1, oracles_2, params=None):
                 )
             blocks.append(ORACLE_RELATIONS[key](t))
 
-    # Build block-diagonal matrix
     if p == 1:
         return blocks[0]
 
+    # Build in stacked ordering: [[diag(M_i[0,0]), diag(M_i[0,1])],
+    #                              [diag(M_i[1,0]), diag(M_i[1,1])]]
     result = zeros(2 * p, 2 * p)
     for i, block in enumerate(blocks):
-        for r in range(2):
-            for c in range(2):
-                result[2*i + r, 2*i + c] = block[r, c]
+        result[i, i] = block[0, 0]          # y_i row, y_i col
+        result[i, p + i] = block[0, 1]      # y_i row, u_i col
+        result[p + i, i] = block[1, 0]      # u_i row, y_i col
+        result[p + i, p + i] = block[1, 1]  # u_i row, u_i col
     return result

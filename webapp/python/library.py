@@ -159,7 +159,10 @@ def check_all_equivalences(H_user, user_oracles, library, z_var):
             except ValueError:
                 M_hat = None
             if M_hat is not None:
-                result = check_lft_equivalence(H_user, H_lib, M_hat, z_var)
+                result = check_lft_equivalence(
+                    H_user, H_lib, M_hat, z_var,
+                    lib_params=algo.get('param_symbols')
+                )
                 if result['match']:
                     matches.append({
                         'algorithm': algo,
