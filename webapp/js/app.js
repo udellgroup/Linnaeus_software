@@ -157,6 +157,7 @@ for m in matches:
         'citation': algo.get('citation', ''),
         'type': m['type'],
         'lib_tf_latex': _lib_latex,
+        'lib_oracles': algo.get('oracles', []),
     }
     details = m.get('details', {})
     if details.get('params'):
@@ -167,6 +168,8 @@ for m in matches:
         entry['free_params'] = [latex(s) for s in details['free_params']]
     if details.get('shift_vector'):
         entry['shift_vector'] = details['shift_vector']
+    if m.get('permuted'):
+        entry['permuted'] = True
     _match_list.append(entry)
 
 _result = {

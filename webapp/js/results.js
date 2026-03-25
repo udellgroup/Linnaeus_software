@@ -10,32 +10,25 @@ function displayResults(result) {
   const panel = document.getElementById('results-panel');
   panel.innerHTML = '<h2 class="panel-title">Results</h2>';
 
-  // User's transfer function
+  // User's transfer function — composition notation
   const tfSection = document.createElement('div');
   tfSection.className = 'transfer-function-display';
   const tfLabel = document.createElement('div');
   tfLabel.style.cssText = 'font-size:0.8rem;color:#666;margin-bottom:0.5rem;font-weight:600;';
-  tfLabel.textContent = 'Your transfer function';
+  tfLabel.textContent = 'Your algorithm';
   tfSection.appendChild(tfLabel);
 
   const tfMath = document.createElement('div');
+  const userCompLatex = compositionLatex(result.tf_latex, result.oracle_types);
   try {
-    katex.render('H(z) = ' + result.tf_latex, tfMath, {
+    katex.render(userCompLatex, tfMath, {
       throwOnError: false,
       displayMode: true,
     });
   } catch (e) {
-    tfMath.textContent = 'H(z) = ' + result.tf_latex;
+    tfMath.textContent = userCompLatex;
   }
   tfSection.appendChild(tfMath);
-
-  // Oracle types
-  if (result.oracle_types && result.oracle_types.length > 0) {
-    const oracleInfo = document.createElement('div');
-    oracleInfo.style.cssText = 'font-size:0.8rem;color:#666;margin-top:0.5rem;';
-    oracleInfo.textContent = 'Oracles: ' + result.oracle_types.join(', ');
-    tfSection.appendChild(oracleInfo);
-  }
 
   panel.appendChild(tfSection);
 
@@ -60,9 +53,18 @@ function displayResults(result) {
     card.style.cssText =
       'margin-bottom:1rem;padding:1rem;background:#fafafa;border:1px solid #e0e0e0;border-radius:6px;';
 
-    // Badge + name row
-    const header = document.createElement('div');
-    header.style.cssText = 'display:flex;align-items:center;gap:0.75rem;margin-bottom:0.5rem;';
+    // Name
+    const nameEl = document.createElement('div');
+    nameEl.style.cssText = 'font-weight:600;font-size:0.95rem;margin-bottom:0.4rem;';
+    nameEl.textContent = match.name;
+    if (match.citation) {
+      nameEl.textContent += ' (' + match.citation + ')';
+    }
+    card.appendChild(nameEl);
+
+    // Chips row
+    const chipsRow = document.createElement('div');
+    chipsRow.style.cssText = 'display:flex;align-items:center;gap:0.5rem;margin-bottom:0.5rem;';
 
     const badge = document.createElement('span');
     badge.className = 'match-badge';
@@ -78,38 +80,32 @@ function displayResults(result) {
       lft: 'LFT equivalent',
     };
     badge.textContent = badgeLabels[match.type] || match.type;
-    header.appendChild(badge);
+    chipsRow.appendChild(badge);
 
-    const nameEl = document.createElement('span');
-    nameEl.style.cssText = 'font-weight:600;font-size:0.95rem;';
-    nameEl.textContent = match.name;
-    if (match.citation) {
-      nameEl.textContent += ' (' + match.citation + ')';
+    if (match.permuted) {
+      const permBadge = document.createElement('span');
+      permBadge.className = 'match-badge';
+      permBadge.style.cssText = 'background:#b3e5fc;color:#01579b;';
+      permBadge.textContent = 'Permutation';
+      chipsRow.appendChild(permBadge);
     }
-    header.appendChild(nameEl);
 
-    card.appendChild(header);
+    card.appendChild(chipsRow);
 
-    // Library transfer function
+    // Library transfer function — composition notation
     if (match.lib_tf_latex) {
-      const libTf = document.createElement('div');
-      libTf.style.cssText = 'margin:0.5rem 0;';
-      const libLabel = document.createElement('div');
-      libLabel.style.cssText = 'font-size:0.78rem;color:#888;margin-bottom:0.25rem;';
-      libLabel.textContent = 'Library transfer function';
-      libTf.appendChild(libLabel);
-
       const libMath = document.createElement('div');
+      libMath.style.cssText = 'margin:0.5rem 0;';
+      const libCompLatex = compositionLatex(match.lib_tf_latex, match.lib_oracles);
       try {
-        katex.render('H_{\\text{lib}}(z) = ' + match.lib_tf_latex, libMath, {
+        katex.render(libCompLatex, libMath, {
           throwOnError: false,
           displayMode: true,
         });
       } catch (e) {
-        libMath.textContent = match.lib_tf_latex;
+        libMath.textContent = libCompLatex;
       }
-      libTf.appendChild(libMath);
-      card.appendChild(libTf);
+      card.appendChild(libMath);
     }
 
     // Parameter mapping — show both library and user param constraints.

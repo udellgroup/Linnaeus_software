@@ -97,18 +97,13 @@ function renderLibraryCards(data) {
     title.textContent = algo.name;
     card.appendChild(title);
 
-    // Meta: oracle types + citation
-    const meta = document.createElement('div');
-    meta.className = 'algo-card-meta';
-    const parts = [];
-    if (algo.oracles && algo.oracles.length > 0) {
-      parts.push(algo.oracles.join(', '));
-    }
+    // Citation
     if (algo.citation) {
-      parts.push(algo.citation);
+      const meta = document.createElement('div');
+      meta.className = 'algo-card-meta';
+      meta.textContent = algo.citation;
+      card.appendChild(meta);
     }
-    meta.textContent = parts.join(' \u2014 ');
-    card.appendChild(meta);
 
     // Catalog-only badge
     if (algo.catalogOnly) {
@@ -143,25 +138,21 @@ function renderLibraryCards(data) {
       card.appendChild(eqDiv);
     }
 
-    // Transfer function — rendered with KaTeX in display mode
+    // Transfer function — composition notation with KaTeX in display mode
     if (algo.tf_latex && !algo.catalogOnly) {
       const tfDiv = document.createElement('div');
       tfDiv.className = 'transfer-function-display';
       tfDiv.style.marginTop = '0.6rem';
 
-      const tfLabel = document.createElement('div');
-      tfLabel.style.cssText = 'font-size:0.75rem;color:#888;margin-bottom:0.25rem;';
-      tfLabel.textContent = 'Transfer function';
-      tfDiv.appendChild(tfLabel);
-
       const tfMath = document.createElement('div');
+      const compLatex = compositionLatex(algo.tf_latex, algo.oracles);
       try {
-        katex.render('H(z) = ' + algo.tf_latex, tfMath, {
+        katex.render(compLatex, tfMath, {
           throwOnError: false,
           displayMode: true,
         });
       } catch (e) {
-        tfMath.textContent = 'H(z) = ' + algo.tf_latex;
+        tfMath.textContent = compLatex;
       }
       tfDiv.appendChild(tfMath);
       card.appendChild(tfDiv);

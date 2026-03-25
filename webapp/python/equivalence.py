@@ -68,11 +68,32 @@ def check_oracle_equivalence(H1, H2, z, lib_params=None):
     if not equations:
         return {'match': True, 'params': {}}
 
-    # Solve for fresh_params
+    # Collect all free symbols (user params) in the equations besides
+    # fresh_params and z, so we can solve for them if needed.
+    all_free = set()
+    for eq in equations:
+        all_free |= eq.free_symbols
+    all_free.discard(z)
+    user_params_in_eq = sorted(all_free - set(fresh_params), key=str)
+
+    # First try solving for lib params only (allows user params to stay
+    # symbolic in the solution, e.g., lib_t = user_alpha).
     try:
         solution = solve(equations, fresh_params, dict=True)
     except Exception:
-        return {'match': False}
+        solution = []
+
+    if not solution:
+        # Solving for lib params alone failed — the user may have extra
+        # parameters that need constraining (e.g., user has t and q where
+        # the library has just t, equivalent when q = t).  Try solving
+        # for all free symbols simultaneously.
+        if user_params_in_eq:
+            all_unknowns = fresh_params + user_params_in_eq
+            try:
+                solution = solve(equations, all_unknowns, dict=True)
+            except Exception:
+                solution = []
 
     if not solution:
         return {'match': False}
@@ -104,16 +125,31 @@ def check_oracle_equivalence(H1, H2, z, lib_params=None):
         for d in free_dummies:
             sol_fresh[d] = 0
 
-    # Verify substitution works
+    # Verify substitution works.  Substitute into both sides: sol_fresh
+    # contains lib dummy values (for H2_fresh) and possibly user param
+    # constraints (for H1).
     for i in range(rows):
         for j in range(cols):
-            diff = cancel(H1[i, j] - H2_fresh[i, j].subs(sol_fresh))
+            diff = cancel(
+                H1[i, j].subs(sol_fresh) -
+                H2_fresh[i, j].subs(sol_fresh)
+            )
             if diff != 0:
                 return {'match': False}
 
-    # Map back to original library parameter names for display
-    sol = {reverse_map[k]: v for k, v in sol_fresh.items()}
-    return {'match': True, 'params': sol}
+    # Map back to original library parameter names for display.
+    # Separate lib params from user params.
+    lib_solved = {}
+    user_solved = {}
+    for k, v in sol_fresh.items():
+        if k in reverse_map:
+            lib_solved[reverse_map[k]] = v
+        else:
+            user_solved[k] = v
+    result = {'match': True, 'params': lib_solved}
+    if user_solved:
+        result['user_params'] = user_solved
+    return result
 
 
 def _extract_z_power(expr, z):

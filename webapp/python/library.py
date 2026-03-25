@@ -58,25 +58,31 @@ def load_library(json_path):
     return algorithms
 
 
-def _find_oracle_permutation(user_oracles, lib_oracles):
-    """Find a permutation mapping user oracle order to library oracle order.
+def _find_all_oracle_permutations(user_oracles, lib_oracles):
+    """Find all permutations mapping user oracle order to library oracle order.
 
-    Returns list perm where user_oracles[perm[i]] == lib_oracles[i],
-    or None if no valid permutation exists (different oracle multisets).
+    Yields lists perm where user_oracles[perm[i]] == lib_oracles[i].
+    When oracle types repeat (e.g., two grad_f), there are multiple valid
+    permutations; the correct one depends on the transfer function structure.
     """
     if sorted(user_oracles) != sorted(lib_oracles):
-        return None
-    used = set()
-    perm = []
-    for lib_oracle in lib_oracles:
-        for j, user_oracle in enumerate(user_oracles):
-            if j not in used and user_oracle == lib_oracle:
-                perm.append(j)
+        return
+
+    n = len(lib_oracles)
+
+    def _backtrack(pos, used, perm):
+        if pos == n:
+            yield list(perm)
+            return
+        for j in range(n):
+            if j not in used and user_oracles[j] == lib_oracles[pos]:
                 used.add(j)
-                break
-        else:
-            return None
-    return perm
+                perm.append(j)
+                yield from _backtrack(pos + 1, used, perm)
+                perm.pop()
+                used.discard(j)
+
+    yield from _backtrack(0, set(), [])
 
 
 def _permute_tf(H, perm):
@@ -113,18 +119,23 @@ def check_all_equivalences(H_user, user_oracles, library, z_var):
         H_lib = algo['tf'].subs(z, z_var)
         lib_oracles = algo.get('oracles', [])
 
-        # Determine if oracles match (possibly up to permutation)
+        # Determine if oracles match (possibly up to permutation).
+        # When oracle types repeat, there are multiple valid permutations;
+        # try all of them since the correct one depends on the TF structure.
+        perms_to_try = []
         if user_oracles == lib_oracles:
-            H_check = H_user
-        else:
-            # Try permutation: same oracle types but different order
-            perm = _find_oracle_permutation(user_oracles, lib_oracles)
-            if perm is not None:
-                H_check = _permute_tf(H_user, perm)
-            else:
-                H_check = None
+            perms_to_try.append((None, False))  # identity, not permuted
+        if sorted(user_oracles) == sorted(lib_oracles):
+            for perm in _find_all_oracle_permutations(user_oracles,
+                                                       lib_oracles):
+                is_identity = (perm == list(range(len(perm))))
+                if not is_identity:
+                    perms_to_try.append((perm, True))
 
-        if H_check is not None:
+        found = False
+        for perm, permuted in perms_to_try:
+            H_check = _permute_tf(H_user, perm) if perm else H_user
+
             # Same oracles (possibly permuted): try oracle equivalence
             result = check_oracle_equivalence(
                 H_check, H_lib, z_var,
@@ -135,8 +146,10 @@ def check_all_equivalences(H_user, user_oracles, library, z_var):
                     'algorithm': algo,
                     'type': 'oracle',
                     'details': result,
+                    'permuted': permuted,
                 })
-                continue
+                found = True
+                break
 
             # Try shift equivalence (only for multi-oracle)
             if H_check.rows > 1:
@@ -149,8 +162,13 @@ def check_all_equivalences(H_user, user_oracles, library, z_var):
                         'algorithm': algo,
                         'type': 'shift',
                         'details': result,
+                        'permuted': permuted,
                     })
-                    continue
+                    found = True
+                    break
+
+        if found:
+            continue
 
         if len(user_oracles) == len(lib_oracles) and user_oracles != lib_oracles:
             # Different oracle types but same count: try LFT.
@@ -204,6 +222,7 @@ def check_all_equivalences(H_user, user_oracles, library, z_var):
                             'algorithm': algo,
                             'type': 'lft',
                             'details': result,
+                            'permuted': perm_list != list(range(p)),
                         })
                         found_lft = True
                         break
