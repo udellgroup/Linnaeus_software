@@ -161,6 +161,10 @@ for m in matches:
     details = m.get('details', {})
     if details.get('params'):
         entry['params'] = {latex(k): latex(v) for k, v in details['params'].items()}
+    if details.get('user_params'):
+        entry['user_params'] = {latex(k): latex(v) for k, v in details['user_params'].items()}
+    if details.get('free_params'):
+        entry['free_params'] = [latex(s) for s in details['free_params']]
     if details.get('shift_vector'):
         entry['shift_vector'] = details['shift_vector']
     _match_list.append(entry)

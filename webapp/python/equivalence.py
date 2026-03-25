@@ -167,15 +167,26 @@ def check_shift_equivalence(H1, H2, z, lib_params=None):
 
     p = rows
 
+    lib_param_set = set(lib_params) if lib_params else set()
+
+    # Replace library params in H2 with fresh Dummy symbols so that shared
+    # names (e.g., user's alpha vs library's alpha) can be solved independently.
+    from sympy import Dummy
+    fresh_map = {}      # lib_param -> Dummy
+    reverse_map = {}    # Dummy -> lib_param
+    for lp in lib_param_set:
+        d = Dummy('_lib_' + lp.name)
+        fresh_map[lp] = d
+        reverse_map[d] = lp
+    H2_fresh = H2.subs(fresh_map) if fresh_map else H2
+
     # Collect all free symbols (except z) across both TFs
     all_free = set()
     for i in range(p):
         for j in range(p):
             all_free |= H1[i, j].free_symbols
-            all_free |= H2[i, j].free_symbols
+            all_free |= H2_fresh[i, j].free_symbols
     all_free.discard(z)
-
-    lib_param_set = set(lib_params) if lib_params else set()
 
     if not all_free:
         # No free parameters — use exact check
@@ -192,13 +203,12 @@ def check_shift_equivalence(H1, H2, z, lib_params=None):
         if all(mi == 0 for mi in m):
             continue  # Skip zero shift (that's oracle equivalence)
 
-        # Build equations: H1[i,j] - z^{m_i - m_j} * H2[i,j] = 0
+        # Build equations: H1[i,j] - z^{m_i - m_j} * H2_fresh[i,j] = 0
         equations = []
-        valid = True
         for i in range(p):
             for j in range(p):
                 shift_power = m[i] - m[j]
-                diff = cancel(H1[i, j] - z**shift_power * H2[i, j])
+                diff = cancel(H1[i, j] - z**shift_power * H2_fresh[i, j])
                 if diff == 0:
                     continue
                 num = numer(diff)
@@ -232,7 +242,9 @@ def check_shift_equivalence(H1, H2, z, lib_params=None):
         for i in range(p):
             for j in range(p):
                 shift_power = m[i] - m[j]
-                diff = cancel((H1[i, j] - z**shift_power * H2[i, j]).subs(sol))
+                diff = cancel(
+                    (H1[i, j] - z**shift_power * H2_fresh[i, j]).subs(sol)
+                )
                 if diff != 0:
                     ok = False
                     break
@@ -243,8 +255,18 @@ def check_shift_equivalence(H1, H2, z, lib_params=None):
             # Normalize shift vector
             min_m = min(m)
             m = [mi - min_m for mi in m]
-            params = {k: v for k, v in sol.items() if k in lib_param_set}
-            return {'match': True, 'shift_vector': m, 'params': params}
+            # Map fresh dummies back to original lib param names
+            lib_solved = {}
+            user_solved = {}
+            for k, v in sol.items():
+                if k in reverse_map:
+                    lib_solved[reverse_map[k]] = v
+                else:
+                    user_solved[k] = v
+            result = {'match': True, 'shift_vector': m, 'params': lib_solved}
+            if user_solved:
+                result['user_params'] = user_solved
+            return result
 
     return {'match': False, 'shift_vector': None}
 
@@ -362,24 +384,37 @@ def _check_shift_exact(H1, H2, z, p):
     return {'match': True, 'shift_vector': m}
 
 
-def check_lft_equivalence(H1, H2, M_hat, z, lib_params=None):
+def check_lft_equivalence(H1, H2, M_hat, z, lib_params=None,
+                          internal_syms=None):
     """
     Check LFT equivalence: [I | -H1] * M_hat * [H2; I] == 0.
 
     H1, H2 are p x p transfer function matrices.
-    M_hat is a 2p x 2p transformation matrix (may contain symbol 't'
-    for the oracle transformation parameter).
-
-    If lib_params is provided, solve for library parameter values (and
-    the oracle transformation parameter t) that make the LFT product zero.
+    M_hat is a 2p x 2p transformation matrix (may contain internal
+    oracle transformation symbols).
+    internal_syms: set of symbols from M_hat that are internal (not
+    user or library params).  When solved, their values are substituted
+    into other params; when free, they are reported separately.
 
     Returns dict with 'match' (bool) and optionally 'params'.
     """
     p = H1.shape[0]
 
+    # Replace library params in H2 with fresh Dummy symbols so that shared
+    # names (e.g., user's alpha vs library's alpha) can be solved independently.
+    from sympy import Dummy
+    lib_param_set = set(lib_params) if lib_params else set()
+    fresh_map = {}      # lib_param -> Dummy
+    reverse_map = {}    # Dummy -> lib_param
+    for lp in lib_param_set:
+        d = Dummy('_lib_' + lp.name)
+        fresh_map[lp] = d
+        reverse_map[d] = lp
+    H2_fresh = H2.subs(fresh_map) if fresh_map else H2
+
     # Compute LFT product (possibly with parametric solving)
     left = eye(p).row_join(-H1)
-    right = H2.col_join(eye(p))
+    right = H2_fresh.col_join(eye(p))
     product = left * M_hat * right
 
     # Collect all free symbols except z
@@ -442,12 +477,75 @@ def check_lft_equivalence(H1, H2, M_hat, z, lib_params=None):
             if entry != 0:
                 return {'match': False}
 
-    # Return all solved params (library + user + oracle transformation t).
-    # Exclude the oracle transformation parameter t (internal detail).
-    t_sym = symbols('t')
-    params = {k: v for k, v in sol.items() if k != t_sym}
+    # Partition solution into lib params, user params, and internal
+    # (oracle transformation) params.  Internal symbols that were solved
+    # get substituted into other values; free internal symbols are
+    # reported for display.
+    internal = set(internal_syms) if internal_syms else set()
+    solved_keys = set(sol.keys())
 
-    return {'match': True, 'params': params}
+    # Internal symbols that were solved — substitute their values out.
+    internal_sub = {k: v for k, v in sol.items() if k in internal}
+
+    # Free internal parameters: internal symbols that the solver left
+    # unconstrained.  User/lib params that are unsolved simply express
+    # natural constraint relationships (e.g., sigma = 1/tau) and should
+    # not be labelled "free".
+    free_syms = sorted((internal - solved_keys) & all_free, key=str)
+
+    # Collect display names of all solved non-internal params to detect
+    # collisions with free param names.
+    solved_display_names = set()
+    for k in sol:
+        if k in internal:
+            continue
+        orig = reverse_map.get(k, k)
+        solved_display_names.add(orig.name)
+
+    # Rename free params if their name collides with a solved param.
+    # Use t_1, t_2, ... (incrementing subscript) to avoid duplicates.
+    from sympy import Symbol
+    all_used_names = set(solved_display_names)
+    rename_map = {}  # old_sym -> new_sym (for substitution in values)
+    free_display = []  # symbols with clean names for display
+    for fs in free_syms:
+        name = fs.name
+        if name.startswith('_lib_'):
+            name = name[5:]  # strip dummy prefix
+        if name not in all_used_names:
+            display_sym = Symbol(name)
+            all_used_names.add(name)
+        else:
+            # Find an unused subscript
+            idx = 1
+            while f'{name}_{idx}' in all_used_names:
+                idx += 1
+            display_sym = Symbol(f'{name}_{idx}')
+            all_used_names.add(display_sym.name)
+        if display_sym != fs:
+            rename_map[fs] = display_sym
+        free_display.append(display_sym)
+
+    # Combined substitution: solved internals + renames for free params
+    value_sub = {**internal_sub, **rename_map}
+
+    lib_solved = {}
+    user_solved = {}
+    for k, v in sol.items():
+        if k in internal:
+            continue  # don't expose internal symbols as params
+        if value_sub:
+            v = cancel(v.subs(value_sub))
+        if k in reverse_map:
+            lib_solved[reverse_map[k]] = v
+        else:
+            user_solved[k] = v
+    result = {'match': True, 'params': lib_solved}
+    if user_solved:
+        result['user_params'] = user_solved
+    if free_display:
+        result['free_params'] = free_display
+    return result
 
     # Non-parametric check
     left = eye(p).row_join(-H1)
@@ -497,7 +595,9 @@ def build_block_m_hat(oracles_1, oracles_2, params=None):
     oracles_2: list of oracle names for algorithm 2
     params: dict of parameter symbols (e.g., {'t': t_symbol})
 
-    Returns a 2p x 2p Matrix.
+    Returns (M_hat, internal_syms) where M_hat is a 2p x 2p Matrix and
+    internal_syms is the set of oracle-transformation symbols used
+    internally (e.g., the Dummy 't').
     """
     if params is None:
         params = {}
@@ -505,7 +605,9 @@ def build_block_m_hat(oracles_1, oracles_2, params=None):
     p = len(oracles_1)
     assert len(oracles_2) == p, "Oracle lists must have same length"
 
-    t = params.get('t', symbols('t'))
+    from sympy import Dummy
+    t = params.get('t', Dummy('t'))
+    internal_syms = {t}
 
     blocks = []
     for i in range(p):
@@ -522,7 +624,7 @@ def build_block_m_hat(oracles_1, oracles_2, params=None):
             blocks.append(ORACLE_RELATIONS[key](t))
 
     if p == 1:
-        return blocks[0]
+        return blocks[0], internal_syms
 
     # Build in stacked ordering: [[diag(M_i[0,0]), diag(M_i[0,1])],
     #                              [diag(M_i[1,0]), diag(M_i[1,1])]]
@@ -532,4 +634,4 @@ def build_block_m_hat(oracles_1, oracles_2, params=None):
         result[i, p + i] = block[0, 1]      # y_i row, u_i col
         result[p + i, i] = block[1, 0]      # u_i row, y_i col
         result[p + i, p + i] = block[1, 1]  # u_i row, u_i col
-    return result
+    return result, internal_syms

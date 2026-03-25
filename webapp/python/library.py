@@ -170,7 +170,8 @@ def check_all_equivalences(H_user, user_oracles, library, z_var):
                     continue
                 tried_orderings.add(key)
                 try:
-                    M_hat = build_block_m_hat(user_oracles, perm_lib_oracles)
+                    M_hat, internal_syms = build_block_m_hat(
+                        user_oracles, perm_lib_oracles)
                 except ValueError:
                     continue
                 perm_list = list(perm_indices)
@@ -190,7 +191,8 @@ def check_all_equivalences(H_user, user_oracles, library, z_var):
                                 z_var**(m[i] - m[j]) * H_lib_perm[i, j]
                     result = check_lft_equivalence(
                         H_user, H_lib_shifted, M_hat, z_var,
-                        lib_params=algo.get('param_symbols')
+                        lib_params=algo.get('param_symbols'),
+                        internal_syms=internal_syms,
                     )
                     if result['match']:
                         # Normalize shift

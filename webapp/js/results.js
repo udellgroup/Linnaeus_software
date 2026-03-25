@@ -112,9 +112,29 @@ function displayResults(result) {
       card.appendChild(libTf);
     }
 
-    // Parameter mapping — tuple format: (p1, p2, ...) \mapsfrom (v1, v2, ...)
-    if (match.params && Object.keys(match.params).length > 0) {
-      const entries = Object.entries(match.params);
+    // Parameter mapping — show both library and user param constraints.
+    // When a symbol name appears in both, add _{\text{lib}} subscript to the lib one.
+    const hasLibParams = match.params && Object.keys(match.params).length > 0;
+    const hasUserParams = match.user_params && Object.keys(match.user_params).length > 0;
+    if (hasLibParams || hasUserParams) {
+      const libEntries = hasLibParams ? Object.entries(match.params) : [];
+      const userEntries = hasUserParams ? Object.entries(match.user_params) : [];
+
+      // Detect name collisions between lib and user param keys
+      const libKeys = new Set(libEntries.map(([k]) => k));
+      const userKeys = new Set(userEntries.map(([k]) => k));
+      const collisions = new Set([...libKeys].filter(k => userKeys.has(k)));
+
+      // Build display entries: [displayKey, value] pairs.
+      // Only add _{\text{lib}} subscript when there's a name collision.
+      const allDisplay = [];
+      for (const [k, v] of libEntries) {
+        const displayKey = collisions.has(k) ? k + '_{\\text{lib}}' : k;
+        allDisplay.push([displayKey, v]);
+      }
+      for (const [k, v] of userEntries) {
+        allDisplay.push([k, v]);
+      }
 
       const paramDiv = document.createElement('div');
       paramDiv.style.cssText =
@@ -126,9 +146,16 @@ function displayResults(result) {
       paramDiv.appendChild(paramLabel);
 
       const paramMath = document.createElement('div');
-      const keys = entries.map(([k]) => k).join(', ');
-      const vals = entries.map(([, v]) => v).join(', ');
-      const paramLatex = '(' + keys + ') \\leftarrow (' + vals + ')';
+      const keys = allDisplay.map(([k]) => k).join(', ');
+      const vals = allDisplay.map(([, v]) => v).join(', ');
+      let paramLatex = '(' + keys + ') \\leftarrow (' + vals + ')';
+
+      // Append free parameter annotation if present
+      if (match.free_params && match.free_params.length > 0) {
+        const freeList = match.free_params.join(', ');
+        paramLatex += ' \\qquad (' + freeList + ' \\text{ free})';
+      }
+
       try {
         katex.render(paramLatex, paramMath, { throwOnError: false, displayMode: false });
       } catch (e) {
