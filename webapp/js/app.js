@@ -155,6 +155,8 @@ for m in matches:
     entry = {
         'name': algo['name'],
         'citation': algo.get('citation', ''),
+        'doi': algo.get('doi', ''),
+        'bibtex': algo.get('bibtex', ''),
         'type': m['type'],
         'lib_tf_latex': _lib_latex,
         'lib_oracles': algo.get('oracles', []),

@@ -29,6 +29,8 @@
     "name": "Heavy Ball",
     "aliases": [],
     "citation": "Polyak 1964",
+    "doi": "https://doi.org/10.1016/0041-5553(64)90137-5",
+    "bibtex": "@article{polyak1964some,\n  title={Some methods of speeding up the convergence of iteration methods},\n  author={Polyak, Boris T},\n  journal={USSR Computational Mathematics and Mathematical Physics},\n  volume={4},\n  number={5},\n  pages={1--17},\n  year={1964},\n  publisher={Elsevier}\n}",
     "oracles": [
       "grad_f"
     ],
@@ -55,6 +57,7 @@
     "name": "Nesterov's Accelerated Method",
     "aliases": [],
     "citation": "Nesterov 1983",
+    "bibtex": "@inproceedings{nesterov1983method,\n  title={A method for solving the convex programming problem with convergence rate {$O(1/k^2)$}},\n  author={Nesterov, Yurii},\n  booktitle={Dokl. Akad. Nauk SSSR},\n  volume={269},\n  pages={543--547},\n  year={1983}\n}",
     "oracles": [
       "grad_f"
     ],
@@ -82,6 +85,8 @@
     "name": "Triple Momentum Method",
     "aliases": [],
     "citation": "Van Scoy et al. 2018",
+    "doi": "https://doi.org/10.1109/LCSYS.2017.2722406",
+    "bibtex": "@article{vanscoy2018fastest,\n  title={The fastest known globally convergent first-order method for minimizing strongly convex functions},\n  author={Van Scoy, Bryan and Freeman, Randy A and Lynch, Kevin M},\n  journal={IEEE Control Systems Letters},\n  volume={2},\n  number={1},\n  pages={49--54},\n  year={2018},\n  publisher={IEEE}\n}",
     "oracles": [
       "grad_f"
     ],
@@ -110,6 +115,7 @@
     "name": "Quasi-Hyperbolic Momentum",
     "aliases": [],
     "citation": "Ma & Yarats 2019",
+    "bibtex": "@inproceedings{ma2019quasi,\n  title={Quasi-hyperbolic momentum and Adam for deep learning},\n  author={Ma, Jerry and Yarats, Denis},\n  booktitle={International Conference on Learning Representations},\n  year={2019}\n}",
     "oracles": [
       "grad_f"
     ],
@@ -249,6 +255,8 @@
     "name": "Douglas-Rachford Splitting",
     "aliases": [],
     "citation": "Lions & Mercier 1979",
+    "doi": "https://doi.org/10.1137/0716071",
+    "bibtex": "@article{lions1979splitting,\n  title={Splitting algorithms for the sum of two nonlinear operators},\n  author={Lions, Pierre-Louis and Mercier, Bertrand},\n  journal={SIAM Journal on Numerical Analysis},\n  volume={16},\n  number={6},\n  pages={964--979},\n  year={1979},\n  publisher={SIAM}\n}",
     "notes": "Parameter alpha is the relaxation (alpha=1 is the standard form).",
     "oracles": [
       "prox_f",
@@ -282,6 +290,8 @@
       "Alternating Direction Method of Multipliers"
     ],
     "citation": "Boyd et al. 2011",
+    "doi": "https://doi.org/10.1561/2200000016",
+    "bibtex": "@article{boyd2011distributed,\n  title={Distributed optimization and statistical learning via the alternating direction method of multipliers},\n  author={Boyd, Stephen and Parikh, Neal and Chu, Eric and Peleato, Borja and Eckstein, Jonathan},\n  journal={Foundations and Trends in Machine Learning},\n  volume={3},\n  number={1},\n  pages={1--122},\n  year={2011},\n  publisher={Now Publishers}\n}",
     "notes": "Parameter rho is the penalty parameter in the augmented Lagrangian.",
     "oracles": [
       "prox_g",
@@ -313,6 +323,8 @@
     "name": "Peaceman-Rachford Splitting",
     "aliases": [],
     "citation": "Peaceman & Rachford 1955",
+    "doi": "https://doi.org/10.1137/0103003",
+    "bibtex": "@article{peaceman1955numerical,\n  title={The numerical solution of parabolic and elliptic differential equations},\n  author={Peaceman, Donald W and Rachford, Jr, Henry H},\n  journal={Journal of the Society for Industrial and Applied Mathematics},\n  volume={3},\n  number={1},\n  pages={28--41},\n  year={1955},\n  publisher={SIAM}\n}",
     "oracles": [
       "prox_f",
       "prox_g"
@@ -341,6 +353,8 @@
       "Primal-Dual Algorithm"
     ],
     "citation": "Chambolle & Pock 2011",
+    "doi": "https://doi.org/10.1007/s10851-010-0251-1",
+    "bibtex": "@article{chambolle2011first,\n  title={A first-order primal-dual algorithm for convex problems with applications to imaging},\n  author={Chambolle, Antonin and Pock, Thomas},\n  journal={Journal of Mathematical Imaging and Vision},\n  volume={40},\n  pages={120--145},\n  year={2011},\n  publisher={Springer}\n}",
     "notes": "Shown for the case where the linear operator is the identity (L = I). Parameters sigma and tau are the primal and dual step sizes; theta is the relaxation parameter.",
     "oracles": [
       "prox_f",
@@ -432,6 +446,8 @@
       "Three-Operator Splitting"
     ],
     "citation": "Davis & Yin 2017",
+    "doi": "https://doi.org/10.1007/s11228-017-0421-z",
+    "bibtex": "@article{davis2017three,\n  title={A three-operator splitting scheme and its optimization applications},\n  author={Davis, Damek and Yin, Wotao},\n  journal={Set-Valued and Variational Analysis},\n  volume={25},\n  pages={829--858},\n  year={2017},\n  publisher={Springer}\n}",
     "notes": "Minimizes f(x) + g(x) + h(x) where h is smooth (grad_f oracle) and f, g have proximal operators (prox_f, prox_g). Parameter gamma is the proximal step size; t is the relaxation parameter.",
     "oracles": [
       "prox_g",
@@ -491,6 +507,7 @@
     "name": "Extragradient (Korpelevich-Antipin)",
     "aliases": [],
     "citation": "Korpelevich 1976",
+    "bibtex": "@article{korpelevich1976extragradient,\n  title={The extragradient method for finding saddle points and other problems},\n  author={Korpelevich, Galina M},\n  journal={Matecon},\n  volume={12},\n  pages={747--756},\n  year={1976}\n}",
     "notes": "Projection onto the constraint set C is modeled as prox_g where g is the indicator function of C.",
     "oracles": [
       "grad_f",
@@ -525,6 +542,8 @@
       "Forward-Backward-Forward"
     ],
     "citation": "Tseng 2000",
+    "doi": "https://doi.org/10.1137/S0363012998338806",
+    "bibtex": "@article{tseng2000modified,\n  title={A modified forward-backward splitting method for maximal monotone mappings},\n  author={Tseng, Paul},\n  journal={SIAM Journal on Control and Optimization},\n  volume={38},\n  number={2},\n  pages={431--446},\n  year={2000},\n  publisher={SIAM}\n}",
     "notes": "Projection onto the constraint set C is modeled as prox_g where g is the indicator function of C.",
     "oracles": [
       "grad_f",
@@ -557,6 +576,8 @@
       "Reflected Gradient Method"
     ],
     "citation": "Malitsky 2015",
+    "doi": "https://doi.org/10.1137/14097238X",
+    "bibtex": "@article{malitsky2015projected,\n  title={Projected reflected gradient methods for monotone variational inequalities},\n  author={Malitsky, Yura},\n  journal={SIAM Journal on Optimization},\n  volume={25},\n  number={1},\n  pages={502--520},\n  year={2015},\n  publisher={SIAM}\n}",
     "notes": "Projection onto the constraint set C is modeled as prox_g where g is the indicator function of C.",
     "oracles": [
       "grad_f",
@@ -587,6 +608,8 @@
     "name": "NIDS",
     "aliases": [],
     "citation": "Li et al. 2019",
+    "doi": "https://doi.org/10.1109/TSP.2019.2926022",
+    "bibtex": "@article{li2019decentralized,\n  title={A decentralized proximal-gradient method with network independent step-sizes and separated convergence rates},\n  author={Li, Zhi and Shi, Wei and Yan, Ming},\n  journal={IEEE Transactions on Signal Processing},\n  volume={67},\n  number={17},\n  pages={4494--4506},\n  year={2019},\n  publisher={IEEE}\n}",
     "notes": "Decentralized algorithm. Parameter lam represents an eigenvalue of the mixing matrix W; the transfer function characterizes behavior per spectral mode.",
     "oracles": [
       "grad_f"
@@ -616,6 +639,8 @@
     "name": "Exact Diffusion",
     "aliases": [],
     "citation": "Yuan et al. 2018",
+    "doi": "https://doi.org/10.1109/TSP.2018.2875898",
+    "bibtex": "@article{yuan2018exact,\n  title={Exact diffusion for distributed optimization and learning---{P}art {I}: Algorithm development},\n  author={Yuan, Kun and Ying, Bicheng and Zhao, Xiaochuan and Sayed, Ali H},\n  journal={IEEE Transactions on Signal Processing},\n  volume={67},\n  number={3},\n  pages={708--723},\n  year={2018},\n  publisher={IEEE}\n}",
     "notes": "Decentralized algorithm using adapt-correct-combine steps. Parameter lam represents an eigenvalue of the mixing matrix W; the transfer function characterizes behavior per spectral mode. Oracle-equivalent to NIDS.",
     "oracles": [
       "grad_f"

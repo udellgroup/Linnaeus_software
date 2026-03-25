@@ -542,3 +542,44 @@ body {
     margin-top: 0.25rem;
   }
 }
+
+/* ----------------------------------------------------------
+   Citation links & BibTeX copy buttons
+   ---------------------------------------------------------- */
+.citation-link {
+  color: #1565c0;
+  text-decoration: none;
+  transition: color 0.15s;
+}
+
+.citation-link:hover {
+  color: #0d47a1;
+  text-decoration: underline;
+}
+
+.bibtex-copy-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: none;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  padding: 2px 4px;
+  margin-left: 0.35rem;
+  cursor: pointer;
+  color: #666;
+  vertical-align: middle;
+  transition: all 0.15s;
+  line-height: 1;
+}
+
+.bibtex-copy-btn:hover {
+  background: #f0f0f0;
+  border-color: #999;
+  color: #333;
+}
+
+.bibtex-copy-btn.copied {
+  color: #2e7d32;
+  border-color: #2e7d32;
+}

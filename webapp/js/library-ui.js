@@ -97,11 +97,39 @@ function renderLibraryCards(data) {
     title.textContent = algo.name;
     card.appendChild(title);
 
-    // Citation
+    // Citation with DOI link + BibTeX copy button
     if (algo.citation) {
       const meta = document.createElement('div');
       meta.className = 'algo-card-meta';
-      meta.textContent = algo.citation;
+      if (algo.doi) {
+        const link = document.createElement('a');
+        link.href = algo.doi;
+        link.target = '_blank';
+        link.rel = 'noopener noreferrer';
+        link.className = 'citation-link';
+        link.textContent = algo.citation;
+        meta.appendChild(link);
+      } else {
+        meta.appendChild(document.createTextNode(algo.citation));
+      }
+      if (algo.bibtex) {
+        const btn = document.createElement('button');
+        btn.className = 'bibtex-copy-btn';
+        btn.title = 'Copy BibTeX';
+        btn.innerHTML = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>';
+        btn.addEventListener('click', (e) => {
+          e.stopPropagation();
+          navigator.clipboard.writeText(algo.bibtex).then(() => {
+            btn.classList.add('copied');
+            btn.innerHTML = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg>';
+            setTimeout(() => {
+              btn.classList.remove('copied');
+              btn.innerHTML = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>';
+            }, 1500);
+          });
+        });
+        meta.appendChild(btn);
+      }
       card.appendChild(meta);
     }
 
