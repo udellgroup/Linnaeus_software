@@ -76,30 +76,101 @@ def check_oracle_equivalence(H1, H2, z, lib_params=None):
     all_free.discard(z)
     user_params_in_eq = sorted(all_free - set(fresh_params), key=str)
 
-    # Strategy: solve for lib params in terms of user params first.
-    # If residual constraints remain on user params, solve those next.
-    # This avoids SymPy picking the trivial (all-zero) solution.
-    from sympy import Dummy as _Dummy, Integer
+    # Collect candidate solutions from multiple strategies, score them,
+    # and pick the simplest.  This avoids bias from the solver picking
+    # e.g., beta_lib=0 when gamma=0 is a simpler answer.
+    from sympy import Integer
 
     fresh_set = set(fresh_params)
 
-    # Step 1: Try solving for lib params only.
+    def _finalize_solution(sol):
+        """Resolve free dummies, verify, and build result dict.
+
+        Returns (result_dict, score) or None if invalid.
+        Score = number of non-identity equations (lower is simpler).
+        """
+        sol = dict(sol)
+
+        # Handle unsolved fresh Dummy symbols
+        solved_set = set(sol.keys())
+        free_dummies = fresh_set - solved_set
+        for val in sol.values():
+            free_dummies |= (val.free_symbols & fresh_set)
+        free_dummies -= solved_set
+        if free_dummies:
+            zero_sub = {d: 0 for d in free_dummies}
+            sol = {k: cancel(v.subs(zero_sub)) for k, v in sol.items()}
+            for d in free_dummies:
+                sol[d] = Integer(0)
+
+        # Reject solutions containing z
+        if any(v.has(z) for v in sol.values()):
+            return None
+
+        # Reject trivial all-zero solutions
+        if sol and all(cancel(v) == 0 for v in sol.values()):
+            return None
+
+        # Verify substitution works
+        for i in range(rows):
+            for j in range(cols):
+                diff = cancel(
+                    H1[i, j].subs(sol) - H2_fresh[i, j].subs(sol)
+                )
+                if diff != 0:
+                    return None
+
+        # Map back to original library parameter names
+        lib_solved = {}
+        user_solved = {}
+        for k, v in sol.items():
+            if k in reverse_map:
+                lib_solved[reverse_map[k]] = v
+            else:
+                user_solved[k] = v
+
+        # Ensure ALL user params appear in the mapping
+        for up in user_params_in_eq:
+            if up not in user_solved:
+                for lp, lv in lib_solved.items():
+                    if lv == up:
+                        user_solved[up] = lp
+                        break
+                else:
+                    user_solved[up] = up
+
+        # Score: count non-identity equations (lower = simpler).
+        # An identity is lib_param = user_param_with_same_name or v = k.
+        score = 0
+        for lp, lv in lib_solved.items():
+            if lv != lp and not any(
+                up == lp and uv == lp for up, uv in user_solved.items()
+            ):
+                score += 1
+        for up, uv in user_solved.items():
+            if uv != up:
+                score += 1
+
+        result = {'match': True, 'params': lib_solved}
+        if user_solved:
+            result['user_params'] = user_solved
+        return (result, score)
+
+    candidates = []
+
+    # Strategy 1: Solve for lib params, then residual user constraints.
     try:
         lib_solutions = solve(equations, fresh_params, dict=True)
     except Exception:
         lib_solutions = []
 
-    # Filter out solutions with z-dependent values
     lib_solutions = [
         s for s in lib_solutions
         if all(not v.has(z) for v in s.values())
     ]
 
-    best_result = None
-
     for lib_sol in lib_solutions:
-        # Substitute lib solution back to get residual constraints on
-        # user params.
+        # Get residual constraints on user params
         residuals = []
         for eq in equations:
             r = cancel(eq.subs(lib_sol))
@@ -110,93 +181,31 @@ def check_oracle_equivalence(H1, H2, z, lib_params=None):
                 except Exception:
                     residuals.append(r)
 
-        user_sol = {}
-        if residuals:
-            # Solve residual constraints for user params
-            try:
-                user_solutions = solve(residuals, user_params_in_eq, dict=True)
-            except Exception:
-                user_solutions = []
-
-            if not user_solutions:
-                continue
-            # Prefer non-trivial solutions (not all zeros)
-            chosen = None
-            for us in user_solutions:
-                if not all(cancel(v) == 0 for v in us.values()):
-                    chosen = us
-                    break
-            if chosen is None:
-                chosen = user_solutions[0]
-            user_sol = chosen
-
-        # Build the full solution
-        sol = {}
-        sol.update(lib_sol)
-        # Substitute user constraints into lib values
-        for k in sol:
-            sol[k] = cancel(sol[k].subs(user_sol))
-        sol.update(user_sol)
-
-        # Check for unsolved fresh Dummy symbols in solution values
-        solved_set = set(sol.keys())
-        free_dummies = fresh_set - solved_set
-        for val in sol.values():
-            free_dummies |= (val.free_symbols & fresh_set)
-        free_dummies -= solved_set
-
-        if free_dummies:
-            zero_sub = {d: 0 for d in free_dummies}
-            sol = {k: cancel(v.subs(zero_sub)) for k, v in sol.items()}
-            for d in free_dummies:
-                sol[d] = Integer(0)
-
-        # Reject solutions containing z
-        if any(v.has(z) for v in sol.values()):
+        if not residuals:
+            # No residual constraints — lib solution is complete
+            sol = dict(lib_sol)
+            fin = _finalize_solution(sol)
+            if fin:
+                candidates.append(fin)
             continue
 
-        # Verify substitution works.
-        valid = True
-        for i in range(rows):
-            for j in range(cols):
-                diff = cancel(
-                    H1[i, j].subs(sol) - H2_fresh[i, j].subs(sol)
-                )
-                if diff != 0:
-                    valid = False
-                    break
-            if not valid:
-                break
-        if not valid:
-            continue
+        # Solve residuals for user params
+        try:
+            user_solutions = solve(residuals, user_params_in_eq, dict=True)
+        except Exception:
+            user_solutions = []
 
-        # Map back to original library parameter names for display.
-        lib_solved = {}
-        user_solved = {}
-        for k, v in sol.items():
-            if k in reverse_map:
-                lib_solved[reverse_map[k]] = v
-            else:
-                user_solved[k] = v
+        for user_sol in user_solutions:
+            sol = {}
+            sol.update(lib_sol)
+            for k in list(sol.keys()):
+                sol[k] = cancel(sol[k].subs(user_sol))
+            sol.update(user_sol)
+            fin = _finalize_solution(sol)
+            if fin:
+                candidates.append(fin)
 
-        # Ensure ALL user params in the equation appear in the mapping.
-        for up in user_params_in_eq:
-            if up not in user_solved:
-                # Check if a lib param equals this user param
-                for lp, lv in lib_solved.items():
-                    if lv == up:
-                        user_solved[up] = lp
-                        break
-                else:
-                    user_solved[up] = up
-
-        result = {'match': True, 'params': lib_solved}
-        if user_solved:
-            result['user_params'] = user_solved
-        return result
-
-    # Step 2: If lib-only solving failed entirely, try solving for all
-    # unknowns simultaneously (fallback for cases like q = t).
+    # Strategy 2: Solve for all unknowns simultaneously.
     if user_params_in_eq:
         all_unknowns = fresh_params + user_params_in_eq
         try:
@@ -204,72 +213,19 @@ def check_oracle_equivalence(H1, H2, z, lib_params=None):
         except Exception:
             all_solutions = []
 
-        # Try each solution, preferring non-trivial ones
-        non_trivial = []
-        trivial = []
         for sol_candidate in all_solutions:
             if any(v.has(z) for v in sol_candidate.values()):
                 continue
-            if all(cancel(v) == 0 for v in sol_candidate.values()):
-                trivial.append(sol_candidate)
-            else:
-                non_trivial.append(sol_candidate)
+            fin = _finalize_solution(dict(sol_candidate))
+            if fin:
+                candidates.append(fin)
 
-        for sol in non_trivial + trivial:
-            sol = dict(sol)
-            # Handle unsolved fresh dummies
-            solved_set = set(sol.keys())
-            free_dummies = fresh_set - solved_set
-            for val in sol.values():
-                free_dummies |= (val.free_symbols & fresh_set)
-            free_dummies -= solved_set
-            if free_dummies:
-                zero_sub = {d: 0 for d in free_dummies}
-                sol = {k: cancel(v.subs(zero_sub)) for k, v in sol.items()}
-                for d in free_dummies:
-                    sol[d] = Integer(0)
+    if not candidates:
+        return {'match': False}
 
-            if any(v.has(z) for v in sol.values()):
-                continue
-
-            # Verify
-            valid = True
-            for i in range(rows):
-                for j in range(cols):
-                    diff = cancel(
-                        H1[i, j].subs(sol) - H2_fresh[i, j].subs(sol)
-                    )
-                    if diff != 0:
-                        valid = False
-                        break
-                if not valid:
-                    break
-            if not valid:
-                continue
-
-            lib_solved = {}
-            user_solved = {}
-            for k, v in sol.items():
-                if k in reverse_map:
-                    lib_solved[reverse_map[k]] = v
-                else:
-                    user_solved[k] = v
-
-            for up in user_params_in_eq:
-                if up not in user_solved:
-                    for lp, lv in lib_solved.items():
-                        if lv == up:
-                            user_solved[up] = lp
-                            break
-                    else:
-                        user_solved[up] = up
-
-            result = {'match': True, 'params': lib_solved}
-            if user_solved:
-                result['user_params'] = user_solved
-            return result
-
-    return {'match': False}
+    # Pick the simplest solution (lowest score)
+    candidates.sort(key=lambda x: x[1])
+    return candidates[0][0]
 
 
 def _extract_z_power(expr, z):
