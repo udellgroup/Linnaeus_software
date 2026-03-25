@@ -141,28 +141,43 @@ function displayResults(result) {
       card.appendChild(libMath);
     }
 
-    // Parameter mapping — show both library and user param constraints.
-    // When a symbol name appears in both, add _{\text{lib}} subscript to the lib one.
+    // Parameter mapping — show user params first, then lib params.
+    // When a symbol name appears in both, add _{\text{lib}} subscript to the
+    // lib one.  Values on the RHS may reference lib params with subscripts.
     const hasLibParams = match.params && Object.keys(match.params).length > 0;
     const hasUserParams = match.user_params && Object.keys(match.user_params).length > 0;
     if (hasLibParams || hasUserParams) {
       const libEntries = hasLibParams ? Object.entries(match.params) : [];
       const userEntries = hasUserParams ? Object.entries(match.user_params) : [];
 
-      // Detect name collisions between lib and user param keys
+      // Detect name collisions between lib param keys and user param keys
       const libKeys = new Set(libEntries.map(([k]) => k));
       const userKeys = new Set(userEntries.map(([k]) => k));
       const collisions = new Set([...libKeys].filter(k => userKeys.has(k)));
 
-      // Build display entries: [displayKey, value] pairs.
-      // Only add _{\text{lib}} subscript when there's a name collision.
+      // Build a substitution map for lib param names that collide:
+      // In display values, replace bare lib param names with subscripted
+      // versions so the user can tell them apart.
+      const libDisplayMap = {};
+      for (const [k] of libEntries) {
+        if (collisions.has(k)) {
+          libDisplayMap[k] = k + '_{\\text{lib}}';
+        }
+      }
+
+      // Build display entries: user params first, then lib params.
       const allDisplay = [];
+      for (const [k, v] of userEntries) {
+        // Substitute lib param names in the value for display
+        let displayVal = v;
+        for (const [from, to] of Object.entries(libDisplayMap)) {
+          displayVal = displayVal.split(from).join(to);
+        }
+        allDisplay.push([k, displayVal]);
+      }
       for (const [k, v] of libEntries) {
         const displayKey = collisions.has(k) ? k + '_{\\text{lib}}' : k;
         allDisplay.push([displayKey, v]);
-      }
-      for (const [k, v] of userEntries) {
-        allDisplay.push([k, v]);
       }
 
       const paramDiv = document.createElement('div');
