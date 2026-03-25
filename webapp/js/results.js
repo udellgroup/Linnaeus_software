@@ -141,9 +141,9 @@ function displayResults(result) {
       card.appendChild(libMath);
     }
 
-    // Parameter mapping — show user params first, then lib params.
-    // When a symbol name appears in both, add _{\text{lib}} subscript to the
-    // lib one.  Values on the RHS may reference lib params with subscripts.
+    // Parameter mapping — displayed as a set of equations.
+    // When a symbol name appears in both lib and user params,
+    // add _{\text{lib}} subscript to the lib one.
     const hasLibParams = match.params && Object.keys(match.params).length > 0;
     const hasUserParams = match.user_params && Object.keys(match.user_params).length > 0;
     if (hasLibParams || hasUserParams) {
@@ -155,58 +155,61 @@ function displayResults(result) {
       const userKeys = new Set(userEntries.map(([k]) => k));
       const collisions = new Set([...libKeys].filter(k => userKeys.has(k)));
 
-      // Build a substitution map for lib param names that collide:
-      // In display values, replace bare lib param names with subscripted
-      // versions so the user can tell them apart.
-      const libDisplayMap = {};
-      for (const [k] of libEntries) {
-        if (collisions.has(k)) {
-          libDisplayMap[k] = k + '_{\\text{lib}}';
-        }
-      }
-
-      // Build display entries: user params first, then lib params.
-      const allDisplay = [];
-      for (const [k, v] of userEntries) {
-        // Substitute lib param names in the value for display
-        let displayVal = v;
-        for (const [from, to] of Object.entries(libDisplayMap)) {
-          displayVal = displayVal.split(from).join(to);
-        }
-        allDisplay.push([k, displayVal]);
-      }
+      // Build equations: key = value.
+      // For lib params with collisions, subscript the key.
+      // For values that reference colliding lib param names, subscript them.
+      const equations = [];
       for (const [k, v] of libEntries) {
         const displayKey = collisions.has(k) ? k + '_{\\text{lib}}' : k;
-        allDisplay.push([displayKey, v]);
+        // Substitute colliding names in the value
+        let displayVal = v;
+        for (const [ck] of [...collisions]) {
+          // Replace bare param name with subscripted version in value
+          // Use word-boundary-aware replacement for LaTeX
+          const re = new RegExp('(?<![a-zA-Z_])' + ck.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + '(?![a-zA-Z_])', 'g');
+          displayVal = displayVal.replace(re, ck + '_{\\text{lib}}');
+        }
+        equations.push([displayKey, displayVal]);
+      }
+      for (const [k, v] of userEntries) {
+        let displayVal = v;
+        for (const [ck] of [...collisions]) {
+          const re = new RegExp('(?<![a-zA-Z_])' + ck.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + '(?![a-zA-Z_])', 'g');
+          displayVal = displayVal.replace(re, ck + '_{\\text{lib}}');
+        }
+        equations.push([k, displayVal]);
       }
 
-      const paramDiv = document.createElement('div');
-      paramDiv.style.cssText =
-        'margin-top:0.5rem;padding:0.5rem 0.75rem;background:#f0f4ff;' +
-        'border:1px solid #c5cae9;border-radius:4px;';
-      const paramLabel = document.createElement('div');
-      paramLabel.style.cssText = 'font-size:0.78rem;color:#666;margin-bottom:0.25rem;font-weight:600;';
-      paramLabel.textContent = 'Parameter mapping:';
-      paramDiv.appendChild(paramLabel);
+      // Filter out trivial identity equations (x = x) — not informative.
+      const nonTrivialEqs = equations.filter(([k, v]) => k !== v);
 
-      const paramMath = document.createElement('div');
-      const keys = allDisplay.map(([k]) => k).join(', ');
-      const vals = allDisplay.map(([, v]) => v).join(', ');
-      let paramLatex = '(' + keys + ') \\leftarrow (' + vals + ')';
+      if (nonTrivialEqs.length > 0) {
+        const paramDiv = document.createElement('div');
+        paramDiv.style.cssText =
+          'margin-top:0.5rem;padding:0.5rem 0.75rem;background:#f0f4ff;' +
+          'border:1px solid #c5cae9;border-radius:4px;';
+        const paramLabel = document.createElement('div');
+        paramLabel.style.cssText = 'font-size:0.78rem;color:#666;margin-bottom:0.25rem;font-weight:600;';
+        paramLabel.textContent = 'Parameter mapping:';
+        paramDiv.appendChild(paramLabel);
 
-      // Append free parameter annotation if present
-      if (match.free_params && match.free_params.length > 0) {
-        const freeList = match.free_params.join(', ');
-        paramLatex += ' \\qquad (' + freeList + ' \\text{ free})';
+        const paramMath = document.createElement('div');
+        let paramLatex = nonTrivialEqs.map(([k, v]) => k + ' = ' + v).join(', \\quad ');
+
+        // Append free parameter annotation if present
+        if (match.free_params && match.free_params.length > 0) {
+          const freeList = match.free_params.join(', ');
+          paramLatex += ' \\qquad (' + freeList + ' \\text{ free})';
+        }
+
+        try {
+          katex.render(paramLatex, paramMath, { throwOnError: false, displayMode: false });
+        } catch (e) {
+          paramMath.textContent = nonTrivialEqs.map(([k, v]) => k + ' = ' + v).join(', ');
+        }
+        paramDiv.appendChild(paramMath);
+        card.appendChild(paramDiv);
       }
-
-      try {
-        katex.render(paramLatex, paramMath, { throwOnError: false, displayMode: false });
-      } catch (e) {
-        paramMath.textContent = '(' + keys + ') <- (' + vals + ')';
-      }
-      paramDiv.appendChild(paramMath);
-      card.appendChild(paramDiv);
     }
 
     // Shift vector
