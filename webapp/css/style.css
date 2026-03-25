@@ -314,9 +314,6 @@ body {
   border-radius: 6px;
   padding: 1rem;
   margin-top: 0.75rem;
-  font-family: "SF Mono", "Fira Code", "Fira Mono", Menlo, Consolas,
-    "DejaVu Sans Mono", monospace;
-  font-size: 0.85rem;
   overflow-x: auto;
 }
 
