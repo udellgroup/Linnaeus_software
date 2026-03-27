@@ -107,18 +107,26 @@ def check_oracle_equivalence(H1, H2, z, lib_params=None):
         if any(v.has(z) for v in sol.values()):
             return None
 
-        # Reject trivial all-zero solutions
+        # Reject trivial all-zero solutions (all values are 0)
         if sol and all(cancel(v) == 0 for v in sol.values()):
             return None
 
-        # Verify substitution works
+        # Verify substitution works AND reject solutions that make the
+        # transfer functions trivially zero (e.g., alpha=0 zeroing out
+        # both H1 and H2 is not a meaningful equivalence).
+        all_zero = True
         for i in range(rows):
             for j in range(cols):
-                diff = cancel(
-                    H1[i, j].subs(sol) - H2_fresh[i, j].subs(sol)
-                )
+                h1_sub = cancel(H1[i, j].subs(sol))
+                h2_sub = cancel(H2_fresh[i, j].subs(sol))
+                diff = cancel(h1_sub - h2_sub)
                 if diff != 0:
                     return None
+                if h1_sub != 0:
+                    all_zero = False
+
+        if all_zero:
+            return None
 
         # Map back to original library parameter names
         lib_solved = {}
@@ -349,8 +357,9 @@ def check_shift_equivalence(H1, H2, z, lib_params=None):
         if any(v.has(z) for v in sol.values()):
             continue
 
-        # Verify substitution works
+        # Verify substitution works and reject trivially-zero TFs
         ok = True
+        all_zero = True
         for i in range(p):
             for j in range(p):
                 shift_power = m[i] - m[j]
@@ -360,10 +369,12 @@ def check_shift_equivalence(H1, H2, z, lib_params=None):
                 if diff != 0:
                     ok = False
                     break
+                if cancel(H1[i, j].subs(sol)) != 0:
+                    all_zero = False
             if not ok:
                 break
 
-        if ok:
+        if ok and not all_zero:
             # Normalize shift vector
             min_m = min(m)
             m = [mi - min_m for mi in m]
@@ -588,6 +599,16 @@ def check_lft_equivalence(H1, H2, M_hat, z, lib_params=None,
             entry = simplify(cancel(product_sub[i, j]))
             if entry != 0:
                 return {'match': False}
+
+    # Reject solutions that make the transfer functions trivially zero
+    # (e.g., alpha=0 zeroing out everything is not meaningful equivalence).
+    h1_sub = H1.subs(sol)
+    all_zero = all(
+        cancel(h1_sub[i, j]) == 0
+        for i in range(H1.rows) for j in range(H1.cols)
+    )
+    if all_zero:
+        return {'match': False}
 
     # Partition solution into lib params, user params, and internal
     # (oracle transformation) params.  Internal symbols that were solved
