@@ -66,7 +66,9 @@ def check_oracle_equivalence(H1, H2, z, lib_params=None):
             equations.extend(coeffs)
 
     if not equations:
-        return {'match': True, 'params': {}}
+        # Perfect match — report identity mapping for all lib params
+        lib_id = {orig: orig for orig in reverse_map.values()}
+        return {'match': True, 'params': lib_id}
 
     # Collect all free symbols (user params) in the equations besides
     # fresh_params and z, so we can solve for them if needed.
@@ -128,14 +130,24 @@ def check_oracle_equivalence(H1, H2, z, lib_params=None):
         if all_zero:
             return None
 
-        # Map back to original library parameter names
+        # Map back to original library parameter names.
+        # Also substitute dummy names in values so e.g. _lib_alpha -> alpha.
+        dummy_to_orig = {d: orig for d, orig in reverse_map.items()}
         lib_solved = {}
         user_solved = {}
         for k, v in sol.items():
+            v = v.subs(dummy_to_orig)
             if k in reverse_map:
                 lib_solved[reverse_map[k]] = v
             else:
                 user_solved[k] = v
+
+        # Ensure ALL lib params appear in the mapping.  If a lib param
+        # dummy wasn't constrained by the solver, it defaults to the
+        # user param with the same base name (identity mapping).
+        for dummy, orig in reverse_map.items():
+            if orig not in lib_solved:
+                lib_solved[orig] = orig
 
         # Ensure ALL user params appear in the mapping
         for up in user_params_in_eq:
@@ -147,17 +159,43 @@ def check_oracle_equivalence(H1, H2, z, lib_params=None):
                 else:
                     user_solved[up] = up
 
-        # Score: count non-identity equations (lower = simpler).
-        # An identity is lib_param = user_param_with_same_name or v = k.
-        score = 0
+        # Prune redundant user equations that are just reverses of lib
+        # equations (e.g., gamma = beta_lib when beta_lib = gamma exists).
+        # Also prune user equations derivable by transitivity from lib eqs
+        # (e.g., beta = gamma when beta_lib = gamma and beta_lib = beta).
+        lib_reverse = {lv: lp for lp, lv in lib_solved.items()}
+        for up in list(user_solved.keys()):
+            uv = user_solved[up]
+            # Direct reverse: up = L where lib has L = up
+            if up in lib_reverse and lib_reverse[up] == uv:
+                del user_solved[up]
+                continue
+            # Transitivity: up = X where a lib eq also maps to X
+            # (e.g., beta = gamma and beta_lib = gamma → beta = beta_lib,
+            # which is identity if the param names match)
+            if uv in lib_reverse:
+                # up = uv, and lib has lib_reverse[uv] = uv
+                # If up and lib_reverse[uv] share the base name, redundant
+                pass  # keep for now — only prune exact reverses
+
+        # Score solutions: lower is better.
+        # Components:
+        #   1. Number of params set to non-trivial values (not identity)
+        #   2. Total expression complexity (count of atoms in values)
+        # This prefers gamma=0 over beta=gamma/(gamma+1).
+        n_nontrivial = 0
+        complexity = 0
         for lp, lv in lib_solved.items():
-            if lv != lp and not any(
-                up == lp and uv == lp for up, uv in user_solved.items()
-            ):
-                score += 1
+            if lv != lp:
+                n_nontrivial += 1
+                complexity += lv.count_ops() if hasattr(lv, 'count_ops') else 0
         for up, uv in user_solved.items():
             if uv != up:
-                score += 1
+                n_nontrivial += 1
+                complexity += uv.count_ops() if hasattr(uv, 'count_ops') else 0
+        # Weight: prioritize fewer nontrivial constraints, break ties by
+        # expression complexity
+        score = n_nontrivial * 1000 + complexity
 
         result = {'match': True, 'params': lib_solved}
         if user_solved:
@@ -166,67 +204,159 @@ def check_oracle_equivalence(H1, H2, z, lib_params=None):
 
     candidates = []
 
-    # Strategy 1: Solve for lib params, then residual user constraints.
-    try:
-        lib_solutions = solve(equations, fresh_params, dict=True)
-    except Exception:
-        lib_solutions = []
-
-    lib_solutions = [
-        s for s in lib_solutions
-        if all(not v.has(z) for v in s.values())
-    ]
-
-    for lib_sol in lib_solutions:
-        # Get residual constraints on user params
-        residuals = []
-        for eq in equations:
-            r = cancel(eq.subs(lib_sol))
-            if r != 0:
-                try:
-                    p = Poly(r, z)
-                    residuals.extend(p.all_coeffs())
-                except Exception:
-                    residuals.append(r)
-
-        if not residuals:
-            # No residual constraints — lib solution is complete
-            sol = dict(lib_sol)
-            fin = _finalize_solution(sol)
-            if fin:
-                candidates.append(fin)
-            continue
-
-        # Solve residuals for user params
+    def _try_solve(eqs, lib_unknowns, user_unknowns):
+        """Try solving eqs and add valid candidates."""
+        # Try lib-only first
         try:
-            user_solutions = solve(residuals, user_params_in_eq, dict=True)
+            lib_solutions = solve(eqs, lib_unknowns, dict=True)
         except Exception:
-            user_solutions = []
+            lib_solutions = []
 
-        for user_sol in user_solutions:
-            sol = {}
-            sol.update(lib_sol)
-            for k in list(sol.keys()):
-                sol[k] = cancel(sol[k].subs(user_sol))
-            sol.update(user_sol)
-            fin = _finalize_solution(sol)
-            if fin:
-                candidates.append(fin)
+        lib_solutions = [
+            s for s in lib_solutions
+            if all(not v.has(z) for v in s.values())
+        ]
 
-    # Strategy 2: Solve for all unknowns simultaneously.
-    if user_params_in_eq:
-        all_unknowns = fresh_params + user_params_in_eq
-        try:
-            all_solutions = solve(equations, all_unknowns, dict=True)
-        except Exception:
-            all_solutions = []
+        for lib_sol in lib_solutions:
+            residuals = []
+            for eq in eqs:
+                r = cancel(eq.subs(lib_sol))
+                if r != 0:
+                    try:
+                        p_eq = Poly(r, z)
+                        residuals.extend(p_eq.all_coeffs())
+                    except Exception:
+                        residuals.append(r)
 
-        for sol_candidate in all_solutions:
-            if any(v.has(z) for v in sol_candidate.values()):
+            if not residuals:
+                fin = _finalize_solution(dict(lib_sol))
+                if fin:
+                    candidates.append(fin)
                 continue
-            fin = _finalize_solution(dict(sol_candidate))
-            if fin:
-                candidates.append(fin)
+
+            try:
+                user_solutions = solve(residuals, user_unknowns, dict=True)
+            except Exception:
+                user_solutions = []
+
+            for user_sol in user_solutions:
+                sol = {}
+                sol.update(lib_sol)
+                for k in list(sol.keys()):
+                    sol[k] = cancel(sol[k].subs(user_sol))
+                sol.update(user_sol)
+                fin = _finalize_solution(sol)
+                if fin:
+                    candidates.append(fin)
+
+        # Also try all-at-once
+        if user_unknowns:
+            all_unknowns = list(lib_unknowns) + list(user_unknowns)
+            try:
+                all_solutions = solve(eqs, all_unknowns, dict=True)
+            except Exception:
+                all_solutions = []
+
+            for sol_candidate in all_solutions:
+                if any(v.has(z) for v in sol_candidate.values()):
+                    continue
+                fin = _finalize_solution(dict(sol_candidate))
+                if fin:
+                    candidates.append(fin)
+
+    # Strategy 1: Direct solve (no branching).
+    _try_solve(equations, fresh_params, user_params_in_eq)
+
+    # Strategy 2: Branch on factored equations.
+    # For equations like alpha*gamma*beta_lib = 0, SymPy's solve may only
+    # explore one branch.  Explicitly try setting each factor to zero.
+    from sympy import factor, Mul
+    all_unknowns_set = fresh_set | set(user_params_in_eq)
+    branch_subs = set()  # (sym, val) pairs already tried
+    for eq in equations:
+        feq = factor(eq)
+        # Get multiplicative factors
+        if isinstance(feq, Mul):
+            factors = feq.args
+        else:
+            factors = [feq]
+        for f in factors:
+            f_syms = f.free_symbols & all_unknowns_set
+            if len(f_syms) == 1:
+                sym = f_syms.pop()
+                # Solve this single factor for that symbol
+                try:
+                    vals = solve(f, sym)
+                except Exception:
+                    continue
+                for val in vals:
+                    if val.has(z):
+                        continue
+                    key = (sym, val)
+                    if key in branch_subs:
+                        continue
+                    branch_subs.add(key)
+                    # Substitute into all equations and re-solve
+                    branched_eqs = []
+                    for orig_eq in equations:
+                        r = cancel(orig_eq.subs(sym, val))
+                        if r != 0:
+                            branched_eqs.append(r)
+                    remaining_fresh = [fp for fp in fresh_params if fp != sym]
+                    remaining_user = [up for up in user_params_in_eq if up != sym]
+                    if not branched_eqs:
+                        # All equations satisfied — build solution
+                        sol = {sym: val}
+                        fin = _finalize_solution(sol)
+                        if fin:
+                            candidates.append(fin)
+                    else:
+                        # Re-extract polynomial coefficients in z
+                        expanded_eqs = []
+                        for beq in branched_eqs:
+                            try:
+                                p_eq = Poly(beq, z)
+                                expanded_eqs.extend(p_eq.all_coeffs())
+                            except Exception:
+                                expanded_eqs.append(beq)
+                        # Solve the remaining system
+                        branch_fresh = remaining_fresh if remaining_fresh else fresh_params
+                        branch_user = remaining_user if remaining_user else user_params_in_eq
+                        try:
+                            bsols = solve(expanded_eqs, branch_fresh, dict=True)
+                        except Exception:
+                            bsols = []
+                        bsols = [s for s in bsols if all(not v.has(z) for v in s.values())]
+                        for bsol in bsols:
+                            full_sol = {sym: val}
+                            full_sol.update(bsol)
+                            # Check residuals for user params
+                            residuals = []
+                            for orig_eq in equations:
+                                r = cancel(orig_eq.subs(full_sol))
+                                if r != 0:
+                                    try:
+                                        p_eq = Poly(r, z)
+                                        residuals.extend(p_eq.all_coeffs())
+                                    except Exception:
+                                        residuals.append(r)
+                            if residuals and branch_user:
+                                try:
+                                    usols = solve(residuals, branch_user, dict=True)
+                                except Exception:
+                                    usols = []
+                                for usol in usols:
+                                    combo = dict(full_sol)
+                                    for k in list(combo.keys()):
+                                        combo[k] = cancel(combo[k].subs(usol))
+                                    combo.update(usol)
+                                    fin = _finalize_solution(combo)
+                                    if fin:
+                                        candidates.append(fin)
+                            else:
+                                fin = _finalize_solution(full_sol)
+                                if fin:
+                                    candidates.append(fin)
 
     if not candidates:
         return {'match': False}
@@ -379,13 +509,21 @@ def check_shift_equivalence(H1, H2, z, lib_params=None):
             min_m = min(m)
             m = [mi - min_m for mi in m]
             # Map fresh dummies back to original lib param names
+            dummy_to_orig = {d: orig for d, orig in reverse_map.items()}
             lib_solved = {}
             user_solved = {}
             for k, v in sol.items():
+                v = v.subs(dummy_to_orig)
                 if k in reverse_map:
                     lib_solved[reverse_map[k]] = v
                 else:
                     user_solved[k] = v
+            # Prune redundant reverse equations
+            lib_reverse = {lv: lp for lp, lv in lib_solved.items()}
+            for up in list(user_solved.keys()):
+                uv = user_solved[up]
+                if up in lib_reverse and lib_reverse[up] == uv:
+                    del user_solved[up]
             result = {'match': True, 'shift_vector': m, 'params': lib_solved}
             if user_solved:
                 result['user_params'] = user_solved

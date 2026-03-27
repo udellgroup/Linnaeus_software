@@ -150,32 +150,28 @@ function displayResults(result) {
       const libEntries = hasLibParams ? Object.entries(match.params) : [];
       const userEntries = hasUserParams ? Object.entries(match.user_params) : [];
 
-      // Detect name collisions between lib param keys and user param keys
+      // Always subscript lib param keys with _{\text{lib}} to distinguish
+      // them from user params, and substitute lib param names in values too.
       const libKeys = new Set(libEntries.map(([k]) => k));
-      const userKeys = new Set(userEntries.map(([k]) => k));
-      const collisions = new Set([...libKeys].filter(k => userKeys.has(k)));
 
-      // Build equations: key = value.
-      // For lib params with collisions, subscript the key.
-      // For values that reference colliding lib param names, subscript them.
       const equations = [];
       for (const [k, v] of libEntries) {
-        const displayKey = collisions.has(k) ? k + '_{\\text{lib}}' : k;
-        // Substitute colliding names in the value
+        const displayKey = k + '_{\\text{lib}}';
+        // Substitute lib param names in the value with subscripted version,
+        // but NOT the param that matches this key (to avoid alpha_lib = alpha_lib).
         let displayVal = v;
-        for (const [ck] of [...collisions]) {
-          // Replace bare param name with subscripted version in value
-          // Use word-boundary-aware replacement for LaTeX
-          const re = new RegExp('(?<![a-zA-Z_])' + ck.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + '(?![a-zA-Z_])', 'g');
-          displayVal = displayVal.replace(re, ck + '_{\\text{lib}}');
+        for (const lk of libKeys) {
+          if (lk === k) continue;  // don't subscript same-name param in value
+          const re = new RegExp('(?<![a-zA-Z_])' + lk.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + '(?![a-zA-Z_])', 'g');
+          displayVal = displayVal.replace(re, lk + '_{\\text{lib}}');
         }
         equations.push([displayKey, displayVal]);
       }
       for (const [k, v] of userEntries) {
         let displayVal = v;
-        for (const [ck] of [...collisions]) {
-          const re = new RegExp('(?<![a-zA-Z_])' + ck.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + '(?![a-zA-Z_])', 'g');
-          displayVal = displayVal.replace(re, ck + '_{\\text{lib}}');
+        for (const lk of libKeys) {
+          const re = new RegExp('(?<![a-zA-Z_])' + lk.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + '(?![a-zA-Z_])', 'g');
+          displayVal = displayVal.replace(re, lk + '_{\\text{lib}}');
         }
         equations.push([k, displayVal]);
       }
