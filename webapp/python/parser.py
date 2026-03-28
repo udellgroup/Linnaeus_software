@@ -135,6 +135,20 @@ def parse_equations(equations):
     # for correct LaTeX rendering, consistent with library.py).
     equations = [re.sub(r'\blambda\b', 'lam', eq) for eq in equations]
 
+    # Detect mixing matrix W: rewrite W*expr to lam*expr.
+    # W is a linear oracle representing a gossip/mixing matrix whose eigenvalue
+    # is lambda.  After rewriting, lam flows through the z-domain pipeline
+    # normally but is marked as a universal parameter (must match for ALL
+    # lambda, not just some specific value).
+    has_mixing_matrix = False
+    W_PATTERN = re.compile(r'\bW\s*\*')
+    for eq in equations:
+        if W_PATTERN.search(eq):
+            has_mixing_matrix = True
+            break
+    if has_mixing_matrix:
+        equations = [W_PATTERN.sub('lam*', eq) for eq in equations]
+
     # Pre-process: merge shifted oracle calls into single oracles
     equations = _merge_shifted_oracles(equations)
 
@@ -338,6 +352,10 @@ def parse_equations(equations):
 
     # Include all variables (including intermediates) in state_vars.
     # The matrix solve in compute.py will naturally eliminate intermediates.
+    # Universal parameters: must match for ALL values during equivalence
+    # checking (e.g., lambda for distributed algorithms).
+    universal_params = ['lam'] if has_mixing_matrix else []
+
     return {
         'state_vars': augmented_state,
         'oracle_inputs': oracle_inputs,
@@ -346,6 +364,8 @@ def parse_equations(equations):
         'z_equations': z_equations,
         'parameters': sorted(parameters),
         'z_var': z,  # the internal z-transform symbol (may differ from Symbol('z'))
+        'has_mixing_matrix': has_mixing_matrix,
+        'universal_params': universal_params,
     }
 
 

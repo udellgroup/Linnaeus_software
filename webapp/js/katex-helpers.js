@@ -21,14 +21,20 @@ function oracleToLatex(name) {
 
 /**
  * Build the composition LaTeX: [matrix] \diamond \begin{bmatrix} oracles \end{bmatrix}
+ * For distributed algorithms, appends: Linear oracle: W (eigenvalue λ)
  * @param {string} tfLatex - LaTeX for the transfer function matrix
  * @param {string[]} oracles - oracle name strings, e.g. ["prox_f", "prox_g"]
+ * @param {boolean} [distributed] - whether this is a distributed algorithm
  * @returns {string} full composition LaTeX
  */
-function compositionLatex(tfLatex, oracles) {
-  if (!oracles || oracles.length === 0) {
-    return tfLatex;
+function compositionLatex(tfLatex, oracles, distributed) {
+  let result = tfLatex;
+  if (oracles && oracles.length > 0) {
+    const oracleEntries = oracles.map(oracleToLatex).join(' \\\\ ');
+    result += ' \\diamond \\begin{bmatrix} ' + oracleEntries + ' \\end{bmatrix}';
   }
-  const oracleEntries = oracles.map(oracleToLatex).join(' \\\\ ');
-  return tfLatex + ' \\diamond \\begin{bmatrix} ' + oracleEntries + ' \\end{bmatrix}';
+  if (distributed) {
+    result += '\\quad \\text{Linear oracle: } W \\text{ (eigenvalue } \\lambda \\text{)}';
+  }
+  return result;
 }

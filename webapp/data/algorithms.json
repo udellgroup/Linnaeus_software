@@ -610,17 +610,17 @@
     "citation": "Li et al. 2019",
     "doi": "https://doi.org/10.1109/TSP.2019.2926022",
     "bibtex": "@article{li2019decentralized,\n  title={A decentralized proximal-gradient method with network independent step-sizes and separated convergence rates},\n  author={Li, Zhi and Shi, Wei and Yan, Ming},\n  journal={IEEE Transactions on Signal Processing},\n  volume={67},\n  number={17},\n  pages={4494--4506},\n  year={2019},\n  publisher={IEEE}\n}",
-    "notes": "Decentralized algorithm. Parameter lam represents an eigenvalue of the mixing matrix W; the transfer function characterizes behavior per spectral mode.",
+    "notes": "Decentralized algorithm. The transfer function characterizes behavior per spectral mode of the mixing matrix W (eigenvalue λ).",
     "oracles": [
       "grad_f"
     ],
     "oracleType": "gradient",
+    "distributed": true,
     "equations": [
-      "x[k+1] = 2 * lam * x[k] - lam * x[k-1] - lam * alpha * grad_f(x[k]) + lam * alpha * grad_f(x[k-1])"
+      "x[k+1] = 2 * W * x[k] - W * x[k-1] - W * alpha * grad_f(x[k]) + W * alpha * grad_f(x[k-1])"
     ],
     "parameters": [
-      "alpha",
-      "lam"
+      "alpha"
     ],
     "transferFunction": "-alpha*lam*(z - 1)/(z**2 - 2*lam*z + lam)",
     "tfIsMatrix": false,
@@ -641,19 +641,19 @@
     "citation": "Yuan et al. 2018",
     "doi": "https://doi.org/10.1109/TSP.2018.2875898",
     "bibtex": "@article{yuan2018exact,\n  title={Exact diffusion for distributed optimization and learning---{P}art {I}: Algorithm development},\n  author={Yuan, Kun and Ying, Bicheng and Zhao, Xiaochuan and Sayed, Ali H},\n  journal={IEEE Transactions on Signal Processing},\n  volume={67},\n  number={3},\n  pages={708--723},\n  year={2018},\n  publisher={IEEE}\n}",
-    "notes": "Decentralized algorithm using adapt-correct-combine steps. Parameter lam represents an eigenvalue of the mixing matrix W; the transfer function characterizes behavior per spectral mode. Oracle-equivalent to NIDS.",
+    "notes": "Decentralized algorithm using adapt-correct-combine steps. The transfer function characterizes behavior per spectral mode of the mixing matrix W (eigenvalue λ). Oracle-equivalent to NIDS.",
     "oracles": [
       "grad_f"
     ],
     "oracleType": "gradient",
+    "distributed": true,
     "equations": [
       "x[k+1] = w[k] - alpha * grad_f(w[k])",
       "y[k] = x[k+1] + w[k] - x[k]",
-      "w[k+1] = lam * y[k]"
+      "w[k+1] = W * y[k]"
     ],
     "parameters": [
-      "alpha",
-      "lam"
+      "alpha"
     ],
     "transferFunction": "-alpha*lam*(z - 1)/(z**2 - 2*lam*z + lam)",
     "tfIsMatrix": false,

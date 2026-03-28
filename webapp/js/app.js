@@ -132,7 +132,13 @@ H_user = compute_transfer_function(
     _z
 )
 
-matches = check_all_equivalences(H_user, parsed['oracle_types'], _library, _z)
+_user_distributed = parsed.get('has_mixing_matrix', False)
+_user_universal = [symbols('lambda')] if _user_distributed else []
+matches = check_all_equivalences(
+    H_user, parsed['oracle_types'], _library, _z,
+    user_distributed=_user_distributed,
+    user_universal_params=_user_universal,
+)
 
 # For display, substitute the internal z symbol with a clean 'z'
 _display_z = Symbol('z')
@@ -172,6 +178,12 @@ for m in matches:
         entry['shift_vector'] = details['shift_vector']
     if m.get('permuted'):
         entry['permuted'] = True
+    if algo.get('distributed', False):
+        entry['distributed'] = True
+    if details.get('condition_note'):
+        entry['condition_note'] = details['condition_note']
+    if m.get('conditional'):
+        entry['conditional'] = True
     _match_list.append(entry)
 
 _result = {
@@ -179,6 +191,7 @@ _result = {
     'oracle_types': parsed['oracle_types'],
     'user_params': [latex(symbols(p)) for p in parsed['parameters']],
     'matches': _match_list,
+    'user_distributed': _user_distributed,
 }
 json.dumps(_result)
 `);

@@ -46,6 +46,7 @@ const FILTERS = [
   { label: '\u2207f', value: 'gradient' },
   { label: 'prox_f + prox_g', value: 'proximal' },
   { label: '\u2207f + prox_g', value: 'mixed' },
+  { label: 'Distributed', value: 'distributed' },
 ];
 
 let activeFilter = 'all';
@@ -73,7 +74,9 @@ function applyFilter(data) {
   const cards = document.querySelectorAll('.algo-card');
   cards.forEach((card, i) => {
     const algo = data[i];
-    if (activeFilter === 'all' || algo.oracleType === activeFilter) {
+    if (activeFilter === 'all'
+        || algo.oracleType === activeFilter
+        || (activeFilter === 'distributed' && algo.distributed)) {
       card.style.display = '';
     } else {
       card.style.display = 'none';
@@ -143,6 +146,16 @@ function renderLibraryCards(data) {
       card.appendChild(badge);
     }
 
+    // Distributed badge
+    if (algo.distributed) {
+      const distBadge = document.createElement('span');
+      distBadge.style.cssText =
+        'display:inline-block;margin-top:0.4rem;padding:0.15rem 0.5rem;' +
+        'font-size:0.72rem;background:#bbdefb;color:#0d47a1;border-radius:10px;';
+      distBadge.textContent = 'Distributed';
+      card.appendChild(distBadge);
+    }
+
     // Notes
     if (algo.notes) {
       const notesDiv = document.createElement('div');
@@ -173,7 +186,7 @@ function renderLibraryCards(data) {
       tfDiv.style.marginTop = '0.6rem';
 
       const tfMath = document.createElement('div');
-      const compLatex = compositionLatex(algo.tf_latex, algo.oracles);
+      const compLatex = compositionLatex(algo.tf_latex, algo.oracles, algo.distributed);
       try {
         katex.render(compLatex, tfMath, {
           throwOnError: false,

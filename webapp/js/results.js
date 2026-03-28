@@ -19,7 +19,8 @@ function displayResults(result) {
   tfSection.appendChild(tfLabel);
 
   const tfMath = document.createElement('div');
-  const userCompLatex = compositionLatex(result.tf_latex, result.oracle_types);
+  const userCompLatex = compositionLatex(result.tf_latex, result.oracle_types,
+                                          result.user_distributed);
   try {
     katex.render(userCompLatex, tfMath, {
       throwOnError: false,
@@ -29,6 +30,14 @@ function displayResults(result) {
     tfMath.textContent = userCompLatex;
   }
   tfSection.appendChild(tfMath);
+
+  if (result.user_distributed) {
+    const distLabel = document.createElement('span');
+    distLabel.className = 'match-badge';
+    distLabel.style.cssText = 'background:#bbdefb;color:#0d47a1;margin-top:0.3rem;display:inline-block;';
+    distLabel.textContent = 'Distributed';
+    tfSection.appendChild(distLabel);
+  }
 
   panel.appendChild(tfSection);
 
@@ -123,13 +132,30 @@ function displayResults(result) {
       chipsRow.appendChild(permBadge);
     }
 
+    if (match.distributed) {
+      const distBadge = document.createElement('span');
+      distBadge.className = 'match-badge';
+      distBadge.style.cssText = 'background:#bbdefb;color:#0d47a1;';
+      distBadge.textContent = 'Distributed';
+      chipsRow.appendChild(distBadge);
+    }
+
+    if (match.conditional) {
+      const condBadge = document.createElement('span');
+      condBadge.className = 'match-badge';
+      condBadge.style.cssText = 'background:#fff3e0;color:#e65100;';
+      condBadge.textContent = 'Conditional';
+      chipsRow.appendChild(condBadge);
+    }
+
     card.appendChild(chipsRow);
 
     // Library transfer function — composition notation
     if (match.lib_tf_latex) {
       const libMath = document.createElement('div');
       libMath.style.cssText = 'margin:0.5rem 0;';
-      const libCompLatex = compositionLatex(match.lib_tf_latex, match.lib_oracles);
+      const libCompLatex = compositionLatex(match.lib_tf_latex, match.lib_oracles,
+                                            match.distributed);
       try {
         katex.render(libCompLatex, libMath, {
           throwOnError: false,
@@ -232,6 +258,23 @@ function displayResults(result) {
     };
     explanation.textContent = explanations[match.type] || '';
     card.appendChild(explanation);
+
+    // Conditional match note (e.g., "Equivalent when λ=1")
+    if (match.condition_note) {
+      const condDiv = document.createElement('div');
+      condDiv.style.cssText =
+        'font-size:0.82rem;margin-top:0.3rem;';
+      try {
+        katex.render(
+          '\\textit{' + match.condition_note + '}',
+          condDiv,
+          { throwOnError: false }
+        );
+      } catch (e) {
+        condDiv.textContent = match.condition_note;
+      }
+      card.appendChild(condDiv);
+    }
 
     panel.appendChild(card);
   }

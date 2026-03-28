@@ -53,6 +53,12 @@ def load_library(json_path):
         # Parse parameter symbols for this entry
         algo['param_symbols'] = [PARAMS[p] for p in entry.get('parameters', [])
                                   if p in PARAMS]
+        # Mark distributed algorithms and track their universal params
+        algo['distributed'] = entry.get('distributed', False)
+        if algo['distributed']:
+            algo['universal_params'] = [PARAMS['lam']]
+        else:
+            algo['universal_params'] = []
         algorithms.append(algo)
 
     return algorithms
@@ -99,8 +105,14 @@ def _permute_tf(H, perm):
     return H_perm
 
 
-def check_all_equivalences(H_user, user_oracles, library, z_var):
+def check_all_equivalences(H_user, user_oracles, library, z_var,
+                           user_distributed=False, user_universal_params=None):
     """Check user's H(z) against all library entries.
+
+    Args:
+        user_distributed: True if the user's algorithm uses mixing matrix W.
+        user_universal_params: list of Symbol objects that are universal
+            (must match for ALL values, e.g. Symbol('lambda') for distributed).
 
     Returns list of match results sorted by strength (oracle > shift > LFT).
     """
@@ -108,6 +120,11 @@ def check_all_equivalences(H_user, user_oracles, library, z_var):
                               check_shift_equivalence,
                               check_lft_equivalence,
                               build_block_m_hat)
+    from sympy import cancel as _cancel
+
+    if user_universal_params is None:
+        user_universal_params = []
+    user_universal_set = set(user_universal_params)
 
     matches = []
     for algo in library:
@@ -118,6 +135,44 @@ def check_all_equivalences(H_user, user_oracles, library, z_var):
         # Substitute library's z with the user's z_var for comparison.
         H_lib = algo['tf'].subs(z, z_var)
         lib_oracles = algo.get('oracles', [])
+        lib_distributed = algo.get('distributed', False)
+
+        # Determine universal params for this comparison.
+        # Both distributed: lambda is universal (must match for all values).
+        # Neither distributed: no universal params.
+        # Cross-category: try lambda=1 substitution (fully connected graph).
+        if user_distributed and lib_distributed:
+            universal_params = user_universal_set | set(algo.get('universal_params', []))
+        elif not user_distributed and not lib_distributed:
+            universal_params = set()
+        else:
+            # Cross-category: substitute lambda=1 in the distributed TF
+            lam_sym = PARAMS['lam']
+            if lib_distributed:
+                H_lib_cross = H_lib.applyfunc(lambda e: _cancel(e.subs(lam_sym, 1)))
+            else:
+                H_lib_cross = H_lib
+            if user_distributed:
+                H_user_cross = H_user.applyfunc(lambda e: _cancel(e.subs(lam_sym, 1)))
+            else:
+                H_user_cross = H_user
+            # Try oracle equivalence with lambda=1 substitution
+            if sorted(user_oracles) == sorted(lib_oracles):
+                result = check_oracle_equivalence(
+                    H_user_cross, H_lib_cross, z_var,
+                    lib_params=algo.get('param_symbols')
+                )
+                if result['match']:
+                    result['condition_note'] = (
+                        'Equivalent when \\lambda=1 (fully connected graph)')
+                    matches.append({
+                        'algorithm': algo,
+                        'type': 'oracle',
+                        'details': result,
+                        'permuted': False,
+                        'conditional': True,
+                    })
+            continue  # Skip normal equivalence for cross-category
 
         # Determine if oracles match (possibly up to permutation).
         # When oracle types repeat, there are multiple valid permutations;
@@ -139,7 +194,8 @@ def check_all_equivalences(H_user, user_oracles, library, z_var):
             # Same oracles (possibly permuted): try oracle equivalence
             result = check_oracle_equivalence(
                 H_check, H_lib, z_var,
-                lib_params=algo.get('param_symbols')
+                lib_params=algo.get('param_symbols'),
+                universal_params=universal_params,
             )
             if result['match']:
                 matches.append({
@@ -155,7 +211,8 @@ def check_all_equivalences(H_user, user_oracles, library, z_var):
             if H_check.rows > 1:
                 result = check_shift_equivalence(
                     H_check, H_lib, z_var,
-                    lib_params=algo.get('param_symbols')
+                    lib_params=algo.get('param_symbols'),
+                    universal_params=universal_params,
                 )
                 if result['match']:
                     matches.append({
@@ -210,6 +267,7 @@ def check_all_equivalences(H_user, user_oracles, library, z_var):
                         H_user, H_lib_shifted, M_hat, z_var,
                         lib_params=algo.get('param_symbols'),
                         internal_syms=internal_syms,
+                        universal_params=universal_params,
                     )
                     if result['match']:
                         # Normalize shift

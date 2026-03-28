@@ -13,15 +13,22 @@ from sympy import (
 )
 
 
-def check_oracle_equivalence(H1, H2, z, lib_params=None):
+def check_oracle_equivalence(H1, H2, z, lib_params=None, universal_params=None):
     """
     Check if H1 and H2 are oracle-equivalent (identical transfer functions).
 
     If lib_params is provided, attempt parametric matching: solve for the
     library parameters so that H1 == H2 after substitution.
 
+    universal_params: set of Symbol objects that are universal (must match
+        for ALL values, e.g. lambda for distributed algorithms).  These are
+        NOT solved for; instead equations are expanded as polynomials in
+        both z and universal params.
+
     Returns dict with 'match' (bool) and optionally 'params' (dict).
     """
+    if universal_params is None:
+        universal_params = set()
     rows, cols = H1.shape
     if H2.shape != (rows, cols):
         return {'match': False}
@@ -38,11 +45,14 @@ def check_oracle_equivalence(H1, H2, z, lib_params=None):
     # Parametric matching: substitute library params with fresh symbols
     # so that shared names (e.g., user's alpha_rpp vs library's alpha_rpp)
     # don't collide. The fresh symbols are the unknowns we solve for.
+    # Universal params are NOT substituted — they must match as identities.
     from sympy import Symbol, Dummy
     fresh_params = []
     sub_map = {}  # lib_param -> fresh_param
     reverse_map = {}  # fresh_param -> lib_param
     for p in lib_params:
+        if p in universal_params:
+            continue  # universal params stay as-is, not solvable
         fresh = Dummy('_lib_' + p.name)
         sub_map[p] = fresh
         reverse_map[fresh] = p
@@ -63,6 +73,19 @@ def check_oracle_equivalence(H1, H2, z, lib_params=None):
                 coeffs = p.all_coeffs()
             except Exception:
                 coeffs = [num]
+            # For universal params (e.g., lambda), also expand each z-coeff
+            # as a polynomial in the universal param.  This enforces that the
+            # match must hold for ALL values of the universal param.
+            if universal_params:
+                expanded = []
+                for c in coeffs:
+                    try:
+                        for up in universal_params:
+                            p_up = Poly(c, up)
+                            expanded.extend(p_up.all_coeffs())
+                    except Exception:
+                        expanded.append(c)
+                coeffs = expanded
             equations.extend(coeffs)
 
     if not equations:
@@ -76,7 +99,7 @@ def check_oracle_equivalence(H1, H2, z, lib_params=None):
     for eq in equations:
         all_free |= eq.free_symbols
     all_free.discard(z)
-    user_params_in_eq = sorted(all_free - set(fresh_params), key=str)
+    user_params_in_eq = sorted(all_free - set(fresh_params) - universal_params, key=str)
 
     # Collect candidate solutions from multiple strategies, score them,
     # and pick the simplest.  This avoids bias from the solver picking
@@ -401,7 +424,7 @@ def _extract_z_power(expr, z):
     return None
 
 
-def check_shift_equivalence(H1, H2, z, lib_params=None):
+def check_shift_equivalence(H1, H2, z, lib_params=None, universal_params=None):
     """
     Check if H1 = Diag(z^{m_i}) * H2 * Diag(z^{-m_j}), i.e.,
     H1[i,j] = z^{m_i - m_j} * H2[i,j].
@@ -409,8 +432,13 @@ def check_shift_equivalence(H1, H2, z, lib_params=None):
     If the TFs contain free symbols, tries candidate shift vectors and
     solves for parameter values that make the shift relationship hold.
 
+    universal_params: set of Symbol objects that must match for ALL values.
+
     Returns dict with 'match' (bool), 'shift_vector', and optionally 'params'.
     """
+    if universal_params is None:
+        universal_params = set()
+
     rows, cols = H1.shape
     if H2.shape != (rows, cols) or rows != cols:
         return {'match': False, 'shift_vector': None}
@@ -421,10 +449,13 @@ def check_shift_equivalence(H1, H2, z, lib_params=None):
 
     # Replace library params in H2 with fresh Dummy symbols so that shared
     # names (e.g., user's alpha vs library's alpha) can be solved independently.
+    # Universal params are NOT substituted — they must match as identities.
     from sympy import Dummy
     fresh_map = {}      # lib_param -> Dummy
     reverse_map = {}    # Dummy -> lib_param
     for lp in lib_param_set:
+        if lp in universal_params:
+            continue  # universal params stay as-is
         d = Dummy('_lib_' + lp.name)
         fresh_map[lp] = d
         reverse_map[d] = lp
@@ -464,15 +495,27 @@ def check_shift_equivalence(H1, H2, z, lib_params=None):
                 num = numer(diff)
                 try:
                     poly = Poly(num, z)
-                    equations.extend(poly.all_coeffs())
+                    coeffs = poly.all_coeffs()
                 except Exception:
-                    equations.append(num)
+                    coeffs = [num]
+                # Expand in universal params for "for all" semantics
+                if universal_params:
+                    expanded = []
+                    for c in coeffs:
+                        try:
+                            for up in universal_params:
+                                p_up = Poly(c, up)
+                                expanded.extend(p_up.all_coeffs())
+                        except Exception:
+                            expanded.append(c)
+                    coeffs = expanded
+                equations.extend(coeffs)
 
         if not equations:
             # Trivially satisfied
             return {'match': True, 'shift_vector': m, 'params': {}}
 
-        unknowns = sorted(all_free, key=str)
+        unknowns = sorted(all_free - universal_params, key=str)
         try:
             solutions = solve(equations, unknowns, dict=True)
         except Exception:
@@ -646,7 +689,7 @@ def _check_shift_exact(H1, H2, z, p):
 
 
 def check_lft_equivalence(H1, H2, M_hat, z, lib_params=None,
-                          internal_syms=None):
+                          internal_syms=None, universal_params=None):
     """
     Check LFT equivalence: [I | -H1] * M_hat * [H2; I] == 0.
 
@@ -656,18 +699,25 @@ def check_lft_equivalence(H1, H2, M_hat, z, lib_params=None,
     internal_syms: set of symbols from M_hat that are internal (not
     user or library params).  When solved, their values are substituted
     into other params; when free, they are reported separately.
+    universal_params: set of Symbol objects that must match for ALL values.
 
     Returns dict with 'match' (bool) and optionally 'params'.
     """
+    if universal_params is None:
+        universal_params = set()
+
     p = H1.shape[0]
 
     # Replace library params in H2 with fresh Dummy symbols so that shared
     # names (e.g., user's alpha vs library's alpha) can be solved independently.
+    # Universal params are NOT substituted.
     from sympy import Dummy
     lib_param_set = set(lib_params) if lib_params else set()
     fresh_map = {}      # lib_param -> Dummy
     reverse_map = {}    # Dummy -> lib_param
     for lp in lib_param_set:
+        if lp in universal_params:
+            continue
         d = Dummy('_lib_' + lp.name)
         fresh_map[lp] = d
         reverse_map[d] = lp
@@ -707,14 +757,26 @@ def check_lft_equivalence(H1, H2, M_hat, z, lib_params=None,
             num = numer(entry)
             try:
                 poly = Poly(num, z)
-                equations.extend(poly.all_coeffs())
+                coeffs = poly.all_coeffs()
             except Exception:
-                equations.append(num)
+                coeffs = [num]
+            # Expand in universal params for "for all" semantics
+            if universal_params:
+                expanded = []
+                for c in coeffs:
+                    try:
+                        for up in universal_params:
+                            p_up = Poly(c, up)
+                            expanded.extend(p_up.all_coeffs())
+                    except Exception:
+                        expanded.append(c)
+                coeffs = expanded
+            equations.extend(coeffs)
 
     if not equations:
         return {'match': True, 'params': {}}
 
-    unknowns = sorted(all_free, key=str)
+    unknowns = sorted(all_free - universal_params, key=str)
     try:
         solutions = solve(equations, unknowns, dict=True)
     except Exception:
