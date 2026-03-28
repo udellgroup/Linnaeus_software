@@ -670,11 +670,11 @@
   {
     "id": "extra_distributed",
     "name": "EXTRA",
-    "aliases": ["Exact First-Order Algorithm", "Unified EXTRA", "uEXTRA"],
+    "aliases": ["Exact First-Order Algorithm"],
     "citation": "Shi et al. 2015",
     "doi": "https://doi.org/10.1137/14096668X",
     "bibtex": "@article{shi2015extra,\n  title={{EXTRA}: An exact first-order algorithm for decentralized consensus optimization},\n  author={Shi, Wei and Ling, Qing and Wu, Gang and Yin, Wotao},\n  journal={SIAM Journal on Optimization},\n  volume={25},\n  number={2},\n  pages={944--966},\n  year={2015},\n  publisher={SIAM}\n}",
-    "notes": "Decentralized algorithm using two gossip matrices W and W̃ = (I+W)/2. Achieves exact convergence. Also known as Unified EXTRA (Jakovetić 2019).",
+    "notes": "Decentralized algorithm using two gossip matrices W and W̃ = (I+W)/2. Achieves exact convergence.",
     "oracles": [
       "grad_f"
     ],
@@ -699,11 +699,11 @@
   {
     "id": "diging",
     "name": "DIGing",
-    "aliases": ["Distributed Inexact Gradient", "Unified DIGing", "uDIG"],
+    "aliases": ["Distributed Inexact Gradient"],
     "citation": "Nedić et al. 2017",
     "doi": "https://doi.org/10.1137/16M1084316",
     "bibtex": "@article{nedic2017achieving,\n  title={Achieving geometric convergence for distributed optimization over time-varying graphs},\n  author={Nedi{\\'c}, Angelia and Olshevsky, Alex and Shi, Wei},\n  journal={SIAM Journal on Optimization},\n  volume={27},\n  number={4},\n  pages={2597--2633},\n  year={2017},\n  publisher={SIAM}\n}",
-    "notes": "Gradient tracking algorithm for decentralized optimization. Uses W̃ = W. Also known as Unified DIGing (Jakovetić 2019).",
+    "notes": "Gradient tracking algorithm for decentralized optimization. Uses W̃ = W.",
     "oracles": [
       "grad_f"
     ],
@@ -790,5 +790,69 @@
     },
     "catalogOnly": false,
     "tf_latex": "\\frac{-\\alpha(1-\\delta(1-\\lambda))(z-1)}{(z-1)^2 + \\gamma(1-\\lambda)(z-1) + \\beta(1-\\lambda)}"
+  },
+  {
+    "id": "unified_extra",
+    "name": "Unified EXTRA",
+    "aliases": ["uEXTRA"],
+    "citation": "Jakovetić et al. 2019",
+    "doi": "https://doi.org/10.1109/TSIPN.2018.2846183",
+    "bibtex": "@article{jakoveticunification2019,\n  title={Unification and generalization of diffusion-type algorithms for distributed optimization},\n  author={Jakoveti{\\'c}, Du{\\v{s}}an and Bajovi{\\'c}, Dragana and Xavier, Jo{\\~a}o and Moura, Jos{\\'e} M. F.},\n  journal={IEEE Transactions on Signal and Information Processing over Networks},\n  volume={5},\n  number={1},\n  pages={46--58},\n  year={2019},\n  publisher={IEEE}\n}",
+    "notes": "Generalization of EXTRA with overrelaxation parameter mu and function parameter l. Reduces to EXTRA when mu=1/2, l=1/alpha.",
+    "oracles": [
+      "grad_f"
+    ],
+    "oracleType": "gradient",
+    "distributed": true,
+    "equations": [
+      "x1[k+1] = x1[k] - alpha*x2[k] - alpha*grad_f(x1[k]) - mu*L*x1[k]",
+      "x2[k+1] = x2[k] - mu*L*(-l*x1[k] + x2[k] + grad_f(x1[k]) + l*mu*L*x1[k])"
+    ],
+    "parameters": [
+      "alpha",
+      "l",
+      "mu"
+    ],
+    "transferFunction": "(-alpha*z + alpha)/(-alpha*l*lam**2*mu**2 + 2*alpha*l*lam*mu**2 - alpha*l*lam*mu - alpha*l*mu**2 + alpha*l*mu + lam**2*mu**2 - 2*lam*mu**2 - 2*lam*mu*z + 2*lam*mu + mu**2 + 2*mu*z - 2*mu + z**2 - 2*z + 1)",
+    "tfIsMatrix": false,
+    "equivalences": {
+      "oracle": [],
+      "shift": [],
+      "lft": []
+    },
+    "catalogOnly": false,
+    "tf_latex": "\\frac{-\\alpha(z-1)}{(z - 1 - \\mu(\\lambda-1))^2 - \\alpha l \\mu (\\lambda-1)(1 - \\mu(\\lambda - 1))}"
+  },
+  {
+    "id": "unified_diging",
+    "name": "Unified DIGing",
+    "aliases": ["uDIG"],
+    "citation": "Jakovetić et al. 2019",
+    "doi": "https://doi.org/10.1109/TSIPN.2018.2846183",
+    "bibtex": "@article{jakoveticunification2019,\n  title={Unification and generalization of diffusion-type algorithms for distributed optimization},\n  author={Jakoveti{\\'c}, Du{\\v{s}}an and Bajovi{\\'c}, Dragana and Xavier, Jo{\\~a}o and Moura, Jos{\\'e} M. F.},\n  journal={IEEE Transactions on Signal and Information Processing over Networks},\n  volume={5},\n  number={1},\n  pages={46--58},\n  year={2019},\n  publisher={IEEE}\n}",
+    "notes": "Generalization of DIGing with overrelaxation parameter mu and function parameter l. Reduces to DIGing when mu=1, l=0.",
+    "oracles": [
+      "grad_f"
+    ],
+    "oracleType": "gradient",
+    "distributed": true,
+    "equations": [
+      "x1[k+1] = x1[k] - alpha*x2[k] - alpha*grad_f(x1[k]) - mu*L*x1[k]",
+      "x2[k+1] = x2[k] - mu*L*(-l*x1[k] + x2[k] + grad_f(x1[k]))"
+    ],
+    "parameters": [
+      "alpha",
+      "l",
+      "mu"
+    ],
+    "transferFunction": "(-alpha*z + alpha)/(-alpha*l*lam*mu + alpha*l*mu + lam**2*mu**2 - 2*lam*mu**2 - 2*lam*mu*z + 2*lam*mu + mu**2 + 2*mu*z - 2*mu + z**2 - 2*z + 1)",
+    "tfIsMatrix": false,
+    "equivalences": {
+      "oracle": [],
+      "shift": [],
+      "lft": []
+    },
+    "catalogOnly": false,
+    "tf_latex": "\\frac{-\\alpha(z-1)}{(z - 1 - \\mu(\\lambda-1))^2 - \\alpha l \\mu (\\lambda - 1)}"
   }
 ]
