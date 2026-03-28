@@ -200,8 +200,8 @@ def parse_equations(equations):
                 oracle_calls_seen.add(orig_text)
 
     # Classify variables
-    # State: appears at [k+1] (LHS target) or at multiple offsets
-    # Intermediate: appears only at [k] and never at [k+1] on LHS
+    # State: appears at multiple time offsets (has dynamics)
+    # Intermediate: appears only at a single offset
     lhs_vars = set()
     for eq_str in equations:
         lhs = eq_str.split('=')[0].strip()
@@ -211,29 +211,13 @@ def parse_equations(equations):
 
     state_vars = []
     intermediate_vars = set()
-    needs_prev = {}  # var_name -> True if [k-1] appears
 
     for var_name, offsets in all_var_refs.items():
-        if 1 in offsets and (0 in offsets or -1 in offsets):
-            # Appears at [k+1] and at [k] or [k-1] => state variable
+        if len(offsets) > 1:
+            # Appears at multiple time offsets => state variable
             state_vars.append(var_name)
-        elif 1 in offsets and len(offsets) == 1:
-            # Only appears at [k+1], e.g. as intermediate that's used
-            # in the same step. Check if it's used elsewhere.
-            # If it appears on LHS at [k+1] and on RHS elsewhere at [k+1],
-            # it's intermediate. If only on LHS, also intermediate.
-            intermediate_vars.add(var_name)
-        elif 0 in offsets and -1 not in offsets and 1 not in offsets:
-            # Only at [k], likely intermediate
-            intermediate_vars.add(var_name)
-        elif 0 in offsets and -1 in offsets and 1 not in offsets:
-            # e.g. y[k] = ... x[k-1] ... - intermediate with lookback
-            intermediate_vars.add(var_name)
         else:
-            state_vars.append(var_name)
-
-        if -1 in offsets:
-            needs_prev[var_name] = True
+            intermediate_vars.add(var_name)
 
     # Sort state_vars for determinism
     state_vars.sort()
@@ -241,12 +225,8 @@ def parse_equations(equations):
     # Include intermediate variables in augmented_state so they get proper
     # columns in the linear system (they'll be eliminated by the matrix solve)
     augmented_state = list(state_vars) + sorted(intermediate_vars)
-    prev_map = {}  # var_name -> augmented_prev_name
-    for var_name in sorted(needs_prev.keys()):
-        if var_name in state_vars:
-            prev_name = f'{var_name}_prev'
-            augmented_state.append(prev_name)
-            prev_map[var_name] = prev_name
+    # No prev_map needed — z^offset handles all time shifts directly
+    prev_map = {}
 
     # Create oracle variable mappings
     oracle_types = []
@@ -378,24 +358,23 @@ def _to_z_domain(expr_str, z, augmented_state, prev_map, intermediate_vars,
     for orig_text, (u_name, y_name, arg_str) in oracle_map.items():
         result = result.replace(orig_text, u_name)
 
-    # Replace variable references with z-domain equivalents
-    # Must process longer variable names first to avoid partial matches
+    # Replace variable references with z-domain equivalents.
+    # x[k+n] -> z^n * x  for any integer n.
     def replace_var_ref(match):
         var_name = match.group(1)
         offset_str = match.group(2)
         offset = int(offset_str) if offset_str else 0
 
-        if offset == 1:
-            return f'(__ztf*{var_name})'
-        elif offset == 0:
+        if offset == 0:
             return var_name
+        elif offset == 1:
+            return f'(__ztf*{var_name})'
         elif offset == -1:
-            if var_name in prev_map:
-                return prev_map[var_name]
-            else:
-                return f'({var_name}/__ztf)'
+            return f'({var_name}/__ztf)'
+        elif offset > 0:
+            return f'(__ztf**{offset}*{var_name})'
         else:
-            raise ValueError(f"Unsupported offset {offset} for {var_name}")
+            return f'({var_name}/__ztf**{-offset})'
 
     result = VAR_REF_PATTERN.sub(replace_var_ref, result)
 
