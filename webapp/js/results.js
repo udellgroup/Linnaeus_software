@@ -36,7 +36,7 @@ function displayResults(result) {
   if (result.user_distributed) {
     const distLabel = document.createElement('span');
     distLabel.className = 'match-badge';
-    distLabel.style.cssText = 'background:#bbdefb;color:#0d47a1;margin-top:0.3rem;display:inline-block;';
+    distLabel.style.cssText = 'background:#e8daef;color:#4a148c;margin-top:0.3rem;display:inline-block;';
     distLabel.textContent = 'Distributed';
     tfSection.appendChild(distLabel);
   }
@@ -137,7 +137,7 @@ function displayResults(result) {
     if (match.distributed) {
       const distBadge = document.createElement('span');
       distBadge.className = 'match-badge';
-      distBadge.style.cssText = 'background:#bbdefb;color:#0d47a1;';
+      distBadge.style.cssText = 'background:#e8daef;color:#4a148c;';
       distBadge.textContent = 'Distributed';
       chipsRow.appendChild(distBadge);
     }

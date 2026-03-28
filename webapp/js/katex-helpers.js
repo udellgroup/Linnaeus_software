@@ -43,7 +43,7 @@ function compositionLatex(tfLatex, oracles, distributed) {
 function linearOracleElement(distributed) {
   if (!distributed) return null;
   const div = document.createElement('div');
-  div.style.cssText = 'margin-top:0.3rem;font-size:0.85rem;color:#0d47a1;';
+  div.style.cssText = 'margin-top:0.3rem;font-size:0.85rem;color:#4a148c;';
   try {
     katex.render(
       '\\text{Linear oracle: } L \\text{ (eigenvalue } \\lambda \\text{)}',

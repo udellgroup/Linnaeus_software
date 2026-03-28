@@ -92,7 +92,7 @@ function renderLibraryCards(data) {
 
   for (const algo of data) {
     const card = document.createElement('div');
-    card.className = 'algo-card ' + (algo.oracleType || 'gradient');
+    card.className = 'algo-card ' + (algo.distributed ? 'distributed' : (algo.oracleType || 'gradient'));
 
     // Title
     const title = document.createElement('div');
@@ -151,7 +151,7 @@ function renderLibraryCards(data) {
       const distBadge = document.createElement('span');
       distBadge.style.cssText =
         'display:inline-block;margin-top:0.4rem;padding:0.15rem 0.5rem;' +
-        'font-size:0.72rem;background:#bbdefb;color:#0d47a1;border-radius:10px;';
+        'font-size:0.72rem;background:#e8daef;color:#4a148c;border-radius:10px;';
       distBadge.textContent = 'Distributed';
       card.appendChild(distBadge);
     }

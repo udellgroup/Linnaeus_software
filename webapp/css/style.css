@@ -394,6 +394,10 @@ body {
   border-left-color: #f9ab00;
 }
 
+.algo-card.distributed {
+  border-left-color: #7c4dff;
+}
+
 .algo-card-title {
   font-size: 0.95rem;
   font-weight: 600;
