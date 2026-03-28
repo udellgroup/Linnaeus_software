@@ -607,6 +607,35 @@
     "tf_latex": "\\begin{bmatrix} 0 & \\frac{2 z -1}{z^{2}} \\\\ - t & \\frac{1}{z} \\end{bmatrix}"
   },
   {
+    "id": "distributed_gradient_descent",
+    "name": "Distributed Gradient Descent",
+    "aliases": ["DGD", "Distributed Subgradient Method"],
+    "citation": "Nedić & Ozdaglar 2009",
+    "doi": "https://doi.org/10.1109/TAC.2008.2009515",
+    "bibtex": "@article{nedic2009distributed,\n  title={Distributed subgradient methods for multi-agent optimization},\n  author={Nedi{\\'c}, Angelia and Ozdaglar, Asuman},\n  journal={IEEE Transactions on Automatic Control},\n  volume={54},\n  number={1},\n  pages={48--61},\n  year={2009},\n  publisher={IEEE}\n}",
+    "notes": "Fundamental distributed optimization algorithm. Does not achieve exact convergence due to the consensus-optimization trade-off.",
+    "oracles": [
+      "grad_f"
+    ],
+    "oracleType": "gradient",
+    "distributed": true,
+    "equations": [
+      "x[k+1] = W * x[k] - alpha * grad_f(x[k])"
+    ],
+    "parameters": [
+      "alpha"
+    ],
+    "transferFunction": "-alpha/(lam + z - 1)",
+    "tfIsMatrix": false,
+    "equivalences": {
+      "oracle": [],
+      "shift": [],
+      "lft": []
+    },
+    "catalogOnly": false,
+    "tf_latex": "\\frac{- \\alpha}{z + \\lambda - 1}"
+  },
+  {
     "id": "nids",
     "name": "NIDS",
     "aliases": [],
