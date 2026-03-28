@@ -143,11 +143,102 @@ matches = check_all_equivalences(
 # For display, substitute the internal z symbol with a clean 'z'
 _display_z = Symbol('z')
 
+def _poly_latex(expr, z):
+    """Format a polynomial in z with factored coefficients."""
+    from sympy import Poly, factor, latex as _latex, Add, Mul, signsimp
+    try:
+        p = Poly(expr, z)
+    except Exception:
+        return _latex(expr)
+    deg = p.degree()
+    terms = []
+    for i in range(deg, -1, -1):
+        c = p.nth(i)
+        if c == 0:
+            continue
+        c_factored = factor(c)
+        # For Add expressions like -beta-1, extract minus sign for -(beta+1)
+        if isinstance(c_factored, Add) and c_factored.could_extract_minus_sign():
+            pos_part = factor(-c_factored)
+            if isinstance(pos_part, Add):
+                c_str = '-\\left(' + _latex(pos_part) + '\\right)'
+            else:
+                c_str = '-' + _latex(pos_part) if str(pos_part) != '1' else '-1'
+            is_negative_wrapped = True
+        elif isinstance(c_factored, Add):
+            c_str = _latex(c_factored)
+            is_negative_wrapped = False
+        else:
+            c_str = _latex(c_factored)
+            is_negative_wrapped = False
+        if i == 0:
+            terms.append(c_str)
+        elif i == 1:
+            zstr = 'z'
+            if c_factored == 1:
+                terms.append(zstr)
+            elif c_factored == -1:
+                terms.append('-' + zstr)
+            elif is_negative_wrapped:
+                terms.append('-' + _latex(factor(-c_factored)) + ' ' + zstr)
+            else:
+                needs_parens = isinstance(c_factored, Add)
+                if needs_parens:
+                    terms.append('\\left(' + c_str + '\\right) ' + zstr)
+                else:
+                    terms.append(c_str + ' ' + zstr)
+        else:
+            zstr = 'z^{' + str(i) + '}'
+            if c_factored == 1:
+                terms.append(zstr)
+            elif c_factored == -1:
+                terms.append('-' + zstr)
+            elif is_negative_wrapped:
+                terms.append('-' + _latex(factor(-c_factored)) + ' ' + zstr)
+            else:
+                needs_parens = isinstance(c_factored, Add)
+                if needs_parens:
+                    terms.append('\\left(' + c_str + '\\right) ' + zstr)
+                else:
+                    terms.append(c_str + ' ' + zstr)
+    if not terms:
+        return '0'
+    # Join with + but handle leading minus
+    result = terms[0]
+    for t in terms[1:]:
+        if t.startswith('-'):
+            result += ' ' + t
+        else:
+            result += ' + ' + t
+    return result
+
 def _to_display_latex(expr):
+    from sympy import fraction, Poly, latex as _latex
     clean = expr.subs(_z, _display_z)
     if isinstance(clean, _Matrix) and clean.shape == (1, 1):
-        return latex(clean[0, 0])
-    return latex(clean)
+        clean = clean[0, 0]
+    if isinstance(clean, _Matrix):
+        # For matrix TFs, format each entry
+        rows = clean.rows
+        cols = clean.cols
+        entries = []
+        for i in range(rows):
+            row = []
+            for j in range(cols):
+                row.append(_to_display_latex_scalar(clean[i, j]))
+            entries.append(row)
+        # Build matrix latex
+        lines = ' \\\\ '.join(' & '.join(r) for r in entries)
+        return '\\begin{bmatrix} ' + lines + ' \\end{bmatrix}'
+    return _to_display_latex_scalar(clean)
+
+def _to_display_latex_scalar(expr):
+    from sympy import fraction, cancel
+    expr = cancel(expr)
+    num, den = fraction(expr)
+    if den == 1:
+        return _poly_latex(num, _display_z)
+    return '\\frac{' + _poly_latex(num, _display_z) + '}{' + _poly_latex(den, _display_z) + '}'
 
 # Build result JSON
 _match_list = []
@@ -155,9 +246,11 @@ for m in matches:
     algo = m['algorithm']
     _lib_tf = algo['tf']
     if isinstance(_lib_tf, _Matrix) and _lib_tf.shape == (1, 1):
-        _lib_latex = latex(_lib_tf[0, 0])
+        _lib_latex = _to_display_latex_scalar(_lib_tf[0, 0].subs(_z, _display_z))
+    elif isinstance(_lib_tf, _Matrix):
+        _lib_latex = _to_display_latex(_lib_tf)
     else:
-        _lib_latex = latex(_lib_tf)
+        _lib_latex = _to_display_latex_scalar(_lib_tf.subs(_z, _display_z) if hasattr(_lib_tf, 'subs') else _lib_tf)
     entry = {
         'name': algo['name'],
         'citation': algo.get('citation', ''),
