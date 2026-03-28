@@ -180,7 +180,12 @@ def _poly_latex(expr, z):
             elif c_factored == -1:
                 terms.append('-' + zstr)
             elif is_negative_wrapped:
-                terms.append('-' + _latex(factor(-c_factored)) + ' ' + zstr)
+                pos = factor(-c_factored)
+                pos_str = _latex(pos)
+                if isinstance(pos, Add):
+                    terms.append('-\\\\left(' + pos_str + '\\\\right) ' + zstr)
+                else:
+                    terms.append('-' + pos_str + ' ' + zstr)
             else:
                 needs_parens = isinstance(c_factored, Add)
                 if needs_parens:
@@ -194,7 +199,12 @@ def _poly_latex(expr, z):
             elif c_factored == -1:
                 terms.append('-' + zstr)
             elif is_negative_wrapped:
-                terms.append('-' + _latex(factor(-c_factored)) + ' ' + zstr)
+                pos = factor(-c_factored)
+                pos_str = _latex(pos)
+                if isinstance(pos, Add):
+                    terms.append('-\\\\left(' + pos_str + '\\\\right) ' + zstr)
+                else:
+                    terms.append('-' + pos_str + ' ' + zstr)
             else:
                 needs_parens = isinstance(c_factored, Add)
                 if needs_parens:
