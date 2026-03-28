@@ -666,5 +666,129 @@
     },
     "catalogOnly": false,
     "tf_latex": "- \\frac{\\alpha \\lambda \\left(z - 1\\right)}{- 2 \\lambda z + \\lambda + z^{2}}"
+  },
+  {
+    "id": "extra_distributed",
+    "name": "EXTRA",
+    "aliases": ["Exact First-Order Algorithm"],
+    "citation": "Shi et al. 2015",
+    "doi": "https://doi.org/10.1109/TSP.2015.2461543",
+    "bibtex": "@article{shi2015extra,\n  title={{EXTRA}: An exact first-order algorithm for decentralized consensus optimization},\n  author={Shi, Wei and Ling, Qing and Wu, Gang and Yin, Wotao},\n  journal={SIAM Journal on Optimization},\n  volume={25},\n  number={2},\n  pages={944--966},\n  year={2015},\n  publisher={SIAM}\n}",
+    "notes": "Decentralized algorithm using two gossip matrices W and W̃ = (I+W)/2. Achieves exact convergence to the optimal solution.",
+    "oracles": [
+      "grad_f"
+    ],
+    "oracleType": "gradient",
+    "distributed": true,
+    "equations": [
+      "x[k+1] = (I + W) * x[k] - (W + I)/2 * x[k-1] - alpha * grad_f(x[k]) + alpha * grad_f(x[k-1])"
+    ],
+    "parameters": [
+      "alpha"
+    ],
+    "transferFunction": "(-2*alpha*z + 2*alpha)/(-2*lam*z + lam + 2*z**2 - 2*z + 1)",
+    "tfIsMatrix": false,
+    "equivalences": {
+      "oracle": [],
+      "shift": [],
+      "lft": []
+    },
+    "catalogOnly": false,
+    "tf_latex": "\\frac{-2 \\alpha (z - 1)}{2z^{2} - 2(1+\\lambda)z + (1+\\lambda)}"
+  },
+  {
+    "id": "diging",
+    "name": "DIGing",
+    "aliases": ["Distributed Inexact Gradient"],
+    "citation": "Nedić & Olshevsky 2017",
+    "doi": "https://doi.org/10.1109/TAC.2016.2609940",
+    "bibtex": "@article{nedic2017achieving,\n  title={Achieving geometric convergence for distributed optimization over time-varying graphs},\n  author={Nedi{\\'c}, Angelia and Olshevsky, Alex},\n  journal={SIAM Journal on Optimization},\n  volume={27},\n  number={4},\n  pages={2597--2633},\n  year={2017},\n  publisher={SIAM}\n}",
+    "notes": "Gradient tracking algorithm for decentralized optimization. Uses W̃ = W.",
+    "oracles": [
+      "grad_f"
+    ],
+    "oracleType": "gradient",
+    "distributed": true,
+    "equations": [
+      "x[k+1] = W * x[k] - alpha * s[k]",
+      "s[k+1] = W * s[k] + grad_f(x[k+1]) - grad_f(x[k])"
+    ],
+    "parameters": [
+      "alpha"
+    ],
+    "transferFunction": "(-alpha*z + alpha)/(lam**2 - 2*lam*z + z**2)",
+    "tfIsMatrix": false,
+    "equivalences": {
+      "oracle": [],
+      "shift": [],
+      "lft": []
+    },
+    "catalogOnly": false,
+    "tf_latex": "\\frac{-\\alpha (z - 1)}{(z - \\lambda)^{2}}"
+  },
+  {
+    "id": "augdgm",
+    "name": "AugDGM",
+    "aliases": ["Aug-DGM"],
+    "citation": "Xu et al. 2021",
+    "doi": "https://doi.org/10.1109/TSIPN.2021.3058452",
+    "bibtex": "@article{xu2021distributed,\n  title={Distributed stochastic gradient tracking methods},\n  author={Xu, Jinming and Zhu, Shanying and Soh, Yeng Chai and Xie, Lihua},\n  journal={Mathematical Programming},\n  volume={187},\n  pages={409--457},\n  year={2021},\n  publisher={Springer}\n}",
+    "notes": "Gradient tracking with the mixing matrix applied jointly to the state and gradient step.",
+    "oracles": [
+      "grad_f"
+    ],
+    "oracleType": "gradient",
+    "distributed": true,
+    "equations": [
+      "x[k+1] = W * x[k] - alpha * W * s[k]",
+      "s[k+1] = W * s[k] + grad_f(x[k+1]) - grad_f(x[k])"
+    ],
+    "parameters": [
+      "alpha"
+    ],
+    "transferFunction": "(-alpha*lam*z + alpha*lam)/(lam**2 - 2*lam*z + z**2)",
+    "tfIsMatrix": false,
+    "equivalences": {
+      "oracle": [],
+      "shift": [],
+      "lft": []
+    },
+    "catalogOnly": false,
+    "tf_latex": "\\frac{-\\alpha \\lambda (z - 1)}{(z - \\lambda)^{2}}"
+  },
+  {
+    "id": "svl",
+    "name": "SVL",
+    "aliases": [],
+    "citation": "Sundararajan et al. 2020",
+    "doi": "https://doi.org/10.1109/TCNS.2020.3024720",
+    "bibtex": "@article{sundararajan2020analysis,\n  title={Analysis and design of first-order distributed optimization algorithms over time-varying graphs},\n  author={Sundararajan, Akhil and Van Scoy, Bryan and Lessard, Laurent},\n  journal={IEEE Transactions on Control of Network Systems},\n  volume={7},\n  number={4},\n  pages={1597--1608},\n  year={2020},\n  publisher={IEEE}\n}",
+    "notes": "General distributed algorithm template with four tunable parameters. Achieves optimal worst-case convergence rate for time-varying graphs.",
+    "oracles": [
+      "grad_f"
+    ],
+    "oracleType": "gradient",
+    "distributed": true,
+    "equations": [
+      "v[k] = (I - W) * x[k]",
+      "y[k] = x[k] - delta * v[k]",
+      "x[k+1] = x[k] + beta * w[k] - alpha * grad_f(y[k]) - gamma * v[k]",
+      "w[k+1] = w[k] - v[k]"
+    ],
+    "parameters": [
+      "alpha",
+      "beta",
+      "gamma",
+      "delta"
+    ],
+    "transferFunction": "(-alpha*delta*lam*z + alpha*delta*lam + alpha*delta*z - alpha*delta - alpha*z + alpha)/(-beta*lam + beta - gamma*lam*z + gamma*lam + gamma*z - gamma + z**2 - 2*z + 1)",
+    "tfIsMatrix": false,
+    "equivalences": {
+      "oracle": [],
+      "shift": [],
+      "lft": []
+    },
+    "catalogOnly": false,
+    "tf_latex": "\\frac{-\\alpha(1-\\delta(1-\\lambda))(z-1)}{(z-1)^2 + \\gamma(1-\\lambda)(z-1) + \\beta(1-\\lambda)}"
   }
 ]

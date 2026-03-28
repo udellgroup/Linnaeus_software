@@ -135,19 +135,16 @@ def parse_equations(equations):
     # for correct LaTeX rendering, consistent with library.py).
     equations = [re.sub(r'\blambda\b', 'lam', eq) for eq in equations]
 
-    # Detect mixing matrix W: rewrite W*expr to lam*expr.
+    # Detect mixing matrix W: rewrite W -> lam and I -> 1 (identity matrix).
     # W is a linear oracle representing a gossip/mixing matrix whose eigenvalue
     # is lambda.  After rewriting, lam flows through the z-domain pipeline
     # normally but is marked as a universal parameter (must match for ALL
     # lambda, not just some specific value).
-    has_mixing_matrix = False
-    W_PATTERN = re.compile(r'\bW\s*\*')
-    for eq in equations:
-        if W_PATTERN.search(eq):
-            has_mixing_matrix = True
-            break
+    # Supports: W*x[k], (W+I)/2 * x[k], (I+W)/2, etc.
+    has_mixing_matrix = any(re.search(r'\bW\b', eq) for eq in equations)
     if has_mixing_matrix:
-        equations = [W_PATTERN.sub('lam*', eq) for eq in equations]
+        equations = [re.sub(r'\bW\b', 'lam', eq) for eq in equations]
+        equations = [re.sub(r'\bI\b', '1', eq) for eq in equations]
 
     # Pre-process: merge shifted oracle calls into single oracles
     equations = _merge_shifted_oracles(equations)
