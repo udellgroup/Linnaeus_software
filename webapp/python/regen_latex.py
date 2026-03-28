@@ -76,12 +76,109 @@ def poly_latex(expr, z):
     return result
 
 
+def _factored_product_latex(expr):
+    """Factor expr and render each factor as a polynomial in z.
+
+    For a product like -2*alpha*(z-1), renders as ``-2 \\alpha (z - 1)``.
+    Each factor that is a polynomial of degree >= 1 in z gets poly_latex
+    treatment; scalar/constant factors are rendered with latex().
+    """
+    from sympy import Mul, Pow, Rational, Integer, Number
+
+    expr_f = factor(expr)
+
+    # Decompose into multiplicative factors
+    if isinstance(expr_f, Mul):
+        raw_factors = list(expr_f.args)
+    else:
+        raw_factors = [expr_f]
+
+    # Separate: sign, numeric constants, parameter factors, z-polynomial factors
+    sign = 1
+    numerics = []
+    params = []
+    z_polys = []
+
+    for f in raw_factors:
+        # Handle negative one
+        if f == -1:
+            sign *= -1
+            continue
+        # Pow with negative exponent shouldn't appear (we're in num or den)
+        # Check if factor involves z
+        if f.has(z):
+            z_polys.append(f)
+        elif isinstance(f, (Integer, Rational, Number)):
+            if f < 0:
+                sign *= -1
+                numerics.append(abs(f))
+            else:
+                numerics.append(f)
+        else:
+            params.append(f)
+
+    # Build the LaTeX string
+    parts = []
+
+    # Sign
+    if sign == -1:
+        prefix = '-'
+    else:
+        prefix = ''
+
+    # Numeric coefficient
+    for n in numerics:
+        if n != 1:
+            parts.append(latex(n))
+
+    # Parameter factors (alpha, beta, etc.)
+    # Wrap multi-term expressions in parens (e.g., lambda - 1)
+    for p in params:
+        p_str = latex(p)
+        if isinstance(p, Add):
+            p_str = r'\left(' + p_str + r'\right)'
+        parts.append(p_str)
+
+    # z-polynomial factors — each wrapped in parens if degree >= 1 and has
+    # multiple terms (Add), or if it's a Pow
+    for zp in z_polys:
+        base = zp.base if isinstance(zp, Pow) else zp
+        exp = zp.exp if isinstance(zp, Pow) else 1
+
+        # Format the base as polynomial in z
+        base_str = poly_latex(base, z)
+
+        # Wrap in parens if it's a multi-term polynomial
+        try:
+            deg = Poly(base, z).degree()
+        except Exception:
+            deg = 0
+        needs_parens = deg >= 1 and isinstance(cancel(base), Add)
+        if not needs_parens:
+            # Also check if poly_latex produced multiple terms
+            needs_parens = ('+' in base_str or base_str.count('-') > (1 if base_str.startswith('-') else 0))
+
+        if needs_parens:
+            base_str = r'\left(' + base_str + r'\right)'
+
+        if exp != 1:
+            parts.append(base_str + '^{' + latex(exp) + '}')
+        else:
+            parts.append(base_str)
+
+    if not parts:
+        return prefix + '1' if prefix else '1'
+
+    result = prefix + ' '.join(parts)
+    return result
+
+
 def scalar_latex(expr):
     expr = cancel(expr)
     num, den = fraction(expr)
     if den == 1:
-        return poly_latex(num, z)
-    return r'\frac{' + poly_latex(num, z) + '}{' + poly_latex(den, z) + '}'
+        return _factored_product_latex(num)
+    return r'\frac{' + _factored_product_latex(num) + '}{' + _factored_product_latex(den) + '}'
 
 
 def matrix_latex(m):

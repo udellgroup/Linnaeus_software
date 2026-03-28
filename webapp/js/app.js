@@ -244,13 +244,69 @@ def _to_display_latex(expr):
         return '\\\\begin{bmatrix} ' + lines + ' \\\\end{bmatrix}'
     return _to_display_latex_scalar(clean)
 
+def _factored_product_latex(expr, z):
+    from sympy import Mul, Pow, Rational, Integer, Number, Add, Poly, factor, cancel, latex as _latex
+    expr_f = factor(expr)
+    if isinstance(expr_f, Mul):
+        raw_factors = list(expr_f.args)
+    else:
+        raw_factors = [expr_f]
+    sign = 1
+    numerics = []
+    params = []
+    z_polys = []
+    for f in raw_factors:
+        if f == -1:
+            sign *= -1
+            continue
+        if f.has(z):
+            z_polys.append(f)
+        elif isinstance(f, (Integer, Rational, Number)):
+            if f < 0:
+                sign *= -1
+                numerics.append(abs(f))
+            else:
+                numerics.append(f)
+        else:
+            params.append(f)
+    parts = []
+    prefix = '-' if sign == -1 else ''
+    for n in numerics:
+        if n != 1:
+            parts.append(_latex(n))
+    for p in params:
+        p_str = _latex(p)
+        if isinstance(p, Add):
+            p_str = '\\\\left(' + p_str + '\\\\right)'
+        parts.append(p_str)
+    for zp in z_polys:
+        base = zp.base if isinstance(zp, Pow) else zp
+        exp = zp.exp if isinstance(zp, Pow) else 1
+        base_str = _poly_latex(base, z)
+        try:
+            deg = Poly(base, z).degree()
+        except Exception:
+            deg = 0
+        needs_parens = deg >= 1 and isinstance(cancel(base), Add)
+        if not needs_parens:
+            needs_parens = ('+' in base_str or base_str.count('-') > (1 if base_str.startswith('-') else 0))
+        if needs_parens:
+            base_str = '\\\\left(' + base_str + '\\\\right)'
+        if exp != 1:
+            parts.append(base_str + '^{' + _latex(exp) + '}')
+        else:
+            parts.append(base_str)
+    if not parts:
+        return prefix + '1' if prefix else '1'
+    return prefix + ' '.join(parts)
+
 def _to_display_latex_scalar(expr):
     from sympy import fraction, cancel
     expr = cancel(expr)
     num, den = fraction(expr)
     if den == 1:
-        return _poly_latex(num, _display_z)
-    return '\\\\frac{' + _poly_latex(num, _display_z) + '}{' + _poly_latex(den, _display_z) + '}'
+        return _factored_product_latex(num, _display_z)
+    return '\\\\frac{' + _factored_product_latex(num, _display_z) + '}{' + _factored_product_latex(den, _display_z) + '}'
 
 # Build result JSON
 _match_list = []
