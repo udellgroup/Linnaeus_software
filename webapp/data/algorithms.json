@@ -115,7 +115,8 @@
     "name": "Quasi-Hyperbolic Momentum",
     "aliases": [],
     "citation": "Ma & Yarats 2019",
-    "bibtex": "@inproceedings{ma2019quasi,\n  title={Quasi-hyperbolic momentum and Adam for deep learning},\n  author={Ma, Jerry and Yarats, Denis},\n  booktitle={International Conference on Learning Representations},\n  year={2019}\n}",
+    "doi": "https://openreview.net/forum?id=S1fUpoR5FQ",
+    "bibtex": "@inproceedings{ma2018quasihyperbolic,\n  title={Quasi-hyperbolic momentum and Adam for deep learning},\n  author={Jerry Ma and Denis Yarats},\n  booktitle={International Conference on Learning Representations},\n  year={2019},\n  url={https://openreview.net/forum?id=S1fUpoR5FQ}\n}",
     "oracles": [
       "grad_f"
     ],
