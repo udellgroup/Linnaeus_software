@@ -174,14 +174,13 @@ def check_all_equivalences(H_user, user_oracles, library, z_var):
             # Different oracle types but same count: try LFT.
             # Try all permutations of library oracles and shift vectors,
             # since equivalence may require permutation + LFT + shift.
+            # Collect ALL valid matches and pick the best (fewest zero params).
             import itertools
             p = len(lib_oracles)
             MAX_SHIFT = 2
             tried_orderings = set()
-            found_lft = False
+            lft_candidates = []
             for perm_indices in itertools.permutations(range(p)):
-                if found_lft:
-                    break
                 perm_lib_oracles = [lib_oracles[i] for i in perm_indices]
                 key = tuple(perm_lib_oracles)
                 if key in tried_orderings:
@@ -218,14 +217,25 @@ def check_all_equivalences(H_user, user_oracles, library, z_var):
                         m_norm = [mi - min_m for mi in m]
                         if any(mi != 0 for mi in m_norm):
                             result['shift_vector'] = m_norm
-                        matches.append({
+                        # Score: fewer zero-valued params = better
+                        n_zeros = sum(
+                            1 for v in result.get('params', {}).values()
+                            if v == 0
+                        ) + sum(
+                            1 for v in result.get('user_params', {}).values()
+                            if v == 0
+                        )
+                        lft_candidates.append((n_zeros, {
                             'algorithm': algo,
                             'type': 'lft',
                             'details': result,
                             'permuted': perm_list != list(range(p)),
-                        })
-                        found_lft = True
-                        break
+                        }))
+
+            if lft_candidates:
+                # Pick the best candidate (fewest zero params)
+                lft_candidates.sort(key=lambda x: x[0])
+                matches.append(lft_candidates[0][1])
 
     # Sort: oracle first, then shift, then lft
     type_order = {'oracle': 0, 'shift': 1, 'lft': 2}

@@ -718,35 +718,97 @@ def check_lft_equivalence(H1, H2, M_hat, z, lib_params=None,
     try:
         solutions = solve(equations, unknowns, dict=True)
     except Exception:
+        solutions = []
+
+    def _validate_lft_sol(sol):
+        """Validate and score an LFT solution.
+
+        Returns (sol, score) or None.
+        Score: number of params set to zero (lower = more general).
+        """
+        # Reject z in values
+        if any(v.has(z) for v in sol.values()):
+            return None
+        # Verify product is zero
+        product_sub = product.subs(sol)
+        for i in range(product_sub.rows):
+            for j in range(product_sub.cols):
+                entry = simplify(cancel(product_sub[i, j]))
+                if entry != 0:
+                    return None
+        # Reject if H1 is trivially zero
+        h1_sub = H1.subs(sol)
+        if all(cancel(h1_sub[i, j]) == 0
+               for i in range(H1.rows) for j in range(H1.cols)):
+            return None
+        # Also reject if H2 is trivially zero
+        h2_sub = H2_fresh.subs(sol)
+        if all(cancel(h2_sub[i, j]) == 0
+               for i in range(H2_fresh.rows) for j in range(H2_fresh.cols)):
+            return None
+        # Score: count zero-valued params (fewer = more general solution)
+        n_zeros = sum(1 for v in sol.values() if cancel(v) == 0)
+        complexity = sum(
+            v.count_ops() if hasattr(v, 'count_ops') else 0
+            for v in sol.values()
+        )
+        score = n_zeros * 1000 + complexity
+        return (sol, score)
+
+    candidates = []
+    for s in solutions:
+        result = _validate_lft_sol(s)
+        if result:
+            candidates.append(result)
+
+    # Also try branching on factored equations (same idea as oracle equiv)
+    from sympy import factor, Mul
+    unknowns_set = set(unknowns)
+    branch_subs = set()
+    for eq in equations:
+        feq = factor(eq)
+        factors = feq.args if isinstance(feq, Mul) else [feq]
+        for f in factors:
+            f_syms = f.free_symbols & unknowns_set
+            if len(f_syms) == 1:
+                sym = f_syms.pop()
+                try:
+                    vals = solve(f, sym)
+                except Exception:
+                    continue
+                for val in vals:
+                    if val.has(z) or (sym, val) in branch_subs:
+                        continue
+                    branch_subs.add((sym, val))
+                    branched_eqs = []
+                    for orig_eq in equations:
+                        r = cancel(orig_eq.subs(sym, val))
+                        if r != 0:
+                            branched_eqs.append(r)
+                    remaining = [u for u in unknowns if u != sym]
+                    if not branched_eqs:
+                        sol_b = {sym: val}
+                        result = _validate_lft_sol(sol_b)
+                        if result:
+                            candidates.append(result)
+                    elif remaining:
+                        try:
+                            bsols = solve(branched_eqs, remaining, dict=True)
+                        except Exception:
+                            bsols = []
+                        for bsol in bsols:
+                            full = {sym: val}
+                            full.update(bsol)
+                            result = _validate_lft_sol(full)
+                            if result:
+                                candidates.append(result)
+
+    if not candidates:
         return {'match': False}
 
-    if not solutions:
-        return {'match': False}
-
-    sol = solutions[0]
-
-    # Verify no z in solution values
-    for val in sol.values():
-        if val.has(z):
-            return {'match': False}
-
-    # Verify substitution makes product zero
-    product_sub = product.subs(sol)
-    for i in range(product_sub.rows):
-        for j in range(product_sub.cols):
-            entry = simplify(cancel(product_sub[i, j]))
-            if entry != 0:
-                return {'match': False}
-
-    # Reject solutions that make the transfer functions trivially zero
-    # (e.g., alpha=0 zeroing out everything is not meaningful equivalence).
-    h1_sub = H1.subs(sol)
-    all_zero = all(
-        cancel(h1_sub[i, j]) == 0
-        for i in range(H1.rows) for j in range(H1.cols)
-    )
-    if all_zero:
-        return {'match': False}
+    # Pick the best (lowest score = most general)
+    candidates.sort(key=lambda x: x[1])
+    sol = candidates[0][0]
 
     # Partition solution into lib params, user params, and internal
     # (oracle transformation) params.  Internal symbols that were solved
@@ -836,22 +898,36 @@ def check_lft_equivalence(H1, H2, M_hat, z, lib_params=None,
 
 # Oracle relation transformations (2x2 blocks)
 # Maps (oracle_from, oracle_to) -> function(t) -> 2x2 Matrix
-ORACLE_RELATIONS = {
-    ('subgrad_f', 'subgrad_fstar'): lambda t: Matrix([[0, 1], [1, 0]]),
-    ('subgrad_fstar', 'subgrad_f'): lambda t: Matrix([[0, 1], [1, 0]]),
-    ('grad_f', 'prox_f'): lambda t: Matrix([[0, 1], [1/t, -1/t]]),
-    ('prox_f', 'grad_f'): lambda t: Matrix([[0, t], [1, -1]]),
-    ('grad_f', 'prox_fstar'): lambda t: Matrix([[t, -t], [0, 1]]),
-    ('prox_fstar', 'grad_f'): lambda t: Matrix([[1/t, 1], [0, -1]]),
-    ('subgrad_fstar', 'prox_f'): lambda t: Matrix([[1/t, -1/t], [0, 1]]),
-    ('prox_f', 'subgrad_fstar'): lambda t: Matrix([[0, t], [1, -1]]),
-    ('subgrad_fstar', 'prox_fstar'): lambda t: Matrix([[0, 1], [t, -t]]),
-    ('prox_fstar', 'subgrad_fstar'): lambda t: Matrix([[0, 1/t], [1, -1]]),
-    ('prox_f', 'prox_fstar'): lambda t: Matrix([[t, 0], [t, -t]]),
-    ('prox_fstar', 'prox_f'): lambda t: Matrix([[1/t, 0], [1/t, -1/t]]),
-    ('prox_g', 'prox_gstar'): lambda t: Matrix([[t, 0], [t, -t]]),
-    ('prox_gstar', 'prox_g'): lambda t: Matrix([[1/t, 0], [1/t, -1/t]]),
+# The same mathematical relations hold for both _f and _g variants.
+_ORACLE_RELATIONS_BASE = {
+    ('subgrad', 'subgrad_star'): lambda t: Matrix([[0, 1], [1, 0]]),
+    ('subgrad_star', 'subgrad'): lambda t: Matrix([[0, 1], [1, 0]]),
+    ('grad', 'prox'): lambda t: Matrix([[0, 1], [1/t, -1/t]]),
+    ('prox', 'grad'): lambda t: Matrix([[0, t], [1, -1]]),
+    ('grad', 'prox_star'): lambda t: Matrix([[t, -t], [0, 1]]),
+    ('prox_star', 'grad'): lambda t: Matrix([[1/t, 1], [0, -1]]),
+    ('subgrad_star', 'prox'): lambda t: Matrix([[1/t, -1/t], [0, 1]]),
+    ('prox', 'subgrad_star'): lambda t: Matrix([[0, t], [1, -1]]),
+    ('subgrad_star', 'prox_star'): lambda t: Matrix([[0, 1], [t, -t]]),
+    ('prox_star', 'subgrad_star'): lambda t: Matrix([[0, 1/t], [1, -1]]),
+    ('prox', 'prox_star'): lambda t: Matrix([[t, 0], [t, -t]]),
+    ('prox_star', 'prox'): lambda t: Matrix([[1/t, 0], [1/t, -1/t]]),
 }
+
+# Generate ORACLE_RELATIONS for both _f and _g suffixes
+ORACLE_RELATIONS = {}
+for (o1_base, o2_base), fn in _ORACLE_RELATIONS_BASE.items():
+    for suffix in ('_f', '_g'):
+        # Map base names to suffixed names:
+        # 'grad' -> 'grad_f', 'prox' -> 'prox_f',
+        # 'subgrad_star' -> 'subgrad_fstar', 'prox_star' -> 'prox_fstar'
+        def _suffixed(base, s):
+            if base.endswith('_star'):
+                return base[:-5] + s + 'star'
+            return base + s
+        k1 = _suffixed(o1_base, suffix)
+        k2 = _suffixed(o2_base, suffix)
+        ORACLE_RELATIONS[(k1, k2)] = fn
 
 
 def build_block_m_hat(oracles_1, oracles_2, params=None):
