@@ -22,7 +22,7 @@
       "lft": []
     },
     "catalogOnly": false,
-    "tf_latex": "- \\frac{\\alpha}{z - 1}"
+    "tf_latex": "\\frac{- \\alpha}{z -1}"
   },
   {
     "id": "heavy_ball",
@@ -50,7 +50,7 @@
       "lft": []
     },
     "catalogOnly": false,
-    "tf_latex": "- \\frac{\\alpha z}{\\left(- \\beta + z\\right) \\left(z - 1\\right)}"
+    "tf_latex": "\\frac{- \\alpha z}{z^{2} -\\left(\\beta + 1\\right) z + \\beta}"
   },
   {
     "id": "nesterov",
@@ -78,7 +78,7 @@
       "lft": []
     },
     "catalogOnly": false,
-    "tf_latex": "- \\frac{\\alpha \\left(\\beta + 1\\right) \\left(- \\frac{\\beta}{\\beta + 1} + z\\right)}{\\left(- \\beta + z\\right) \\left(z - 1\\right)}"
+    "tf_latex": "\\frac{- \\alpha \\left(\\beta + 1\\right) z + \\alpha \\beta}{z^{2} -\\left(\\beta + 1\\right) z + \\beta}"
   },
   {
     "id": "triple_momentum",
@@ -108,7 +108,7 @@
       "lft": []
     },
     "catalogOnly": false,
-    "tf_latex": "- \\frac{\\alpha \\left(\\gamma + 1\\right) \\left(- \\frac{\\gamma}{\\gamma + 1} + z\\right)}{\\left(- \\beta + z\\right) \\left(z - 1\\right)}"
+    "tf_latex": "\\frac{- \\alpha \\left(\\gamma + 1\\right) z + \\alpha \\gamma}{z^{2} -\\left(\\beta + 1\\right) z + \\beta}"
   },
   {
     "id": "quasi_hyperbolic_momentum",
@@ -138,7 +138,7 @@
       "lft": []
     },
     "catalogOnly": false,
-    "tf_latex": "- \\frac{\\alpha \\left(- \\beta \\nu + 1\\right) \\left(- \\frac{\\beta \\left(1 - \\nu\\right)}{- \\beta \\nu + 1} + z\\right)}{\\left(- \\beta + z\\right) \\left(z - 1\\right)}"
+    "tf_latex": "\\frac{\\alpha \\left(\\beta \\nu - 1\\right) z - \\alpha \\beta \\left(\\nu - 1\\right)}{z^{2} -\\left(\\beta + 1\\right) z + \\beta}"
   },
   {
     "id": "stochastic_unified_momentum",
@@ -169,7 +169,7 @@
       "lft": []
     },
     "catalogOnly": false,
-    "tf_latex": "- \\frac{\\alpha \\left(\\beta s + 1\\right) \\left(- \\frac{\\beta s}{\\beta s + 1} + z\\right)}{\\left(- \\beta + z\\right) \\left(z - 1\\right)}"
+    "tf_latex": "\\frac{- \\alpha \\left(\\beta s + 1\\right) z + \\alpha \\beta s}{z^{2} -\\left(\\beta + 1\\right) z + \\beta}"
   },
   {
     "id": "arrow_hurwicz_omd",
@@ -203,7 +203,7 @@
       "lft": []
     },
     "catalogOnly": false,
-    "tf_latex": "- \\frac{\\eta \\left(2 z - 1\\right)}{z \\left(z - 1\\right)}"
+    "tf_latex": "\\frac{- 2 \\eta z + \\eta}{z^{2} -z}"
   },
   {
     "id": "proximal_point",
@@ -251,7 +251,7 @@
       "lft": []
     },
     "catalogOnly": false,
-    "tf_latex": "\\frac{\\alpha}{\\alpha + z - 1}"
+    "tf_latex": "\\frac{\\alpha}{z + \\alpha - 1}"
   },
   {
     "id": "douglas_rachford",
@@ -284,7 +284,7 @@
       "lft": []
     },
     "catalogOnly": false,
-    "tf_latex": "\\left[\\begin{matrix}- \\frac{\\alpha}{z - 1} & \\frac{\\alpha}{z - 1}\\\\\\frac{\\alpha + 2 z - 2}{z - 1} & - \\frac{\\alpha}{z - 1}\\end{matrix}\\right]"
+    "tf_latex": "\\begin{bmatrix} \\frac{- \\alpha}{z -1} & \\frac{\\alpha}{z -1} \\\\ \\frac{2 z + \\alpha - 2}{z -1} & \\frac{- \\alpha}{z -1} \\end{bmatrix}"
   },
   {
     "id": "admm",
@@ -319,7 +319,7 @@
       "lft": []
     },
     "catalogOnly": false,
-    "tf_latex": "\\left[\\begin{matrix}- \\frac{\\rho}{z - 1} & \\frac{\\rho z + z - 1}{z^{2} - z}\\\\\\frac{\\rho + z - 1}{z - 1} & - \\frac{\\rho}{z - 1}\\end{matrix}\\right]"
+    "tf_latex": "\\begin{bmatrix} \\frac{- \\rho}{z -1} & \\frac{\\left(\\rho + 1\\right) z -1}{z^{2} -z} \\\\ \\frac{z + \\rho - 1}{z -1} & \\frac{- \\rho}{z -1} \\end{bmatrix}"
   },
   {
     "id": "peaceman_rachford",
@@ -347,7 +347,7 @@
       "lft": []
     },
     "catalogOnly": false,
-    "tf_latex": "\\left[\\begin{matrix}0 & \\frac{2}{z + 1}\\\\2 & - \\frac{2}{z + 1}\\end{matrix}\\right]"
+    "tf_latex": "\\begin{bmatrix} 0 & \\frac{2}{z + 1} \\\\ 2 & \\frac{-2}{z + 1} \\end{bmatrix}"
   },
   {
     "id": "chambolle_pock",
@@ -381,7 +381,7 @@
       "lft": []
     },
     "catalogOnly": false,
-    "tf_latex": "\\left[\\begin{matrix}\\frac{1}{z} & - \\frac{\\tau}{z}\\\\\\frac{\\sigma \\theta z - \\sigma \\theta + \\sigma z}{z} & \\frac{1}{z}\\end{matrix}\\right]"
+    "tf_latex": "\\begin{bmatrix} \\frac{1}{z} & \\frac{- \\tau}{z} \\\\ \\frac{\\sigma \\left(\\theta + 1\\right) z - \\sigma \\theta}{z} & \\frac{1}{z} \\end{bmatrix}"
   },
   {
     "id": "proximal_gradient",
@@ -408,7 +408,7 @@
       "lft": []
     },
     "catalogOnly": false,
-    "tf_latex": "\\left[\\begin{matrix}0 & \\frac{1}{z}\\\\- t & \\frac{1}{z}\\end{matrix}\\right]"
+    "tf_latex": "\\begin{bmatrix} 0 & \\frac{1}{z} \\\\ - t & \\frac{1}{z} \\end{bmatrix}"
   },
   {
     "id": "conjugate_proximal_gradient",
@@ -440,7 +440,7 @@
       ]
     },
     "catalogOnly": false,
-    "tf_latex": "\\left[\\begin{matrix}- \\frac{t}{z - 1} & - \\frac{t}{z - 1}\\\\- \\frac{z}{z - 1} & - \\frac{1}{z - 1}\\end{matrix}\\right]"
+    "tf_latex": "\\begin{bmatrix} \\frac{- t}{z -1} & \\frac{- t}{z -1} \\\\ \\frac{-z}{z -1} & \\frac{-1}{z -1} \\end{bmatrix}"
   },
   {
     "id": "davis_yin",
@@ -476,7 +476,7 @@
       "lft": []
     },
     "catalogOnly": false,
-    "tf_latex": "\\left[\\begin{matrix}- \\frac{t}{z - 1} & 0 & \\frac{t}{z - 1}\\\\1 & 0 & 0\\\\\\frac{t + 2 z - 2}{z - 1} & - \\gamma & - \\frac{t}{z - 1}\\end{matrix}\\right]"
+    "tf_latex": "\\begin{bmatrix} \\frac{- t}{z -1} & 0 & \\frac{t}{z -1} \\\\ 1 & 0 & 0 \\\\ \\frac{2 z + t - 2}{z -1} & - \\gamma & \\frac{- t}{z -1} \\end{bmatrix}"
   },
   {
     "id": "extragradient",
@@ -503,7 +503,7 @@
       "lft": []
     },
     "catalogOnly": false,
-    "tf_latex": "\\left[\\begin{matrix}0 & - \\frac{t}{z - 1}\\\\- t & - \\frac{t}{z - 1}\\end{matrix}\\right]"
+    "tf_latex": "\\begin{bmatrix} 0 & \\frac{- t}{z -1} \\\\ - t & \\frac{- t}{z -1} \\end{bmatrix}"
   },
   {
     "id": "extragradient_korpelevich",
@@ -536,7 +536,7 @@
       "lft": []
     },
     "catalogOnly": false,
-    "tf_latex": "\\left[\\begin{matrix}0 & 0 & 0 & \\frac{1}{z}\\\\- t & 0 & 0 & \\frac{1}{z}\\\\0 & 1 & 0 & 0\\\\0 & 0 & - t & \\frac{1}{z}\\end{matrix}\\right]"
+    "tf_latex": "\\begin{bmatrix} 0 & 0 & 0 & \\frac{1}{z} \\\\ - t & 0 & 0 & \\frac{1}{z} \\\\ 0 & 1 & 0 & 0 \\\\ 0 & 0 & - t & \\frac{1}{z} \\end{bmatrix}"
   },
   {
     "id": "extragradient_tseng",
@@ -570,7 +570,7 @@
       "lft": []
     },
     "catalogOnly": false,
-    "tf_latex": "\\left[\\begin{matrix}\\frac{t}{z} & \\frac{1}{z} & - \\frac{t}{z}\\\\\\frac{- t z + t}{z} & \\frac{1}{z} & - \\frac{t}{z}\\\\0 & 1 & 0\\end{matrix}\\right]"
+    "tf_latex": "\\begin{bmatrix} \\frac{t}{z} & \\frac{1}{z} & \\frac{- t}{z} \\\\ \\frac{- t z + t}{z} & \\frac{1}{z} & \\frac{- t}{z} \\\\ 0 & 1 & 0 \\end{bmatrix}"
   },
   {
     "id": "extragradient_malitsky",
@@ -604,7 +604,7 @@
       "lft": []
     },
     "catalogOnly": false,
-    "tf_latex": "\\left[\\begin{matrix}0 & \\frac{2 z - 1}{z^{2}}\\\\- t & \\frac{1}{z}\\end{matrix}\\right]"
+    "tf_latex": "\\begin{bmatrix} 0 & \\frac{2 z -1}{z^{2}} \\\\ - t & \\frac{1}{z} \\end{bmatrix}"
   },
   {
     "id": "nids",
@@ -635,7 +635,7 @@
       "lft": []
     },
     "catalogOnly": false,
-    "tf_latex": "- \\frac{\\alpha \\lambda \\left(z - 1\\right)}{- 2 \\lambda z + \\lambda + z^{2}}"
+    "tf_latex": "\\frac{- \\alpha \\lambda z + \\alpha \\lambda}{z^{2} - 2 \\lambda z + \\lambda}"
   },
   {
     "id": "exact_diffusion",
@@ -668,12 +668,14 @@
       "lft": []
     },
     "catalogOnly": false,
-    "tf_latex": "- \\frac{\\alpha \\lambda \\left(z - 1\\right)}{- 2 \\lambda z + \\lambda + z^{2}}"
+    "tf_latex": "\\frac{- \\alpha \\lambda z + \\alpha \\lambda}{z^{2} - 2 \\lambda z + \\lambda}"
   },
   {
     "id": "extra_distributed",
     "name": "EXTRA",
-    "aliases": ["Exact First-Order Algorithm"],
+    "aliases": [
+      "Exact First-Order Algorithm"
+    ],
     "citation": "Shi et al. 2015",
     "doi": "https://doi.org/10.1137/14096668X",
     "bibtex": "@article{shi2015extra,\n  title={{EXTRA}: An exact first-order algorithm for decentralized consensus optimization},\n  author={Shi, Wei and Ling, Qing and Wu, Gang and Yin, Wotao},\n  journal={SIAM Journal on Optimization},\n  volume={25},\n  number={2},\n  pages={944--966},\n  year={2015},\n  publisher={SIAM}\n}",
@@ -697,12 +699,14 @@
       "lft": []
     },
     "catalogOnly": false,
-    "tf_latex": "\\frac{-2 \\alpha (z - 1)}{2z^{2} - 2(1+\\lambda)z + (1+\\lambda)}"
+    "tf_latex": "\\frac{- 2 \\alpha z + 2 \\alpha}{2 z^{2} - 2 \\left(\\lambda + 1\\right) z + \\lambda + 1}"
   },
   {
     "id": "diging",
     "name": "DIGing",
-    "aliases": ["Distributed Inexact Gradient"],
+    "aliases": [
+      "Distributed Inexact Gradient"
+    ],
     "citation": "Nedić et al. 2017",
     "doi": "https://doi.org/10.1137/16M1084316",
     "bibtex": "@article{nedic2017achieving,\n  title={Achieving geometric convergence for distributed optimization over time-varying graphs},\n  author={Nedi{\\'c}, Angelia and Olshevsky, Alex and Shi, Wei},\n  journal={SIAM Journal on Optimization},\n  volume={27},\n  number={4},\n  pages={2597--2633},\n  year={2017},\n  publisher={SIAM}\n}",
@@ -727,12 +731,14 @@
       "lft": []
     },
     "catalogOnly": false,
-    "tf_latex": "\\frac{-\\alpha (z - 1)}{(z - \\lambda)^{2}}"
+    "tf_latex": "\\frac{- \\alpha z + \\alpha}{z^{2} - 2 \\lambda z + \\lambda^{2}}"
   },
   {
     "id": "augdgm",
     "name": "AugDGM",
-    "aliases": ["Aug-DGM"],
+    "aliases": [
+      "Aug-DGM"
+    ],
     "citation": "Xu et al. 2015",
     "doi": "https://doi.org/10.1109/CDC.2015.7402509",
     "bibtex": "@inproceedings{xu2015augmented,\n  title={Augmented distributed gradient methods for multi-agent optimization under uncoordinated constant stepsizes},\n  author={Xu, Jinming and Zhu, Shanying and Soh, Yeng Chai and Xie, Lihua},\n  booktitle={54th IEEE Conference on Decision and Control (CDC)},\n  pages={2055--2060},\n  year={2015},\n  organization={IEEE}\n}",
@@ -757,7 +763,7 @@
       "lft": []
     },
     "catalogOnly": false,
-    "tf_latex": "\\frac{-\\alpha \\lambda (z - 1)}{(z - \\lambda)^{2}}"
+    "tf_latex": "\\frac{- \\alpha \\lambda z + \\alpha \\lambda}{z^{2} - 2 \\lambda z + \\lambda^{2}}"
   },
   {
     "id": "svl",
@@ -792,12 +798,14 @@
       "lft": []
     },
     "catalogOnly": false,
-    "tf_latex": "\\frac{-\\alpha(1-\\delta(1-\\lambda))(z-1)}{(z-1)^2 + \\gamma(1-\\lambda)(z-1) + \\beta(1-\\lambda)}"
+    "tf_latex": "\\frac{- \\alpha \\left(\\delta \\lambda - \\delta + 1\\right) z + \\alpha \\left(\\delta \\lambda - \\delta + 1\\right)}{z^{2} -\\left(\\gamma \\lambda - \\gamma + 2\\right) z - \\beta \\lambda + \\beta + \\gamma \\lambda - \\gamma + 1}"
   },
   {
     "id": "unified_extra",
     "name": "Unified EXTRA",
-    "aliases": ["uEXTRA"],
+    "aliases": [
+      "uEXTRA"
+    ],
     "citation": "Jakovetić et al. 2019",
     "doi": "https://doi.org/10.1109/TSIPN.2018.2846183",
     "bibtex": "@article{jakoveticunification2019,\n  title={Unification and generalization of diffusion-type algorithms for distributed optimization},\n  author={Jakoveti{\\'c}, Du{\\v{s}}an and Bajovi{\\'c}, Dragana and Xavier, Jo{\\~a}o and Moura, Jos{\\'e} M. F.},\n  journal={IEEE Transactions on Signal and Information Processing over Networks},\n  volume={5},\n  number={1},\n  pages={46--58},\n  year={2019},\n  publisher={IEEE}\n}",
@@ -824,12 +832,14 @@
       "lft": []
     },
     "catalogOnly": false,
-    "tf_latex": "\\frac{-\\alpha(z-1)}{(z - 1 - \\mu(\\lambda-1))^2 - \\alpha l \\mu (\\lambda-1)(1 - \\mu(\\lambda - 1))}"
+    "tf_latex": "\\frac{- \\alpha z + \\alpha}{z^{2} - 2 \\left(\\lambda \\mu - \\mu + 1\\right) z - \\left(\\lambda \\mu - \\mu + 1\\right) \\left(\\alpha l \\lambda \\mu - \\alpha l \\mu - \\lambda \\mu + \\mu - 1\\right)}"
   },
   {
     "id": "unified_diging",
     "name": "Unified DIGing",
-    "aliases": ["uDIG"],
+    "aliases": [
+      "uDIG"
+    ],
     "citation": "Jakovetić et al. 2019",
     "doi": "https://doi.org/10.1109/TSIPN.2018.2846183",
     "bibtex": "@article{jakoveticunification2019,\n  title={Unification and generalization of diffusion-type algorithms for distributed optimization},\n  author={Jakoveti{\\'c}, Du{\\v{s}}an and Bajovi{\\'c}, Dragana and Xavier, Jo{\\~a}o and Moura, Jos{\\'e} M. F.},\n  journal={IEEE Transactions on Signal and Information Processing over Networks},\n  volume={5},\n  number={1},\n  pages={46--58},\n  year={2019},\n  publisher={IEEE}\n}",
@@ -856,6 +866,6 @@
       "lft": []
     },
     "catalogOnly": false,
-    "tf_latex": "\\frac{-\\alpha(z-1)}{(z - 1 - \\mu(\\lambda-1))^2 - \\alpha l \\mu (\\lambda - 1)}"
+    "tf_latex": "\\frac{- \\alpha z + \\alpha}{z^{2} - 2 \\left(\\lambda \\mu - \\mu + 1\\right) z - \\alpha l \\lambda \\mu + \\alpha l \\mu + \\lambda^{2} \\mu^{2} - 2 \\lambda \\mu^{2} + 2 \\lambda \\mu + \\mu^{2} - 2 \\mu + 1}"
   }
 ]

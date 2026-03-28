@@ -151,6 +151,8 @@ def _poly_latex(expr, z):
     except Exception:
         return _latex(expr)
     deg = p.degree()
+    if deg < 0:  # Poly(0, z) has degree -oo
+        return '0'
     terms = []
     for i in range(deg, -1, -1):
         c = p.nth(i)
