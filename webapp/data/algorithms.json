@@ -672,7 +672,7 @@
     "name": "EXTRA",
     "aliases": ["Exact First-Order Algorithm"],
     "citation": "Shi et al. 2015",
-    "doi": "https://doi.org/10.1109/TSP.2015.2461543",
+    "doi": "https://doi.org/10.1137/14096668X",
     "bibtex": "@article{shi2015extra,\n  title={{EXTRA}: An exact first-order algorithm for decentralized consensus optimization},\n  author={Shi, Wei and Ling, Qing and Wu, Gang and Yin, Wotao},\n  journal={SIAM Journal on Optimization},\n  volume={25},\n  number={2},\n  pages={944--966},\n  year={2015},\n  publisher={SIAM}\n}",
     "notes": "Decentralized algorithm using two gossip matrices W and W̃ = (I+W)/2. Achieves exact convergence to the optimal solution.",
     "oracles": [
@@ -700,9 +700,9 @@
     "id": "diging",
     "name": "DIGing",
     "aliases": ["Distributed Inexact Gradient"],
-    "citation": "Nedić & Olshevsky 2017",
-    "doi": "https://doi.org/10.1109/TAC.2016.2609940",
-    "bibtex": "@article{nedic2017achieving,\n  title={Achieving geometric convergence for distributed optimization over time-varying graphs},\n  author={Nedi{\\'c}, Angelia and Olshevsky, Alex},\n  journal={SIAM Journal on Optimization},\n  volume={27},\n  number={4},\n  pages={2597--2633},\n  year={2017},\n  publisher={SIAM}\n}",
+    "citation": "Nedić et al. 2017",
+    "doi": "https://doi.org/10.1137/16M1084316",
+    "bibtex": "@article{nedic2017achieving,\n  title={Achieving geometric convergence for distributed optimization over time-varying graphs},\n  author={Nedi{\\'c}, Angelia and Olshevsky, Alex and Shi, Wei},\n  journal={SIAM Journal on Optimization},\n  volume={27},\n  number={4},\n  pages={2597--2633},\n  year={2017},\n  publisher={SIAM}\n}",
     "notes": "Gradient tracking algorithm for decentralized optimization. Uses W̃ = W.",
     "oracles": [
       "grad_f"
@@ -730,9 +730,9 @@
     "id": "augdgm",
     "name": "AugDGM",
     "aliases": ["Aug-DGM"],
-    "citation": "Xu et al. 2021",
-    "doi": "https://doi.org/10.1109/TSIPN.2021.3058452",
-    "bibtex": "@article{xu2021distributed,\n  title={Distributed stochastic gradient tracking methods},\n  author={Xu, Jinming and Zhu, Shanying and Soh, Yeng Chai and Xie, Lihua},\n  journal={Mathematical Programming},\n  volume={187},\n  pages={409--457},\n  year={2021},\n  publisher={Springer}\n}",
+    "citation": "Xu et al. 2015",
+    "doi": "https://doi.org/10.1109/CDC.2015.7402509",
+    "bibtex": "@inproceedings{xu2015augmented,\n  title={Augmented distributed gradient methods for multi-agent optimization under uncoordinated constant stepsizes},\n  author={Xu, Jinming and Zhu, Shanying and Soh, Yeng Chai and Xie, Lihua},\n  booktitle={54th IEEE Conference on Decision and Control (CDC)},\n  pages={2055--2060},\n  year={2015},\n  organization={IEEE}\n}",
     "notes": "Gradient tracking with the mixing matrix applied jointly to the state and gradient step.",
     "oracles": [
       "grad_f"
@@ -761,7 +761,7 @@
     "name": "SVL",
     "aliases": [],
     "citation": "Sundararajan et al. 2020",
-    "doi": "https://doi.org/10.1109/TCNS.2020.3024720",
+    "doi": "https://doi.org/10.1109/TCNS.2020.2988009",
     "bibtex": "@article{sundararajan2020analysis,\n  title={Analysis and design of first-order distributed optimization algorithms over time-varying graphs},\n  author={Sundararajan, Akhil and Van Scoy, Bryan and Lessard, Laurent},\n  journal={IEEE Transactions on Control of Network Systems},\n  volume={7},\n  number={4},\n  pages={1597--1608},\n  year={2020},\n  publisher={IEEE}\n}",
     "notes": "General distributed algorithm template with four tunable parameters. Achieves optimal worst-case convergence rate for time-varying graphs.",
     "oracles": [
