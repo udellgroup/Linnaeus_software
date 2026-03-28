@@ -135,15 +135,23 @@ def parse_equations(equations):
     # for correct LaTeX rendering, consistent with library.py).
     equations = [re.sub(r'\blambda\b', 'lam', eq) for eq in equations]
 
-    # Detect mixing matrix W: rewrite W -> lam and I -> 1 (identity matrix).
-    # W is a linear oracle representing a gossip/mixing matrix whose eigenvalue
-    # is lambda.  After rewriting, lam flows through the z-domain pipeline
-    # normally but is marked as a universal parameter (must match for ALL
-    # lambda, not just some specific value).
-    # Supports: W*x[k], (W+I)/2 * x[k], (I+W)/2, etc.
-    has_mixing_matrix = any(re.search(r'\bW\b', eq) for eq in equations)
+    # Detect linear oracles W (mixing matrix) and L (graph Laplacian).
+    # W has eigenvalue lambda; L has eigenvalue 1-lambda (since W = I - L
+    # in the simplest case, or W = I - mu*L with mu as a free parameter).
+    # After rewriting, lam flows through the z-domain pipeline normally
+    # but is marked as a universal parameter (must match for ALL lambda).
+    # I (identity matrix) is replaced with 1.
+    # Supports: W*x[k], (W+I)/2, L*x[k], (I - mu*L)*x[k], etc.
+    has_W = any(re.search(r'\bW\b', eq) for eq in equations)
+    has_L = any(re.search(r'\bL\b', eq) for eq in equations)
+    has_mixing_matrix = has_W or has_L
     if has_mixing_matrix:
-        equations = [re.sub(r'\bW\b', 'lam', eq) for eq in equations]
+        # Replace W -> lam, L -> (1-lam), I -> 1
+        # Order matters: do L before I to avoid I in (1-lam) being replaced
+        if has_L:
+            equations = [re.sub(r'\bL\b', '(1-lam)', eq) for eq in equations]
+        if has_W:
+            equations = [re.sub(r'\bW\b', 'lam', eq) for eq in equations]
         equations = [re.sub(r'\bI\b', '1', eq) for eq in equations]
 
     # Pre-process: merge shifted oracle calls into single oracles
