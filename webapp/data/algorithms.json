@@ -670,11 +670,11 @@
   {
     "id": "extra_distributed",
     "name": "EXTRA",
-    "aliases": ["Exact First-Order Algorithm"],
+    "aliases": ["Exact First-Order Algorithm", "Unified EXTRA", "uEXTRA"],
     "citation": "Shi et al. 2015",
     "doi": "https://doi.org/10.1137/14096668X",
     "bibtex": "@article{shi2015extra,\n  title={{EXTRA}: An exact first-order algorithm for decentralized consensus optimization},\n  author={Shi, Wei and Ling, Qing and Wu, Gang and Yin, Wotao},\n  journal={SIAM Journal on Optimization},\n  volume={25},\n  number={2},\n  pages={944--966},\n  year={2015},\n  publisher={SIAM}\n}",
-    "notes": "Decentralized algorithm using two gossip matrices W and W̃ = (I+W)/2. Achieves exact convergence to the optimal solution.",
+    "notes": "Decentralized algorithm using two gossip matrices W and W̃ = (I+W)/2. Achieves exact convergence. Also known as Unified EXTRA (Jakovetić 2019).",
     "oracles": [
       "grad_f"
     ],
@@ -699,11 +699,11 @@
   {
     "id": "diging",
     "name": "DIGing",
-    "aliases": ["Distributed Inexact Gradient"],
+    "aliases": ["Distributed Inexact Gradient", "Unified DIGing", "uDIG"],
     "citation": "Nedić et al. 2017",
     "doi": "https://doi.org/10.1137/16M1084316",
     "bibtex": "@article{nedic2017achieving,\n  title={Achieving geometric convergence for distributed optimization over time-varying graphs},\n  author={Nedi{\\'c}, Angelia and Olshevsky, Alex and Shi, Wei},\n  journal={SIAM Journal on Optimization},\n  volume={27},\n  number={4},\n  pages={2597--2633},\n  year={2017},\n  publisher={SIAM}\n}",
-    "notes": "Gradient tracking algorithm for decentralized optimization. Uses W̃ = W.",
+    "notes": "Gradient tracking algorithm for decentralized optimization. Uses W̃ = W. Also known as Unified DIGing (Jakovetić 2019).",
     "oracles": [
       "grad_f"
     ],
