@@ -140,23 +140,23 @@ def check_all_equivalences(H_user, user_oracles, library, z_var,
         # Determine universal params for this comparison.
         # Both distributed: lambda is universal (must match for all values).
         # Neither distributed: no universal params.
-        # Cross-category: try lambda=1 substitution (fully connected graph).
+        # Cross-category: try lambda=0 substitution (trivial one-node graph).
         if user_distributed and lib_distributed:
             universal_params = user_universal_set | set(algo.get('universal_params', []))
         elif not user_distributed and not lib_distributed:
             universal_params = set()
         else:
-            # Cross-category: substitute lambda=1 in the distributed TF
+            # Cross-category: substitute lambda=0 in the distributed TF
             lam_sym = PARAMS['lam']
             if lib_distributed:
-                H_lib_cross = H_lib.applyfunc(lambda e: _cancel(e.subs(lam_sym, 1)))
+                H_lib_cross = H_lib.applyfunc(lambda e: _cancel(e.subs(lam_sym, 0)))
             else:
                 H_lib_cross = H_lib
             if user_distributed:
-                H_user_cross = H_user.applyfunc(lambda e: _cancel(e.subs(lam_sym, 1)))
+                H_user_cross = H_user.applyfunc(lambda e: _cancel(e.subs(lam_sym, 0)))
             else:
                 H_user_cross = H_user
-            # Try oracle equivalence with lambda=1 substitution
+            # Try oracle equivalence with lambda=0 substitution
             if sorted(user_oracles) == sorted(lib_oracles):
                 result = check_oracle_equivalence(
                     H_user_cross, H_lib_cross, z_var,
@@ -164,8 +164,8 @@ def check_all_equivalences(H_user, user_oracles, library, z_var,
                 )
                 if result['match']:
                     result['condition_note'] = (
-                        '\\text{Equivalent when } \\lambda=1 '
-                        '\\text{ (fully connected graph)}')
+                        '\\text{Equivalent when } \\lambda=0 '
+                        '\\text{ (trivial one-node graph)}')
                     matches.append({
                         'algorithm': algo,
                         'type': 'oracle',

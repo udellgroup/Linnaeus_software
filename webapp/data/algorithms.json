@@ -613,7 +613,7 @@
     "citation": "Li et al. 2019",
     "doi": "https://doi.org/10.1109/TSP.2019.2926022",
     "bibtex": "@article{li2019decentralized,\n  title={A decentralized proximal-gradient method with network independent step-sizes and separated convergence rates},\n  author={Li, Zhi and Shi, Wei and Yan, Ming},\n  journal={IEEE Transactions on Signal Processing},\n  volume={67},\n  number={17},\n  pages={4494--4506},\n  year={2019},\n  publisher={IEEE}\n}",
-    "notes": "Decentralized algorithm. The transfer function characterizes behavior per spectral mode of the mixing matrix W (eigenvalue λ).",
+    "notes": "Decentralized algorithm. The transfer function characterizes behavior per spectral mode of the graph Laplacian L (eigenvalue λ).",
     "oracles": [
       "grad_f"
     ],
@@ -625,7 +625,7 @@
     "parameters": [
       "alpha"
     ],
-    "transferFunction": "-alpha*lam*(z - 1)/(z**2 - 2*lam*z + lam)",
+    "transferFunction": "(alpha*lam*z - alpha*lam - alpha*z + alpha)/(2*lam*z - lam + z**2 - 2*z + 1)",
     "tfIsMatrix": false,
     "equivalences": {
       "oracle": [
@@ -635,7 +635,7 @@
       "lft": []
     },
     "catalogOnly": false,
-    "tf_latex": "\\frac{- \\alpha \\lambda z + \\alpha \\lambda}{z^{2} - 2 \\lambda z + \\lambda}"
+    "tf_latex": "\\frac{\\alpha \\left(\\lambda - 1\\right) z - \\alpha \\left(\\lambda - 1\\right)}{z^{2} + 2 \\left(\\lambda - 1\\right) z -\\left(\\lambda - 1\\right)}"
   },
   {
     "id": "exact_diffusion",
@@ -644,7 +644,7 @@
     "citation": "Yuan et al. 2018",
     "doi": "https://doi.org/10.1109/TSP.2018.2875898",
     "bibtex": "@article{yuan2018exact,\n  title={Exact diffusion for distributed optimization and learning---{P}art {I}: Algorithm development},\n  author={Yuan, Kun and Ying, Bicheng and Zhao, Xiaochuan and Sayed, Ali H},\n  journal={IEEE Transactions on Signal Processing},\n  volume={67},\n  number={3},\n  pages={708--723},\n  year={2018},\n  publisher={IEEE}\n}",
-    "notes": "Decentralized algorithm using adapt-correct-combine steps. The transfer function characterizes behavior per spectral mode of the mixing matrix W (eigenvalue λ). Oracle-equivalent to NIDS.",
+    "notes": "Decentralized algorithm using adapt-correct-combine steps. The transfer function characterizes behavior per spectral mode of the graph Laplacian L (eigenvalue λ). Oracle-equivalent to NIDS.",
     "oracles": [
       "grad_f"
     ],
@@ -658,7 +658,7 @@
     "parameters": [
       "alpha"
     ],
-    "transferFunction": "-alpha*lam*(z - 1)/(z**2 - 2*lam*z + lam)",
+    "transferFunction": "(alpha*lam*z - alpha*lam - alpha*z + alpha)/(2*lam*z - lam + z**2 - 2*z + 1)",
     "tfIsMatrix": false,
     "equivalences": {
       "oracle": [
@@ -668,7 +668,7 @@
       "lft": []
     },
     "catalogOnly": false,
-    "tf_latex": "\\frac{- \\alpha \\lambda z + \\alpha \\lambda}{z^{2} - 2 \\lambda z + \\lambda}"
+    "tf_latex": "\\frac{\\alpha \\left(\\lambda - 1\\right) z - \\alpha \\left(\\lambda - 1\\right)}{z^{2} + 2 \\left(\\lambda - 1\\right) z -\\left(\\lambda - 1\\right)}"
   },
   {
     "id": "extra_distributed",
@@ -691,7 +691,7 @@
     "parameters": [
       "alpha"
     ],
-    "transferFunction": "(-2*alpha*z + 2*alpha)/(-2*lam*z + lam + 2*z**2 - 2*z + 1)",
+    "transferFunction": "(-2*alpha*z + 2*alpha)/(2*lam*z - lam + 2*z**2 - 4*z + 2)",
     "tfIsMatrix": false,
     "equivalences": {
       "oracle": [],
@@ -699,7 +699,7 @@
       "lft": []
     },
     "catalogOnly": false,
-    "tf_latex": "\\frac{- 2 \\alpha z + 2 \\alpha}{2 z^{2} - 2 \\left(\\lambda + 1\\right) z + \\lambda + 1}"
+    "tf_latex": "\\frac{- 2 \\alpha z + 2 \\alpha}{2 z^{2} + 2 \\left(\\lambda - 2\\right) z -\\left(\\lambda - 2\\right)}"
   },
   {
     "id": "diging",
@@ -723,7 +723,7 @@
     "parameters": [
       "alpha"
     ],
-    "transferFunction": "(-alpha*z + alpha)/(lam**2 - 2*lam*z + z**2)",
+    "transferFunction": "(-alpha*z + alpha)/(lam**2 + 2*lam*z - 2*lam + z**2 - 2*z + 1)",
     "tfIsMatrix": false,
     "equivalences": {
       "oracle": [],
@@ -731,7 +731,7 @@
       "lft": []
     },
     "catalogOnly": false,
-    "tf_latex": "\\frac{- \\alpha z + \\alpha}{z^{2} - 2 \\lambda z + \\lambda^{2}}"
+    "tf_latex": "\\frac{- \\alpha z + \\alpha}{z^{2} + 2 \\left(\\lambda - 1\\right) z + \\left(\\lambda - 1\\right)^{2}}"
   },
   {
     "id": "augdgm",
@@ -755,7 +755,7 @@
     "parameters": [
       "alpha"
     ],
-    "transferFunction": "(-alpha*lam*z + alpha*lam)/(lam**2 - 2*lam*z + z**2)",
+    "transferFunction": "(alpha*lam*z - alpha*lam - alpha*z + alpha)/(lam**2 + 2*lam*z - 2*lam + z**2 - 2*z + 1)",
     "tfIsMatrix": false,
     "equivalences": {
       "oracle": [],
@@ -763,7 +763,7 @@
       "lft": []
     },
     "catalogOnly": false,
-    "tf_latex": "\\frac{- \\alpha \\lambda z + \\alpha \\lambda}{z^{2} - 2 \\lambda z + \\lambda^{2}}"
+    "tf_latex": "\\frac{\\alpha \\left(\\lambda - 1\\right) z - \\alpha \\left(\\lambda - 1\\right)}{z^{2} + 2 \\left(\\lambda - 1\\right) z + \\left(\\lambda - 1\\right)^{2}}"
   },
   {
     "id": "svl",
@@ -790,7 +790,7 @@
       "gamma",
       "delta"
     ],
-    "transferFunction": "(-alpha*delta*lam*z + alpha*delta*lam + alpha*delta*z - alpha*delta - alpha*z + alpha)/(-beta*lam + beta - gamma*lam*z + gamma*lam + gamma*z - gamma + z**2 - 2*z + 1)",
+    "transferFunction": "(alpha*delta*lam*z - alpha*delta*lam - alpha*z + alpha)/(beta*lam + gamma*lam*z - gamma*lam + z**2 - 2*z + 1)",
     "tfIsMatrix": false,
     "equivalences": {
       "oracle": [],
@@ -798,7 +798,7 @@
       "lft": []
     },
     "catalogOnly": false,
-    "tf_latex": "\\frac{- \\alpha \\left(\\delta \\lambda - \\delta + 1\\right) z + \\alpha \\left(\\delta \\lambda - \\delta + 1\\right)}{z^{2} -\\left(\\gamma \\lambda - \\gamma + 2\\right) z - \\beta \\lambda + \\beta + \\gamma \\lambda - \\gamma + 1}"
+    "tf_latex": "\\frac{\\alpha \\left(\\delta \\lambda - 1\\right) z - \\alpha \\left(\\delta \\lambda - 1\\right)}{z^{2} + \\left(\\gamma \\lambda - 2\\right) z + \\beta \\lambda - \\gamma \\lambda + 1}"
   },
   {
     "id": "unified_extra",
@@ -824,7 +824,7 @@
       "l",
       "mu"
     ],
-    "transferFunction": "(-alpha*z + alpha)/(-alpha*l*lam**2*mu**2 + 2*alpha*l*lam*mu**2 - alpha*l*lam*mu - alpha*l*mu**2 + alpha*l*mu + lam**2*mu**2 - 2*lam*mu**2 - 2*lam*mu*z + 2*lam*mu + mu**2 + 2*mu*z - 2*mu + z**2 - 2*z + 1)",
+    "transferFunction": "(-alpha*z + alpha)/(-alpha*l*lam**2*mu**2 + alpha*l*lam*mu + lam**2*mu**2 + 2*lam*mu*z - 2*lam*mu + z**2 - 2*z + 1)",
     "tfIsMatrix": false,
     "equivalences": {
       "oracle": [],
@@ -832,7 +832,7 @@
       "lft": []
     },
     "catalogOnly": false,
-    "tf_latex": "\\frac{- \\alpha z + \\alpha}{z^{2} - 2 \\left(\\lambda \\mu - \\mu + 1\\right) z - \\left(\\lambda \\mu - \\mu + 1\\right) \\left(\\alpha l \\lambda \\mu - \\alpha l \\mu - \\lambda \\mu + \\mu - 1\\right)}"
+    "tf_latex": "\\frac{- \\alpha z + \\alpha}{z^{2} + 2 \\left(\\lambda \\mu - 1\\right) z - \\left(\\lambda \\mu - 1\\right) \\left(\\alpha l \\lambda \\mu - \\lambda \\mu + 1\\right)}"
   },
   {
     "id": "unified_diging",
@@ -858,7 +858,7 @@
       "l",
       "mu"
     ],
-    "transferFunction": "(-alpha*z + alpha)/(-alpha*l*lam*mu + alpha*l*mu + lam**2*mu**2 - 2*lam*mu**2 - 2*lam*mu*z + 2*lam*mu + mu**2 + 2*mu*z - 2*mu + z**2 - 2*z + 1)",
+    "transferFunction": "(-alpha*z + alpha)/(alpha*l*lam*mu + lam**2*mu**2 + 2*lam*mu*z - 2*lam*mu + z**2 - 2*z + 1)",
     "tfIsMatrix": false,
     "equivalences": {
       "oracle": [],
@@ -866,6 +866,6 @@
       "lft": []
     },
     "catalogOnly": false,
-    "tf_latex": "\\frac{- \\alpha z + \\alpha}{z^{2} - 2 \\left(\\lambda \\mu - \\mu + 1\\right) z - \\alpha l \\lambda \\mu + \\alpha l \\mu + \\lambda^{2} \\mu^{2} - 2 \\lambda \\mu^{2} + 2 \\lambda \\mu + \\mu^{2} - 2 \\mu + 1}"
+    "tf_latex": "\\frac{- \\alpha z + \\alpha}{z^{2} + 2 \\left(\\lambda \\mu - 1\\right) z + \\alpha l \\lambda \\mu + \\lambda^{2} \\mu^{2} - 2 \\lambda \\mu + 1}"
   }
 ]

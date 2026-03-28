@@ -21,7 +21,7 @@ function oracleToLatex(name) {
 
 /**
  * Build the composition LaTeX: [matrix] \diamond \begin{bmatrix} oracles \end{bmatrix}
- * For distributed algorithms, appends: Linear oracle: W (eigenvalue λ)
+ * For distributed algorithms, appends: Linear oracle: L (eigenvalue λ)
  * @param {string} tfLatex - LaTeX for the transfer function matrix
  * @param {string[]} oracles - oracle name strings, e.g. ["prox_f", "prox_g"]
  * @param {boolean} [distributed] - whether this is a distributed algorithm
@@ -37,7 +37,7 @@ function compositionLatex(tfLatex, oracles, distributed) {
 }
 
 /**
- * Render a "Linear oracle: W (eigenvalue λ)" line as a separate KaTeX element.
+ * Render a "Linear oracle: L (eigenvalue λ)" line as a separate KaTeX element.
  * @returns {HTMLElement|null} A div with the rendered line, or null if not distributed.
  */
 function linearOracleElement(distributed) {
@@ -46,11 +46,11 @@ function linearOracleElement(distributed) {
   div.style.cssText = 'margin-top:0.3rem;font-size:0.85rem;color:#0d47a1;';
   try {
     katex.render(
-      '\\text{Linear oracle: } W \\text{ (eigenvalue } \\lambda \\text{)}',
+      '\\text{Linear oracle: } L \\text{ (eigenvalue } \\lambda \\text{)}',
       div, { throwOnError: false }
     );
   } catch (e) {
-    div.textContent = 'Linear oracle: W (eigenvalue λ)';
+    div.textContent = 'Linear oracle: L (eigenvalue λ)';
   }
   return div;
 }
