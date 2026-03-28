@@ -444,6 +444,15 @@ body {
   margin-bottom: 0.4rem;
 }
 
+.about-content ol ul {
+  margin: 0.3rem 0 0.3rem 1.2rem;
+  list-style-type: disc;
+}
+
+.about-content ol ul li {
+  margin-bottom: 0.2rem;
+}
+
 .about-content code {
   font-family: "SF Mono", "Fira Code", "Fira Mono", Menlo, Consolas,
     "DejaVu Sans Mono", monospace;

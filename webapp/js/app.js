@@ -6,6 +6,15 @@
   let pyodide = null;
   let pyodideReady = false;
 
+  // ---- Render inline KaTeX formulas in the About section ----
+  document.querySelectorAll('.katex-inline[data-formula]').forEach(el => {
+    try {
+      katex.render(el.getAttribute('data-formula'), el, { throwOnError: false });
+    } catch (e) {
+      el.textContent = el.getAttribute('data-formula');
+    }
+  });
+
   // ---- Tab switching ----
   document.querySelectorAll('.tab').forEach(tab => {
     tab.addEventListener('click', () => {
@@ -239,9 +248,11 @@ def _to_display_latex(expr):
             for j in range(cols):
                 row.append(_to_display_latex_scalar(clean[i, j]))
             entries.append(row)
-        # Build matrix latex
-        lines = ' \\\\ '.join(' & '.join(r) for r in entries)
-        return '\\\\begin{bmatrix} ' + lines + ' \\\\end{bmatrix}'
+        # Build matrix latex (use chr(92) to avoid JS/Python escaping issues)
+        _bs = chr(92)
+        _rowsep = ' ' + _bs + _bs + ' '
+        lines = _rowsep.join(' & '.join(r) for r in entries)
+        return _bs + 'begin{bmatrix} ' + lines + ' ' + _bs + 'end{bmatrix}'
     return _to_display_latex_scalar(clean)
 
 def _factored_product_latex(expr, z):

@@ -96,21 +96,29 @@ x[k+1] = y[k] - alpha * grad_f(y[k])"></textarea>
       <p>
         Every iterative oracle-based algorithm can be expressed as a linear dynamical system
         in feedback with a nonlinearity (the oracle). Linnaeus parses your algorithm's update
-        equations, computes a <strong>transfer function</strong> H(z), and compares it against
+        equations, computes a <strong>transfer function</strong>
+        <span class="katex-inline" data-formula="H(z)"></span>, and compares it against
         a library of known methods:
       </p>
       <ol>
-        <li><strong>Parse:</strong> Your update equations are converted to a state-space realization (A, B, C, D).</li>
-        <li><strong>Transfer function:</strong> H(z) = D + C(zI &minus; A)<sup>&minus;1</sup>B is computed via z-transform.</li>
-        <li><strong>Equivalence test:</strong> H(z) is compared against all library entries using three tests:
-          <strong>oracle equivalence</strong> (identical H(z)),
-          <strong>shift equivalence</strong> (H(z) related by a diagonal shift), and
-          <strong>LFT equivalence</strong> (related oracles, e.g., prox vs. conjugate prox).
+        <li><strong>Parse:</strong> Your update equations are converted to a state-space realization
+          <span class="katex-inline" data-formula="(A, B, C, D)"></span>.</li>
+        <li><strong>Transfer function:</strong>
+          <span class="katex-inline" data-formula="H(z) = D + C(zI - A)^{-1}B"></span>
+          is computed via z-transform.</li>
+        <li><strong>Equivalence test:</strong>
+          <span class="katex-inline" data-formula="H(z)"></span> is compared against all library entries using:
+          <ul>
+            <li><strong>Oracle equivalence</strong> &mdash; identical <span class="katex-inline" data-formula="H(z)"></span></li>
+            <li><strong>Oracle permutation</strong> &mdash; equivalent after reordering oracles</li>
+            <li><strong>Shift equivalence</strong> &mdash; <span class="katex-inline" data-formula="H(z)"></span> related by a diagonal shift</li>
+            <li><strong>LFT equivalence</strong> &mdash; related oracles (e.g., prox vs. conjugate prox)</li>
+          </ul>
         </li>
       </ol>
 
       <h3>Equation Syntax</h3>
-      <p>Enter one update equation per line using <code>[k]</code>, <code>[k+1]</code>, <code>[k-1]</code> for time indices. Use <code>*</code> for explicit multiplication.</p>
+      <p>Enter one update equation per line. Use <code>[k]</code>, <code>[k+1]</code>, <code>[k-1]</code>, <code>[k+2]</code>, etc. for time indices (<code>k</code> is a reserved symbol for iterate indices). Use <code>*</code> for explicit multiplication.</p>
       <pre><code># Nesterov's Accelerated Method
 y[k] = x[k] + beta * (x[k] - x[k-1])
 x[k+1] = y[k] - alpha * grad_f(y[k])
@@ -118,7 +126,10 @@ x[k+1] = y[k] - alpha * grad_f(y[k])
 # Douglas-Rachford Splitting
 x1[k+1] = prox_f(x3[k])
 x2[k+1] = prox_g(2 * x1[k+1] - x3[k])
-x3[k+1] = x3[k] + x2[k+1] - x1[k+1]</code></pre>
+x3[k+1] = x3[k] + x2[k+1] - x1[k+1]
+
+# EXTRA (distributed)
+x[k+1] = 2*W*x[k] - W*x[k-1] - alpha*(grad_f(x[k]) - grad_f(x[k-1]))</code></pre>
 
       <h3>Supported Oracles</h3>
       <table class="oracle-table">
@@ -126,12 +137,11 @@ x3[k+1] = x3[k] + x2[k+1] - x1[k+1]</code></pre>
           <tr><th>Syntax</th><th>Description</th></tr>
         </thead>
         <tbody>
-          <tr><td><code>grad_f(x)</code></td><td>Gradient of f</td></tr>
-          <tr><td><code>prox_f(x)</code>, <code>prox_g(x)</code></td><td>Proximal operator</td></tr>
-          <tr><td><code>prox_fstar(x)</code>, <code>prox_gstar(x)</code></td><td>Proximal operator of the conjugate</td></tr>
-          <tr><td><code>subgrad_f(x)</code></td><td>Subdifferential</td></tr>
-          <tr><td><code>L</code></td><td>Graph Laplacian (linear oracle, eigenvalue &lambda;)</td></tr>
-          <tr><td><code>W</code></td><td>Mixing matrix (linear oracle, W = I &minus; L)</td></tr>
+          <tr><td><code>grad_f(x)</code></td><td>Gradient of <span class="katex-inline" data-formula="f"></span></td></tr>
+          <tr><td><code>prox_f(x)</code>, <code>prox_g(x)</code></td><td>Proximal operator of <span class="katex-inline" data-formula="f"></span> or <span class="katex-inline" data-formula="g"></span></td></tr>
+          <tr><td><code>prox_fstar(x)</code>, <code>prox_gstar(x)</code></td><td>Proximal operator of the conjugate <span class="katex-inline" data-formula="f^*"></span> or <span class="katex-inline" data-formula="g^*"></span></td></tr>
+          <tr><td><code>L</code></td><td>Graph Laplacian (linear oracle, eigenvalue <span class="katex-inline" data-formula="\lambda"></span>)</td></tr>
+          <tr><td><code>W</code></td><td>Mixing matrix (linear oracle, <span class="katex-inline" data-formula="W = I - L"></span>)</td></tr>
         </tbody>
       </table>
 
