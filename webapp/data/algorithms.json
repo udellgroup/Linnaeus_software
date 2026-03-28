@@ -144,7 +144,9 @@
     "id": "stochastic_unified_momentum",
     "name": "Stochastic Unified Momentum",
     "aliases": [],
-    "citation": "",
+    "citation": "Yan et al. 2018",
+    "doi": "https://doi.org/10.24963/ijcai.2018/410",
+    "bibtex": "@inproceedings{ijcai2018p410,\n  title={A Unified Analysis of Stochastic Momentum Methods for Deep Learning},\n  author={Yan Yan and Tianbao Yang and Zhe Li and Qihang Lin and Yi Yang},\n  booktitle={Proceedings of the Twenty-Seventh International Joint Conference on Artificial Intelligence, {IJCAI-18}},\n  publisher={International Joint Conferences on Artificial Intelligence Organization},\n  pages={2955--2961},\n  year={2018},\n  month={7},\n  doi={10.24963/ijcai.2018/410},\n  url={https://doi.org/10.24963/ijcai.2018/410}\n}",
     "oracles": [
       "grad_f"
     ],
