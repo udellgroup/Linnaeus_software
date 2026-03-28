@@ -22,7 +22,7 @@
       "lft": []
     },
     "catalogOnly": false,
-    "tf_latex": "\\frac{-\\alpha}{\\left(z -1\\right)}"
+    "tf_latex": "\\frac{-\\alpha}{z -1}"
   },
   {
     "id": "heavy_ball",
@@ -251,7 +251,7 @@
       "lft": []
     },
     "catalogOnly": false,
-    "tf_latex": "\\frac{\\alpha}{\\left(z + \\alpha - 1\\right)}"
+    "tf_latex": "\\frac{\\alpha}{z + \\alpha - 1}"
   },
   {
     "id": "douglas_rachford",
@@ -284,7 +284,7 @@
       "lft": []
     },
     "catalogOnly": false,
-    "tf_latex": "\\begin{bmatrix} \\frac{-\\alpha}{\\left(z -1\\right)} & \\frac{\\alpha}{\\left(z -1\\right)} \\\\ \\frac{\\left(2 z + \\alpha - 2\\right)}{\\left(z -1\\right)} & \\frac{-\\alpha}{\\left(z -1\\right)} \\end{bmatrix}"
+    "tf_latex": "\\begin{bmatrix} \\frac{-\\alpha}{z -1} & \\frac{\\alpha}{z -1} \\\\ \\frac{2 z + \\alpha - 2}{z -1} & \\frac{-\\alpha}{z -1} \\end{bmatrix}"
   },
   {
     "id": "admm",
@@ -319,7 +319,7 @@
       "lft": []
     },
     "catalogOnly": false,
-    "tf_latex": "\\begin{bmatrix} \\frac{-\\rho}{\\left(z -1\\right)} & \\frac{\\left(\\left(\\rho + 1\\right) z -1\\right)}{z \\left(z -1\\right)} \\\\ \\frac{\\left(z + \\rho - 1\\right)}{\\left(z -1\\right)} & \\frac{-\\rho}{\\left(z -1\\right)} \\end{bmatrix}"
+    "tf_latex": "\\begin{bmatrix} \\frac{-\\rho}{z -1} & \\frac{\\left(\\rho + 1\\right) z -1}{z \\left(z -1\\right)} \\\\ \\frac{z + \\rho - 1}{z -1} & \\frac{-\\rho}{z -1} \\end{bmatrix}"
   },
   {
     "id": "peaceman_rachford",
@@ -347,7 +347,7 @@
       "lft": []
     },
     "catalogOnly": false,
-    "tf_latex": "\\begin{bmatrix} 0 & \\frac{2}{\\left(z + 1\\right)} \\\\ 2 & \\frac{-2}{\\left(z + 1\\right)} \\end{bmatrix}"
+    "tf_latex": "\\begin{bmatrix} 0 & \\frac{2}{z + 1} \\\\ 2 & \\frac{-2}{z + 1} \\end{bmatrix}"
   },
   {
     "id": "chambolle_pock",
@@ -440,7 +440,7 @@
       ]
     },
     "catalogOnly": false,
-    "tf_latex": "\\begin{bmatrix} \\frac{-t}{\\left(z -1\\right)} & \\frac{-t}{\\left(z -1\\right)} \\\\ \\frac{-z}{\\left(z -1\\right)} & \\frac{-1}{\\left(z -1\\right)} \\end{bmatrix}"
+    "tf_latex": "\\begin{bmatrix} \\frac{-t}{z -1} & \\frac{-t}{z -1} \\\\ \\frac{-z}{z -1} & \\frac{-1}{z -1} \\end{bmatrix}"
   },
   {
     "id": "davis_yin",
@@ -476,7 +476,7 @@
       "lft": []
     },
     "catalogOnly": false,
-    "tf_latex": "\\begin{bmatrix} \\frac{-t}{\\left(z -1\\right)} & 0 & \\frac{t}{\\left(z -1\\right)} \\\\ 1 & 0 & 0 \\\\ \\frac{\\left(2 z + t - 2\\right)}{\\left(z -1\\right)} & -\\gamma & \\frac{-t}{\\left(z -1\\right)} \\end{bmatrix}"
+    "tf_latex": "\\begin{bmatrix} \\frac{-t}{z -1} & 0 & \\frac{t}{z -1} \\\\ 1 & 0 & 0 \\\\ \\frac{2 z + t - 2}{z -1} & -\\gamma & \\frac{-t}{z -1} \\end{bmatrix}"
   },
   {
     "id": "extragradient",
@@ -503,7 +503,7 @@
       "lft": []
     },
     "catalogOnly": false,
-    "tf_latex": "\\begin{bmatrix} 0 & \\frac{-t}{\\left(z -1\\right)} \\\\ -t & \\frac{-t}{\\left(z -1\\right)} \\end{bmatrix}"
+    "tf_latex": "\\begin{bmatrix} 0 & \\frac{-t}{z -1} \\\\ -t & \\frac{-t}{z -1} \\end{bmatrix}"
   },
   {
     "id": "extragradient_korpelevich",
@@ -604,7 +604,7 @@
       "lft": []
     },
     "catalogOnly": false,
-    "tf_latex": "\\begin{bmatrix} 0 & \\frac{\\left(2 z -1\\right)}{z^{2}} \\\\ -t & \\frac{1}{z} \\end{bmatrix}"
+    "tf_latex": "\\begin{bmatrix} 0 & \\frac{2 z -1}{z^{2}} \\\\ -t & \\frac{1}{z} \\end{bmatrix}"
   },
   {
     "id": "distributed_gradient_descent",
@@ -636,7 +636,7 @@
       "lft": []
     },
     "catalogOnly": false,
-    "tf_latex": "\\frac{-\\alpha}{\\left(z + \\lambda - 1\\right)}"
+    "tf_latex": "\\frac{-\\alpha}{z + \\lambda - 1}"
   },
   {
     "id": "nids",
@@ -667,7 +667,7 @@
       "lft": []
     },
     "catalogOnly": false,
-    "tf_latex": "\\frac{\\alpha \\left(\\lambda - 1\\right) \\left(z -1\\right)}{\\left(z^{2} + 2 \\left(\\lambda - 1\\right) z -\\left(\\lambda - 1\\right)\\right)}"
+    "tf_latex": "\\frac{\\alpha \\left(\\lambda - 1\\right) \\left(z -1\\right)}{z^{2} + 2 \\left(\\lambda - 1\\right) z -\\left(\\lambda - 1\\right)}"
   },
   {
     "id": "exact_diffusion",
@@ -700,7 +700,7 @@
       "lft": []
     },
     "catalogOnly": false,
-    "tf_latex": "\\frac{\\alpha \\left(\\lambda - 1\\right) \\left(z -1\\right)}{\\left(z^{2} + 2 \\left(\\lambda - 1\\right) z -\\left(\\lambda - 1\\right)\\right)}"
+    "tf_latex": "\\frac{\\alpha \\left(\\lambda - 1\\right) \\left(z -1\\right)}{z^{2} + 2 \\left(\\lambda - 1\\right) z -\\left(\\lambda - 1\\right)}"
   },
   {
     "id": "extra_distributed",
@@ -731,7 +731,7 @@
       "lft": []
     },
     "catalogOnly": false,
-    "tf_latex": "\\frac{-2 \\alpha \\left(z -1\\right)}{\\left(2 z^{2} + 2 \\left(\\lambda - 2\\right) z -\\left(\\lambda - 2\\right)\\right)}"
+    "tf_latex": "\\frac{-2 \\alpha \\left(z -1\\right)}{2 z^{2} + 2 \\left(\\lambda - 2\\right) z -\\left(\\lambda - 2\\right)}"
   },
   {
     "id": "diging",
@@ -830,7 +830,7 @@
       "lft": []
     },
     "catalogOnly": false,
-    "tf_latex": "\\frac{\\alpha \\left(\\delta \\lambda - 1\\right) \\left(z -1\\right)}{\\left(z^{2} + \\left(\\gamma \\lambda - 2\\right) z + \\beta \\lambda - \\gamma \\lambda + 1\\right)}"
+    "tf_latex": "\\frac{\\alpha \\left(\\delta \\lambda - 1\\right) \\left(z -1\\right)}{z^{2} + \\left(\\gamma \\lambda - 2\\right) z + \\beta \\lambda - \\gamma \\lambda + 1}"
   },
   {
     "id": "unified_extra",
@@ -864,7 +864,7 @@
       "lft": []
     },
     "catalogOnly": false,
-    "tf_latex": "\\frac{-\\alpha \\left(z -1\\right)}{\\left(z^{2} + 2 \\left(\\lambda \\mu - 1\\right) z - \\left(\\lambda \\mu - 1\\right) \\left(\\alpha l \\lambda \\mu - \\lambda \\mu + 1\\right)\\right)}"
+    "tf_latex": "\\frac{-\\alpha \\left(z -1\\right)}{z^{2} + 2 \\left(\\lambda \\mu - 1\\right) z - \\left(\\lambda \\mu - 1\\right) \\left(\\alpha l \\lambda \\mu - \\lambda \\mu + 1\\right)}"
   },
   {
     "id": "unified_diging",
@@ -898,6 +898,6 @@
       "lft": []
     },
     "catalogOnly": false,
-    "tf_latex": "\\frac{-\\alpha \\left(z -1\\right)}{\\left(z^{2} + 2 \\left(\\lambda \\mu - 1\\right) z + \\alpha l \\lambda \\mu + \\lambda^{2} \\mu^{2} - 2 \\lambda \\mu + 1\\right)}"
+    "tf_latex": "\\frac{-\\alpha \\left(z -1\\right)}{z^{2} + 2 \\left(\\lambda \\mu - 1\\right) z + \\alpha l \\lambda \\mu + \\lambda^{2} \\mu^{2} - 2 \\lambda \\mu + 1}"
   }
 ]

@@ -139,8 +139,9 @@ def _factored_product_latex(expr):
             p_str = r'\left(' + p_str + r'\right)'
         parts.append(p_str)
 
-    # z-polynomial factors — each wrapped in parens if degree >= 1 and has
-    # multiple terms (Add), or if it's a Pow
+    # z-polynomial factors — wrap in parens only when needed for grouping
+    # (i.e., there are other factors to multiply with, or it has an exponent)
+    total_factors = len(numerics) + len(params) + len(z_polys)
     for zp in z_polys:
         base = zp.base if isinstance(zp, Pow) else zp
         exp = zp.exp if isinstance(zp, Pow) else 1
@@ -148,15 +149,13 @@ def _factored_product_latex(expr):
         # Format the base as polynomial in z
         base_str = poly_latex(base, z)
 
-        # Wrap in parens if it's a multi-term polynomial
-        try:
-            deg = Poly(base, z).degree()
-        except Exception:
-            deg = 0
-        needs_parens = deg >= 1 and isinstance(cancel(base), Add)
-        if not needs_parens:
-            # Also check if poly_latex produced multiple terms
-            needs_parens = ('+' in base_str or base_str.count('-') > (1 if base_str.startswith('-') else 0))
+        # Only wrap in parens if: (a) there are other factors or sign prefix,
+        # or (b) the factor has an exponent (e.g., (z+λ-1)²)
+        has_multiple_terms = ('+' in base_str or
+                              base_str.count('-') > (1 if base_str.startswith('-') else 0))
+        needs_parens = has_multiple_terms and (
+            total_factors > 1 or sign == -1 or exp != 1
+        )
 
         if needs_parens:
             base_str = r'\left(' + base_str + r'\right)'

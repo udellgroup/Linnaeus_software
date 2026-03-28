@@ -279,17 +279,15 @@ def _factored_product_latex(expr, z):
         if isinstance(p, Add):
             p_str = '\\\\left(' + p_str + '\\\\right)'
         parts.append(p_str)
+    total_factors = len(numerics) + len(params) + len(z_polys)
     for zp in z_polys:
         base = zp.base if isinstance(zp, Pow) else zp
         exp = zp.exp if isinstance(zp, Pow) else 1
         base_str = _poly_latex(base, z)
-        try:
-            deg = Poly(base, z).degree()
-        except Exception:
-            deg = 0
-        needs_parens = deg >= 1 and isinstance(cancel(base), Add)
-        if not needs_parens:
-            needs_parens = ('+' in base_str or base_str.count('-') > (1 if base_str.startswith('-') else 0))
+        has_multiple_terms = ('+' in base_str or base_str.count('-') > (1 if base_str.startswith('-') else 0))
+        needs_parens = has_multiple_terms and (
+            total_factors > 1 or sign == -1 or exp != 1
+        )
         if needs_parens:
             base_str = '\\\\left(' + base_str + '\\\\right)'
         if exp != 1:
