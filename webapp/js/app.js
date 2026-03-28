@@ -161,7 +161,7 @@ def _poly_latex(expr, z):
         if isinstance(c_factored, Add) and c_factored.could_extract_minus_sign():
             pos_part = factor(-c_factored)
             if isinstance(pos_part, Add):
-                c_str = '-\\left(' + _latex(pos_part) + '\\right)'
+                c_str = '-\\\\left(' + _latex(pos_part) + '\\\\right)'
             else:
                 c_str = '-' + _latex(pos_part) if str(pos_part) != '1' else '-1'
             is_negative_wrapped = True
@@ -184,7 +184,7 @@ def _poly_latex(expr, z):
             else:
                 needs_parens = isinstance(c_factored, Add)
                 if needs_parens:
-                    terms.append('\\left(' + c_str + '\\right) ' + zstr)
+                    terms.append('\\\\left(' + c_str + '\\\\right) ' + zstr)
                 else:
                     terms.append(c_str + ' ' + zstr)
         else:
@@ -198,7 +198,7 @@ def _poly_latex(expr, z):
             else:
                 needs_parens = isinstance(c_factored, Add)
                 if needs_parens:
-                    terms.append('\\left(' + c_str + '\\right) ' + zstr)
+                    terms.append('\\\\left(' + c_str + '\\\\right) ' + zstr)
                 else:
                     terms.append(c_str + ' ' + zstr)
     if not terms:
@@ -229,7 +229,7 @@ def _to_display_latex(expr):
             entries.append(row)
         # Build matrix latex
         lines = ' \\\\ '.join(' & '.join(r) for r in entries)
-        return '\\begin{bmatrix} ' + lines + ' \\end{bmatrix}'
+        return '\\\\begin{bmatrix} ' + lines + ' \\\\end{bmatrix}'
     return _to_display_latex_scalar(clean)
 
 def _to_display_latex_scalar(expr):
@@ -238,7 +238,7 @@ def _to_display_latex_scalar(expr):
     num, den = fraction(expr)
     if den == 1:
         return _poly_latex(num, _display_z)
-    return '\\frac{' + _poly_latex(num, _display_z) + '}{' + _poly_latex(den, _display_z) + '}'
+    return '\\\\frac{' + _poly_latex(num, _display_z) + '}{' + _poly_latex(den, _display_z) + '}'
 
 # Build result JSON
 _match_list = []
