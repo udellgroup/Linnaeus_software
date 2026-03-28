@@ -186,7 +186,7 @@ function renderLibraryCards(data) {
       tfDiv.style.marginTop = '0.6rem';
 
       const tfMath = document.createElement('div');
-      const compLatex = compositionLatex(algo.tf_latex, algo.oracles, algo.distributed);
+      const compLatex = compositionLatex(algo.tf_latex, algo.oracles);
       try {
         katex.render(compLatex, tfMath, {
           throwOnError: false,
@@ -196,6 +196,10 @@ function renderLibraryCards(data) {
         tfMath.textContent = compLatex;
       }
       tfDiv.appendChild(tfMath);
+
+      const libLinOracle = linearOracleElement(algo.distributed);
+      if (libLinOracle) tfDiv.appendChild(libLinOracle);
+
       card.appendChild(tfDiv);
     }
 

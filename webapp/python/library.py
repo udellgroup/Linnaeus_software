@@ -164,7 +164,8 @@ def check_all_equivalences(H_user, user_oracles, library, z_var,
                 )
                 if result['match']:
                     result['condition_note'] = (
-                        'Equivalent when \\lambda=1 (fully connected graph)')
+                        '\\text{Equivalent when } \\lambda=1 '
+                        '\\text{ (fully connected graph)}')
                     matches.append({
                         'algorithm': algo,
                         'type': 'oracle',
@@ -295,8 +296,11 @@ def check_all_equivalences(H_user, user_oracles, library, z_var,
                 lft_candidates.sort(key=lambda x: x[0])
                 matches.append(lft_candidates[0][1])
 
-    # Sort: oracle first, then shift, then lft
+    # Sort: non-conditional before conditional, then oracle > shift > lft
     type_order = {'oracle': 0, 'shift': 1, 'lft': 2}
-    matches.sort(key=lambda m: type_order[m['type']])
+    matches.sort(key=lambda m: (
+        1 if m.get('conditional') else 0,
+        type_order[m['type']],
+    ))
 
     return matches

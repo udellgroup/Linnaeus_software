@@ -33,8 +33,24 @@ function compositionLatex(tfLatex, oracles, distributed) {
     const oracleEntries = oracles.map(oracleToLatex).join(' \\\\ ');
     result += ' \\diamond \\begin{bmatrix} ' + oracleEntries + ' \\end{bmatrix}';
   }
-  if (distributed) {
-    result += '\\quad \\text{Linear oracle: } W \\text{ (eigenvalue } \\lambda \\text{)}';
-  }
   return result;
+}
+
+/**
+ * Render a "Linear oracle: W (eigenvalue λ)" line as a separate KaTeX element.
+ * @returns {HTMLElement|null} A div with the rendered line, or null if not distributed.
+ */
+function linearOracleElement(distributed) {
+  if (!distributed) return null;
+  const div = document.createElement('div');
+  div.style.cssText = 'margin-top:0.3rem;font-size:0.85rem;color:#0d47a1;';
+  try {
+    katex.render(
+      '\\text{Linear oracle: } W \\text{ (eigenvalue } \\lambda \\text{)}',
+      div, { throwOnError: false }
+    );
+  } catch (e) {
+    div.textContent = 'Linear oracle: W (eigenvalue λ)';
+  }
+  return div;
 }

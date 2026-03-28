@@ -19,8 +19,7 @@ function displayResults(result) {
   tfSection.appendChild(tfLabel);
 
   const tfMath = document.createElement('div');
-  const userCompLatex = compositionLatex(result.tf_latex, result.oracle_types,
-                                          result.user_distributed);
+  const userCompLatex = compositionLatex(result.tf_latex, result.oracle_types);
   try {
     katex.render(userCompLatex, tfMath, {
       throwOnError: false,
@@ -30,6 +29,9 @@ function displayResults(result) {
     tfMath.textContent = userCompLatex;
   }
   tfSection.appendChild(tfMath);
+
+  const userLinOracle = linearOracleElement(result.user_distributed);
+  if (userLinOracle) tfSection.appendChild(userLinOracle);
 
   if (result.user_distributed) {
     const distLabel = document.createElement('span');
@@ -154,8 +156,7 @@ function displayResults(result) {
     if (match.lib_tf_latex) {
       const libMath = document.createElement('div');
       libMath.style.cssText = 'margin:0.5rem 0;';
-      const libCompLatex = compositionLatex(match.lib_tf_latex, match.lib_oracles,
-                                            match.distributed);
+      const libCompLatex = compositionLatex(match.lib_tf_latex, match.lib_oracles);
       try {
         katex.render(libCompLatex, libMath, {
           throwOnError: false,
@@ -165,6 +166,9 @@ function displayResults(result) {
         libMath.textContent = libCompLatex;
       }
       card.appendChild(libMath);
+
+      const libLinOracle = linearOracleElement(match.distributed);
+      if (libLinOracle) card.appendChild(libLinOracle);
     }
 
     // Parameter mapping — displayed as a set of equations.
@@ -263,13 +267,9 @@ function displayResults(result) {
     if (match.condition_note) {
       const condDiv = document.createElement('div');
       condDiv.style.cssText =
-        'font-size:0.82rem;margin-top:0.3rem;';
+        'font-size:0.82rem;margin-top:0.3rem;font-style:italic;color:#e65100;';
       try {
-        katex.render(
-          '\\textit{' + match.condition_note + '}',
-          condDiv,
-          { throwOnError: false }
-        );
+        katex.render(match.condition_note, condDiv, { throwOnError: false });
       } catch (e) {
         condDiv.textContent = match.condition_note;
       }
