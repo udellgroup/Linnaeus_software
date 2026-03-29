@@ -106,13 +106,14 @@ x[k+1] = y[k] - alpha * grad_f(y[k])"></textarea>
         <li><strong>Transfer function:</strong>
           <span class="katex-inline" data-formula="H(z) = D + C(zI - A)^{-1}B"></span>
           is computed via z-transform.</li>
-        <li><strong>Equivalence test:</strong>
-          <span class="katex-inline" data-formula="H(z)"></span> is compared against all library entries using:
+        <li><strong>Equivalence test:</strong> The transfer function is compared against all library entries using:
           <ul>
-            <li><strong>Oracle equivalence</strong> &mdash; identical <span class="katex-inline" data-formula="H(z)"></span></li>
-            <li><strong>Oracle permutation</strong> &mdash; equivalent after reordering oracles</li>
-            <li><strong>Shift equivalence</strong> &mdash; <span class="katex-inline" data-formula="H(z)"></span> related by a diagonal shift</li>
+            <li><strong>Oracle equivalence</strong> &mdash; identical transfer function</li>
+            <li><strong>Oracle permutation</strong> &mdash; equivalent after reordering or relabeling oracles</li>
+            <li><strong>Shift equivalence</strong> &mdash; algorithms related by a cyclical shift of update equations</li>
             <li><strong>LFT equivalence</strong> &mdash; related oracles (e.g., prox vs. conjugate prox)</li>
+            <li><strong>Parametric matching</strong> &mdash; finds parameter values that make two algorithms equivalent (e.g., Heavy Ball with zero momentum is Gradient Descent)</li>
+            <li><strong>Conditional equivalence</strong> &mdash; detects equivalences under simplifying assumptions such as certain functions being zero, unconstrained projection, or a trivial communication graph</li>
           </ul>
         </li>
       </ol>
