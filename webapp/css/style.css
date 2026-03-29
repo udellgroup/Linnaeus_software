@@ -394,6 +394,10 @@ body {
   border-left-color: #f9ab00;
 }
 
+.algo-card.projected {
+  border-left-color: #64b5f6;
+}
+
 .algo-card.distributed {
   border-left-color: #7c4dff;
 }

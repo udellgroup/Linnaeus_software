@@ -44,6 +44,7 @@ function loadLibraryUI() {
 const FILTERS = [
   { label: 'All', value: 'all' },
   { label: '\u2207f', value: 'gradient' },
+  { label: 'Projected', value: 'projected' },
   { label: 'prox_f + prox_g', value: 'proximal' },
   { label: '\u2207f + prox_g', value: 'mixed' },
   { label: 'Distributed', value: 'distributed' },
@@ -75,8 +76,9 @@ function applyFilter(data) {
   cards.forEach((card, i) => {
     const algo = data[i];
     if (activeFilter === 'all'
-        || algo.oracleType === activeFilter
-        || (activeFilter === 'distributed' && algo.distributed)) {
+        || (activeFilter === 'distributed' && algo.distributed)
+        || (activeFilter !== 'distributed' && !algo.distributed
+            && algo.oracleType === activeFilter)) {
       card.style.display = '';
     } else {
       card.style.display = 'none';

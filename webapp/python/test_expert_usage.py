@@ -113,31 +113,36 @@ class TestEquivalentFormulations:
         x1[k+1] on the RHS, which creates a coupling the compute engine cannot
         currently handle (singular L matrix). An expert would instead write the
         manually-substituted form: x2[k+1] = x1[k] - 2*eta*grad_f(x2[k]).
-        This avoids the coupling and should match the library entry.
+        Without P_C, this should conditionally match the projected variants
+        (Projected Reflected Gradient, Modified Arrow-Hurwicz, Extrapolation
+        from the Past) when P_C = I.
         """
         H, matches = run_pipeline([
             "x1[k+1] = x1[k] - eta * grad_f(x2[k])",
             "x2[k+1] = x1[k] - 2 * eta * grad_f(x2[k])",
         ])
         names = [m['algorithm']['name'] for m in matches]
-        assert any('Arrow-Hurwicz' in n or 'Optimistic' in n or 'Reflected' in n
-                    for n in names), f"Expected Arrow-Hurwicz match, got: {names}"
+        assert any('Projected Reflected' in n or 'Arrow-Hurwicz' in n
+                    or 'Extrapolation' in n
+                    for n in names), f"Expected conditional match, got: {names}"
 
     def test_arrow_hurwicz_canonical_form(self):
         """Arrow-Hurwicz in its canonical form with same-step coupling.
 
         x2[k+1] = x1[k+1] - eta*grad_f(x2[k]) references x1[k+1] on the RHS.
         Since both equations use the same oracle call grad_f(x2[k]), the parser
-        correctly deduplicates this into a single oracle. This yields the
-        canonical 1x1 TF that should match the library's Arrow-Hurwicz entry.
+        correctly deduplicates this into a single oracle. This yields a
+        canonical 1x1 TF that should conditionally match the projected variants
+        when P_C = I.
         """
         H, matches = run_pipeline([
             "x1[k+1] = x1[k] - eta * grad_f(x2[k])",
             "x2[k+1] = x1[k+1] - eta * grad_f(x2[k])",
         ])
         names = [m['algorithm']['name'] for m in matches]
-        assert any('Arrow-Hurwicz' in n or 'Optimistic' in n or 'Reflected' in n
-                    for n in names), f"Expected Arrow-Hurwicz match, got: {names}"
+        assert any('Projected Reflected' in n or 'Arrow-Hurwicz' in n
+                    or 'Extrapolation' in n
+                    for n in names), f"Expected conditional match, got: {names}"
 
     def test_proximal_gradient_standard_form(self):
         """Proximal gradient in the standard two-line form.

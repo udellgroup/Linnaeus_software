@@ -4,7 +4,7 @@ from sympy import symbols, expand
 from sympy.parsing.sympy_parser import parse_expr
 
 # Known oracle types
-KNOWN_ORACLES = {'grad_f', 'prox_f', 'prox_g', 'prox_fstar', 'prox_gstar', 'subgrad_f'}
+KNOWN_ORACLES = {'grad_f', 'prox_f', 'prox_g', 'prox_fstar', 'prox_gstar', 'subgrad_f', 'P_C'}
 
 # Regex patterns
 VAR_REF_PATTERN = re.compile(r'(\w+)\[k([+-]\d+)?\]')
@@ -134,6 +134,9 @@ def parse_equations(equations):
     # parse_expr; 'lam' is the canonical internal name (mapped to Symbol('lambda')
     # for correct LaTeX rendering, consistent with library.py).
     equations = [re.sub(r'\blambda\b', 'lam', eq) for eq in equations]
+
+    # Normalize projection alias: P(...) -> P_C(...)
+    equations = [re.sub(r'\bP\(', 'P_C(', eq) for eq in equations]
 
     # Detect linear oracles L (graph Laplacian) and W (mixing matrix).
     # L has eigenvalue lambda; W has eigenvalue 1-lambda (since W = I - L
@@ -360,6 +363,7 @@ def parse_equations(equations):
     # Universal parameters: must match for ALL values during equivalence
     # checking (e.g., lambda for distributed algorithms).
     universal_params = ['lam'] if has_mixing_matrix else []
+    has_projection = any(o == 'P_C' for o in oracle_types)
 
     return {
         'state_vars': augmented_state,
@@ -370,6 +374,7 @@ def parse_equations(equations):
         'parameters': sorted(parameters),
         'z_var': z,  # the internal z-transform symbol (may differ from Symbol('z'))
         'has_mixing_matrix': has_mixing_matrix,
+        'has_projection': has_projection,
         'universal_params': universal_params,
     }
 
@@ -379,8 +384,11 @@ def _to_z_domain(expr_str, z, augmented_state, prev_map, intermediate_vars,
     """Convert a string expression with [k+n] references to z-domain SymPy expr."""
     result = expr_str
 
-    # Replace oracle calls with u variables
-    for orig_text, (u_name, y_name, arg_str) in oracle_map.items():
+    # Replace oracle calls with u variables.
+    # Sort by length descending so outer (longer) calls are replaced before
+    # inner (shorter) ones — e.g., P_C(x - grad_f(x)) before grad_f(x).
+    for orig_text, (u_name, y_name, arg_str) in sorted(
+            oracle_map.items(), key=lambda kv: len(kv[0]), reverse=True):
         result = result.replace(orig_text, u_name)
 
     # Replace variable references with z-domain equivalents.

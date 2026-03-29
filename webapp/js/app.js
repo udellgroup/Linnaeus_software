@@ -143,10 +143,12 @@ H_user = compute_transfer_function(
 
 _user_distributed = parsed.get('has_mixing_matrix', False)
 _user_universal = [symbols('lambda')] if _user_distributed else []
+_user_has_projection = parsed.get('has_projection', False)
 matches = check_all_equivalences(
     H_user, parsed['oracle_types'], _library, _z,
     user_distributed=_user_distributed,
     user_universal_params=_user_universal,
+    user_has_projection=_user_has_projection,
 )
 
 # For display, substitute the internal z symbol with a clean 'z'

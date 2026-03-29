@@ -172,38 +172,123 @@
     "tf_latex": "\\frac{-\\alpha \\left(\\left(\\beta s + 1\\right) z - \\beta s\\right)}{\\left(z -1\\right) \\left(z - \\beta\\right)}"
   },
   {
-    "id": "arrow_hurwicz_omd",
-    "name": "Modified Arrow-Hurwicz / Optimistic Mirror Descent / Reflected Gradient",
+    "id": "projected_reflected_gradient",
+    "name": "Projected Reflected Gradient",
     "aliases": [
-      "Extrapolation from the Past",
-      "Optimistic Mirror Descent",
       "Reflected Gradient Method"
     ],
-    "citation": "",
+    "citation": "Malitsky 2015",
+    "doi": "https://doi.org/10.1137/14097238X",
+    "bibtex": "@article{malitsky2015projected,\n  title={Projected reflected gradient methods for monotone variational inequalities},\n  author={Malitsky, Yura},\n  journal={SIAM Journal on Optimization},\n  volume={25},\n  number={1},\n  pages={502--520},\n  year={2015},\n  publisher={SIAM}\n}",
+    "oracles": [
+      "grad_f",
+      "P_C"
+    ],
+    "oracleType": "projected",
+    "equations": [
+      "x[k+1] = P( x[k] - eta * grad_f(2 * x[k] - x[k-1]) )"
+    ],
+    "parameters": [
+      "eta"
+    ],
+    "transferFunction": "Matrix([[0, (2*z - 1)/z**2], [-eta, 1/z]])",
+    "tfIsMatrix": true,
+    "equivalences": {
+      "oracle": [],
+      "shift": [],
+      "lft": []
+    },
+    "catalogOnly": false,
+    "tf_latex": "\\begin{bmatrix} 0 & \\frac{2 z -1}{z^{2}} \\\\ -\\eta & \\frac{1}{z} \\end{bmatrix}"
+  },
+  {
+    "id": "modified_arrow_hurwicz",
+    "name": "Modified Arrow-Hurwicz",
+    "aliases": [],
+    "citation": "Popov 1980",
+    "doi": "https://doi.org/10.1007/BF01141092",
+    "bibtex": "@article{popov1980modification,\n  title={A modification of the Arrow-Hurwicz method for search of saddle points},\n  author={Popov, L. D.},\n  journal={Mathematical Notes of the Academy of Sciences of the USSR},\n  volume={28},\n  number={5},\n  pages={845--848},\n  year={1980},\n  publisher={Springer}\n}",
+    "oracles": [
+      "grad_f",
+      "P_C",
+      "P_C"
+    ],
+    "oracleType": "projected",
+    "equations": [
+      "x1[k+1] = P( x1[k] - tau * grad_f(x2[k]) )",
+      "x2[k+1] = P( x1[k+1] - tau * grad_f(x2[k]) )"
+    ],
+    "parameters": [
+      "tau"
+    ],
+    "transferFunction": "Matrix([[0, 0, 1/z], [-tau, 1/z, 0], [-tau, 1, 0]])",
+    "tfIsMatrix": true,
+    "equivalences": {
+      "oracle": [],
+      "shift": [],
+      "lft": []
+    },
+    "catalogOnly": false,
+    "tf_latex": "\\begin{bmatrix} 0 & 0 & \\frac{1}{z} \\\\ -\\tau & \\frac{1}{z} & 0 \\\\ -\\tau & 1 & 0 \\end{bmatrix}"
+  },
+  {
+    "id": "extrapolation_from_past",
+    "name": "Extrapolation from the Past",
+    "aliases": [],
+    "citation": "Gidel et al. 2019",
+    "doi": "https://openreview.net/forum?id=r1laEnA5Ym",
+    "bibtex": "@inproceedings{gidel2019variational,\n  title={A Variational Inequality Perspective on Generative Adversarial Networks},\n  author={Gauthier Gidel and Hugo Berard and Ga{\\\"e}tan Vignoud and Pascal Vincent and Simon Lacoste-Julien},\n  booktitle={International Conference on Learning Representations},\n  year={2019},\n  url={https://openreview.net/forum?id=r1laEnA5Ym}\n}",
+    "oracles": [
+      "grad_f",
+      "P_C",
+      "P_C"
+    ],
+    "oracleType": "projected",
+    "equations": [
+      "x2[k] = P( x1[k] - eta * grad_f(x2[k-1]) )",
+      "x1[k+1] = P( x1[k] - eta * grad_f(x2[k]) )"
+    ],
+    "parameters": [
+      "eta"
+    ],
+    "transferFunction": "Matrix([[0, 1, 0], [-eta/z, 0, 1/z], [-eta, 0, 1/z]])",
+    "tfIsMatrix": true,
+    "equivalences": {
+      "oracle": [],
+      "shift": [],
+      "lft": []
+    },
+    "catalogOnly": false,
+    "tf_latex": "\\begin{bmatrix} 0 & 1 & 0 \\\\ \\frac{-\\eta}{z} & 0 & \\frac{1}{z} \\\\ -\\eta & 0 & \\frac{1}{z} \\end{bmatrix}"
+  },
+  {
+    "id": "optimistic_mirror_descent",
+    "name": "Optimistic Mirror Descent",
+    "aliases": [
+      "OMD"
+    ],
+    "citation": "Daskalakis et al. 2018",
+    "doi": "https://openreview.net/forum?id=SJJySbbAZ",
+    "bibtex": "@inproceedings{daskalakis2018training,\n  title={Training {GAN}s with Optimism},\n  author={Constantinos Daskalakis and Andrew Ilyas and Vasilis Syrgkanis and Haoyang Zeng},\n  booktitle={International Conference on Learning Representations},\n  year={2018},\n  url={https://openreview.net/forum?id=SJJySbbAZ}\n}",
     "oracles": [
       "grad_f"
     ],
     "oracleType": "gradient",
     "equations": [
-      "x1[k+1] = x1[k] - eta * grad_f(x2[k])",
-      "x2[k+1] = x1[k+1] - eta * grad_f(x2[k])"
+      "x[k+1] = x[k] - 2 * eta * grad_f(x[k-1]) + eta * grad_f(x[k-2])"
     ],
     "parameters": [
       "eta"
     ],
-    "transferFunction": "-eta*(2*z - 1)/(z*(z - 1))",
+    "transferFunction": "-eta*(2*z - 1)/(z**2*(z - 1))",
     "tfIsMatrix": false,
     "equivalences": {
-      "oracle": [
-        "arrow_hurwicz_omd",
-        "arrow_hurwicz_efp",
-        "arrow_hurwicz_rg"
-      ],
+      "oracle": [],
       "shift": [],
       "lft": []
     },
     "catalogOnly": false,
-    "tf_latex": "\\frac{-\\eta \\left(2 z -1\\right)}{z \\left(z -1\\right)}"
+    "tf_latex": "\\frac{-\\eta \\left(2 z -1\\right)}{z^{2} \\left(z -1\\right)}"
   },
   {
     "id": "proximal_point",
@@ -506,29 +591,22 @@
     "tf_latex": "\\begin{bmatrix} 0 & \\frac{-t}{z -1} \\\\ -t & \\frac{-t}{z -1} \\end{bmatrix}"
   },
   {
-    "id": "extragradient_korpelevich",
-    "name": "Extragradient (Korpelevich-Antipin)",
+    "id": "projected_gradient",
+    "name": "Projected Gradient",
     "aliases": [],
-    "citation": "Korpelevich 1976",
-    "bibtex": "@article{korpelevich1976extragradient,\n  title={The extragradient method for finding saddle points and other problems},\n  author={Korpelevich, Galina M},\n  journal={Matecon},\n  volume={12},\n  pages={747--756},\n  year={1976}\n}",
-    "notes": "Projection onto the constraint set C is modeled as prox_g where g is the indicator function of C.",
+    "citation": "",
     "oracles": [
-      "grad_f",
-      "prox_g",
-      "grad_f",
-      "prox_g"
+      "P_C",
+      "grad_f"
     ],
-    "oracleType": "mixed",
+    "oracleType": "projected",
     "equations": [
-      "w1[k] = x[k] - t * grad_f(x[k])",
-      "y[k] = prox_g(w1[k])",
-      "w2[k] = x[k] - t * grad_f(y[k])",
-      "x[k+1] = prox_g(w2[k])"
+      "x[k+1] = P( x[k] - alpha * grad_f(x[k]) )"
     ],
     "parameters": [
-      "t"
+      "alpha"
     ],
-    "transferFunction": "Matrix([[0, 0, 0, 1/z], [-t, 0, 0, 1/z], [0, 1, 0, 0], [0, 0, -t, 1/z]])",
+    "transferFunction": "Matrix([[1/z, -alpha], [1/z, 0]])",
     "tfIsMatrix": true,
     "equivalences": {
       "oracle": [],
@@ -536,7 +614,37 @@
       "lft": []
     },
     "catalogOnly": false,
-    "tf_latex": "\\begin{bmatrix} 0 & 0 & 0 & \\frac{1}{z} \\\\ -t & 0 & 0 & \\frac{1}{z} \\\\ 0 & 1 & 0 & 0 \\\\ 0 & 0 & -t & \\frac{1}{z} \\end{bmatrix}"
+    "tf_latex": "\\begin{bmatrix} \\frac{1}{z} & -\\alpha \\\\ \\frac{1}{z} & 0 \\end{bmatrix}"
+  },
+  {
+    "id": "extragradient_korpelevich",
+    "name": "Extragradient (Korpelevich)",
+    "aliases": [],
+    "citation": "Korpelevich 1976",
+    "bibtex": "@article{korpelevich1976extragradient,\n  title={The extragradient method for finding saddle points and other problems},\n  author={Korpelevich, Galina M},\n  journal={Matecon},\n  volume={12},\n  pages={747--756},\n  year={1976}\n}",
+    "oracles": [
+      "P_C",
+      "grad_f",
+      "P_C",
+      "grad_f"
+    ],
+    "oracleType": "projected",
+    "equations": [
+      "y[k] = P( x[k] - tau * grad_f(x[k]) )",
+      "x[k+1] = P( x[k] - tau * grad_f(y[k]) )"
+    ],
+    "parameters": [
+      "tau"
+    ],
+    "transferFunction": "Matrix([[0, -tau, 1/z, 0], [0, 0, 1/z, 0], [0, 0, 1/z, -tau], [1, 0, 0, 0]])",
+    "tfIsMatrix": true,
+    "equivalences": {
+      "oracle": [],
+      "shift": [],
+      "lft": []
+    },
+    "catalogOnly": false,
+    "tf_latex": "\\begin{bmatrix} 0 & -\\tau & \\frac{1}{z} & 0 \\\\ 0 & 0 & \\frac{1}{z} & 0 \\\\ 0 & 0 & \\frac{1}{z} & -\\tau \\\\ 1 & 0 & 0 & 0 \\end{bmatrix}"
   },
   {
     "id": "extragradient_tseng",
@@ -547,22 +655,20 @@
     "citation": "Tseng 2000",
     "doi": "https://doi.org/10.1137/S0363012998338806",
     "bibtex": "@article{tseng2000modified,\n  title={A modified forward-backward splitting method for maximal monotone mappings},\n  author={Tseng, Paul},\n  journal={SIAM Journal on Control and Optimization},\n  volume={38},\n  number={2},\n  pages={431--446},\n  year={2000},\n  publisher={SIAM}\n}",
-    "notes": "Projection onto the constraint set C is modeled as prox_g where g is the indicator function of C.",
     "oracles": [
+      "P_C",
       "grad_f",
-      "prox_g",
       "grad_f"
     ],
-    "oracleType": "mixed",
+    "oracleType": "projected",
     "equations": [
-      "w[k] = x[k] - t * grad_f(x[k])",
-      "y[k+1] = prox_g(w[k])",
-      "x[k+1] = y[k+1] + t * grad_f(x[k]) - t * grad_f(y[k+1])"
+      "y[k] = P( x[k] - tau * grad_f(x[k]) )",
+      "x[k+1] = y[k] - tau * (grad_f(y[k]) - grad_f(x[k]))"
     ],
     "parameters": [
-      "t"
+      "tau"
     ],
-    "transferFunction": "Matrix([[t/z, 1/z, -t/z], [(-t*z + t)/z, 1/z, -t/z], [0, 1, 0]])",
+    "transferFunction": "Matrix([[1/z, (-tau*z + tau)/z, -tau/z], [1/z, tau/z, -tau/z], [1, 0, 0]])",
     "tfIsMatrix": true,
     "equivalences": {
       "oracle": [],
@@ -570,41 +676,7 @@
       "lft": []
     },
     "catalogOnly": false,
-    "tf_latex": "\\begin{bmatrix} \\frac{t}{z} & \\frac{1}{z} & \\frac{-t}{z} \\\\ \\frac{-t \\left(z -1\\right)}{z} & \\frac{1}{z} & \\frac{-t}{z} \\\\ 0 & 1 & 0 \\end{bmatrix}"
-  },
-  {
-    "id": "extragradient_malitsky",
-    "name": "Extragradient (Malitsky / Reflected Gradient)",
-    "aliases": [
-      "Reflected Gradient Method"
-    ],
-    "citation": "Malitsky 2015",
-    "doi": "https://doi.org/10.1137/14097238X",
-    "bibtex": "@article{malitsky2015projected,\n  title={Projected reflected gradient methods for monotone variational inequalities},\n  author={Malitsky, Yura},\n  journal={SIAM Journal on Optimization},\n  volume={25},\n  number={1},\n  pages={502--520},\n  year={2015},\n  publisher={SIAM}\n}",
-    "notes": "Projection onto the constraint set C is modeled as prox_g where g is the indicator function of C.",
-    "oracles": [
-      "grad_f",
-      "prox_g"
-    ],
-    "oracleType": "mixed",
-    "equations": [
-      "y[k] = 2 * x1[k] - x2[k]",
-      "x2[k+1] = x1[k]",
-      "w[k] = x1[k] - t * grad_f(y[k])",
-      "x1[k+1] = prox_g(w[k])"
-    ],
-    "parameters": [
-      "t"
-    ],
-    "transferFunction": "Matrix([[0, (2*z - 1)/z**2], [-t, 1/z]])",
-    "tfIsMatrix": true,
-    "equivalences": {
-      "oracle": [],
-      "shift": [],
-      "lft": []
-    },
-    "catalogOnly": false,
-    "tf_latex": "\\begin{bmatrix} 0 & \\frac{2 z -1}{z^{2}} \\\\ -t & \\frac{1}{z} \\end{bmatrix}"
+    "tf_latex": "\\begin{bmatrix} \\frac{1}{z} & \\frac{-\\tau \\left(z -1\\right)}{z} & \\frac{-\\tau}{z} \\\\ \\frac{1}{z} & \\frac{\\tau}{z} & \\frac{-\\tau}{z} \\\\ 1 & 0 & 0 \\end{bmatrix}"
   },
   {
     "id": "distributed_gradient_descent",

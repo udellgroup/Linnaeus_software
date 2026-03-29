@@ -91,6 +91,39 @@ def _find_all_oracle_permutations(user_oracles, lib_oracles):
     yield from _backtrack(0, set(), [])
 
 
+def _reduce_tf_for_identity_oracles(H, proj_indices):
+    """Reduce TF matrix by substituting identity for oracles at proj_indices.
+
+    When P_C = identity (u_P = y_P), the projection oracle is a pass-through.
+    Uses Schur complement: H_reduced = H_KK + H_KP * (I - H_PP)^{-1} * H_PK
+    where K = kept (non-projection) indices, P = projection indices.
+
+    Returns reduced Matrix, or None if the reduction is impossible
+    (e.g. (I - H_PP) is singular, or all oracles are projections).
+    """
+    from sympy import eye, Matrix, cancel
+
+    n = H.rows
+    keep = [i for i in range(n) if i not in proj_indices]
+    P = sorted(proj_indices)
+
+    if not keep:
+        return None  # All oracles are projections
+
+    H_KK = Matrix([[H[i, j] for j in keep] for i in keep])
+    H_KP = Matrix([[H[i, j] for j in P] for i in keep])
+    H_PK = Matrix([[H[i, j] for j in keep] for i in P])
+    H_PP = Matrix([[H[i, j] for j in P] for i in P])
+
+    try:
+        inv_term = (eye(len(P)) - H_PP).inv()
+    except Exception:
+        return None  # (I - H_PP) is singular
+
+    H_reduced = H_KK + H_KP * inv_term * H_PK
+    return H_reduced.applyfunc(lambda e: cancel(e))
+
+
 def _permute_tf(H, perm):
     """Permute rows and columns of a transfer function matrix.
 
@@ -106,13 +139,16 @@ def _permute_tf(H, perm):
 
 
 def check_all_equivalences(H_user, user_oracles, library, z_var,
-                           user_distributed=False, user_universal_params=None):
+                           user_distributed=False, user_universal_params=None,
+                           user_has_projection=None):
     """Check user's H(z) against all library entries.
 
     Args:
         user_distributed: True if the user's algorithm uses mixing matrix W.
         user_universal_params: list of Symbol objects that are universal
             (must match for ALL values, e.g. Symbol('lambda') for distributed).
+        user_has_projection: True if the user's algorithm uses P_C oracle.
+            Auto-detected from user_oracles if not provided.
 
     Returns list of match results sorted by strength (oracle > shift > LFT).
     """
@@ -126,6 +162,10 @@ def check_all_equivalences(H_user, user_oracles, library, z_var,
         user_universal_params = []
     user_universal_set = set(user_universal_params)
 
+    # Auto-detect projection from oracle types if not explicitly provided
+    if user_has_projection is None:
+        user_has_projection = any(o == 'P_C' for o in user_oracles)
+
     matches = []
     for algo in library:
         if algo['tf'] is None:
@@ -137,43 +177,102 @@ def check_all_equivalences(H_user, user_oracles, library, z_var,
         lib_oracles = algo.get('oracles', [])
         lib_distributed = algo.get('distributed', False)
 
-        # Determine universal params for this comparison.
-        # Both distributed: lambda is universal (must match for all values).
-        # Neither distributed: no universal params.
-        # Cross-category: try lambda=0 substitution (trivial one-node graph).
+        # --- Detect cross-category situations ---
+        # Distributed cross-category: one side uses W/L, the other doesn't.
+        # Projection cross-category: at least one side uses P_C and the
+        # oracle lists differ (different P_C counts or one side has none).
+        lib_has_proj = any(o == 'P_C' for o in lib_oracles)
+        dist_cross = (user_distributed != lib_distributed)
+        proj_cross = ((user_has_projection or lib_has_proj)
+                      and sorted(user_oracles) != sorted(lib_oracles))
+
+        if dist_cross or proj_cross:
+            # Build condition notes and apply reductions
+            conditions = []
+            H_u_cond = H_user
+            H_l_cond = H_lib
+            u_oracles_cond = list(user_oracles)
+            l_oracles_cond = list(lib_oracles)
+
+            # 1) Distributed cross-category: substitute lambda=0
+            if dist_cross:
+                lam_sym = PARAMS['lam']
+                if user_distributed:
+                    H_u_cond = H_u_cond.applyfunc(
+                        lambda e: _cancel(e.subs(lam_sym, 0)))
+                if lib_distributed:
+                    H_l_cond = H_l_cond.applyfunc(
+                        lambda e: _cancel(e.subs(lam_sym, 0)))
+                conditions.append(
+                    '\\lambda=0 \\text{ (trivial one-node graph)}')
+
+            # 2) Projection cross-category: reduce P_C via Schur complement.
+            #    Reduce both sides — handles cases where both have P_C but
+            #    with different counts (e.g. Korpelevich 2×P_C vs Tseng 1×P_C).
+            if proj_cross:
+                if any(o == 'P_C' for o in u_oracles_cond):
+                    proj_idx = [i for i, o in enumerate(u_oracles_cond)
+                                if o == 'P_C']
+                    H_reduced = _reduce_tf_for_identity_oracles(
+                        H_u_cond, proj_idx)
+                    if H_reduced is None:
+                        continue
+                    H_u_cond = H_reduced
+                    u_oracles_cond = [o for o in u_oracles_cond if o != 'P_C']
+                if any(o == 'P_C' for o in l_oracles_cond):
+                    proj_idx = [i for i, o in enumerate(l_oracles_cond)
+                                if o == 'P_C']
+                    H_reduced = _reduce_tf_for_identity_oracles(
+                        H_l_cond, proj_idx)
+                    if H_reduced is None:
+                        continue
+                    H_l_cond = H_reduced
+                    l_oracles_cond = [o for o in l_oracles_cond if o != 'P_C']
+                conditions.append(
+                    'P_C = I \\text{ (unconstrained)}')
+
+            # Try oracle equivalence with reduced/substituted TFs,
+            # including all valid oracle permutations.
+            if sorted(u_oracles_cond) == sorted(l_oracles_cond):
+                cond_perms = []
+                if u_oracles_cond == l_oracles_cond:
+                    cond_perms.append((None, False))
+                for perm in _find_all_oracle_permutations(
+                        u_oracles_cond, l_oracles_cond):
+                    is_identity = (perm == list(range(len(perm))))
+                    if not is_identity:
+                        cond_perms.append((perm, True))
+
+                for perm, permuted in cond_perms:
+                    H_u_check = (_permute_tf(H_u_cond, perm)
+                                 if perm else H_u_cond)
+                    result = check_oracle_equivalence(
+                        H_u_check, H_l_cond, z_var,
+                        lib_params=algo.get('param_symbols')
+                    )
+                    if result['match']:
+                        joiner = (' \\newline \\text{and } '
+                                  if len(conditions) > 1
+                                  else ' \\text{ and } ')
+                        result['condition_note'] = (
+                            '\\text{Equivalent when } '
+                            + joiner.join(conditions))
+                        matches.append({
+                            'algorithm': algo,
+                            'type': 'oracle',
+                            'details': result,
+                            'permuted': permuted,
+                            'conditional': True,
+                            'projected': proj_cross,
+                        })
+                        break  # First matching permutation suffices
+            continue  # Skip normal equivalence for cross-category
+
+        # Determine universal params for same-category comparison.
         if user_distributed and lib_distributed:
             universal_params = user_universal_set | set(algo.get('universal_params', []))
-        elif not user_distributed and not lib_distributed:
-            universal_params = set()
         else:
-            # Cross-category: substitute lambda=0 in the distributed TF
-            lam_sym = PARAMS['lam']
-            if lib_distributed:
-                H_lib_cross = H_lib.applyfunc(lambda e: _cancel(e.subs(lam_sym, 0)))
-            else:
-                H_lib_cross = H_lib
-            if user_distributed:
-                H_user_cross = H_user.applyfunc(lambda e: _cancel(e.subs(lam_sym, 0)))
-            else:
-                H_user_cross = H_user
-            # Try oracle equivalence with lambda=0 substitution
-            if sorted(user_oracles) == sorted(lib_oracles):
-                result = check_oracle_equivalence(
-                    H_user_cross, H_lib_cross, z_var,
-                    lib_params=algo.get('param_symbols')
-                )
-                if result['match']:
-                    result['condition_note'] = (
-                        '\\text{Equivalent when } \\lambda=0 '
-                        '\\text{ (trivial one-node graph)}')
-                    matches.append({
-                        'algorithm': algo,
-                        'type': 'oracle',
-                        'details': result,
-                        'permuted': False,
-                        'conditional': True,
-                    })
-            continue  # Skip normal equivalence for cross-category
+            universal_params = set()
 
         # Determine if oracles match (possibly up to permutation).
         # When oracle types repeat, there are multiple valid permutations;

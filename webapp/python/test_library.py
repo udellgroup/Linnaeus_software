@@ -67,11 +67,13 @@ class TestSelfMatch:
     @pytest.mark.parametrize('algo_id', [
         'gradient_descent', 'heavy_ball', 'nesterov', 'triple_momentum',
         'quasi_hyperbolic_momentum', 'stochastic_unified_momentum',
-        'arrow_hurwicz_omd', 'proximal_point', 'relaxed_proximal_point',
+        'projected_reflected_gradient', 'modified_arrow_hurwicz',
+        'extrapolation_from_past', 'optimistic_mirror_descent',
+        'proximal_point', 'relaxed_proximal_point',
         'douglas_rachford', 'admm', 'peaceman_rachford',
         'chambolle_pock', 'proximal_gradient', 'conjugate_proximal_gradient',
-        'davis_yin', 'extragradient',
-        'extragradient_korpelevich', 'extragradient_tseng', 'extragradient_malitsky',
+        'davis_yin', 'extragradient', 'projected_gradient',
+        'extragradient_korpelevich', 'extragradient_tseng',
         'nids', 'exact_diffusion',
     ])
     def test_self_match(self, lib, algo_id):

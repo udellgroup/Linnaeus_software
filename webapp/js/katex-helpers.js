@@ -15,6 +15,7 @@ function oracleToLatex(name) {
     'subgrad_g': '\\partial g',
     'subgrad_fstar': '\\partial f^*',
     'subgrad_gstar': '\\partial g^*',
+    'P_C': 'P_C',
   };
   return map[name] || '\\text{' + name.replace(/_/g, '\\_') + '}';
 }
