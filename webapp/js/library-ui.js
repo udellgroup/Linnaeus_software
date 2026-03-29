@@ -94,7 +94,7 @@ function renderFilterChips(data) {
     descDiv = document.createElement('div');
     descDiv.id = 'library-category-desc';
     descDiv.style.cssText =
-      'margin-top:0.5rem;margin-bottom:0.25rem;font-size:0.85rem;color:#555;' +
+      'margin-top:0.5rem;margin-bottom:0.75rem;font-size:0.85rem;color:#555;' +
       'line-height:1.5;display:none;';
     container.parentNode.insertBefore(descDiv, container.nextSibling);
   }
