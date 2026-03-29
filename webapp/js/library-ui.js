@@ -44,8 +44,8 @@ function loadLibraryUI() {
 const FILTERS = [
   { label: 'All', value: 'all' },
   { label: 'One oracle', value: 'one-oracle' },
-  { label: 'Two oracle', value: 'two-oracle' },
-  { label: 'Three oracle', value: 'three-oracle' },
+  { label: 'Two oracles', value: 'two-oracle' },
+  { label: 'Three oracles', value: 'three-oracle' },
   { label: 'Projected', value: 'projected' },
   { label: 'Consensus', value: 'consensus' },
   { label: 'Distributed', value: 'distributed' },
@@ -54,12 +54,12 @@ const FILTERS = [
 let activeFilter = 'all';
 
 const CATEGORY_DESCRIPTIONS = {
-  'one-oracle': 'Algorithms using a single oracle: gradient <span class="ki" data-formula="\\nabla f"></span>, proximal <span class="ki" data-formula="\\text{prox}_f"></span>, or subgradient.',
-  'two-oracle': 'Algorithms using two distinct oracles, e.g. <span class="ki" data-formula="\\text{prox}_f + \\text{prox}_g"></span> or <span class="ki" data-formula="\\nabla f + \\text{prox}_g"></span>.',
-  'three-oracle': 'Algorithms for three-function optimization <span class="ki" data-formula="\\min\\, f + g + h"></span> using three distinct oracles.',
+  'one-oracle': 'Algorithms using a single oracle: a gradient, proximal operator, or conjugate prox.',
+  'two-oracle': 'Algorithms using two distinct oracles, e.g., <span class="ki" data-formula="\\nabla f"></span> &amp; <span class="ki" data-formula="\\text{prox}_g"></span> or <span class="ki" data-formula="\\text{prox}_f"></span> &amp; <span class="ki" data-formula="\\text{prox}_{g^*}"></span>.',
+  'three-oracle': 'Algorithms using three distinct oracles, e.g., <span class="ki" data-formula="\\text{prox}_f"></span>, <span class="ki" data-formula="\\text{prox}_{g^*}"></span>, and <span class="ki" data-formula="\\nabla h"></span>.',
   projected: 'Algorithms for constrained optimization using the gradient <span class="ki" data-formula="\\nabla f"></span> and projection <span class="ki" data-formula="P_C"></span> onto a convex set <span class="ki" data-formula="C"></span>.',
-  consensus: 'Consensus algorithms for agreement over a network, using only the mixing oracle <span class="ki" data-formula="W"></span> or Laplacian <span class="ki" data-formula="L"></span> with no objective function.',
-  distributed: 'Algorithms for distributed optimization over a network, using a linear mixing oracle <span class="ki" data-formula="W"></span> or graph Laplacian <span class="ki" data-formula="L"></span>. States represent the aggregate states of all nodes, and <span class="ki" data-formula="\\nabla f"></span> is the aggregated vector of local gradients.',
+  consensus: 'Consensus algorithms for agreement over a network, using only the mixing oracle <span class="ki" data-formula="W"></span> or Laplacian <span class="ki" data-formula="L"></span> with no objective function. States represent the aggregate states of all nodes.',
+  distributed: 'Algorithms for distributed optimization over a network, using a linear mixing oracle <span class="ki" data-formula="W"></span> or graph Laplacian <span class="ki" data-formula="L"></span>. States represent the aggregate states of all nodes, and <span class="ki" data-formula="\\nabla f"></span> is the aggregated vector of local gradients evaluated at respective local states.',
 };
 
 function _renderInlineKatex(container) {
