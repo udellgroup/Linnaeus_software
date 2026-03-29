@@ -192,7 +192,7 @@ function renderLibraryCards(data) {
       try {
         katex.render(compLatex, tfMath, {
           throwOnError: false,
-          displayMode: true,
+          displayMode: false,
         });
       } catch (e) {
         tfMath.textContent = compLatex;
@@ -203,26 +203,6 @@ function renderLibraryCards(data) {
       if (libLinOracle) tfDiv.appendChild(libLinOracle);
 
       card.appendChild(tfDiv);
-    }
-
-    // Known equivalences
-    const equivs = algo.equivalences || {};
-    const equivEntries = [];
-    if (equivs.oracle && equivs.oracle.length > 0) {
-      equivEntries.push('oracle: ' + equivs.oracle.join(', '));
-    }
-    if (equivs.shift && equivs.shift.length > 0) {
-      equivEntries.push('shift: ' + equivs.shift.join(', '));
-    }
-    if (equivs.lft && equivs.lft.length > 0) {
-      const lftNames = equivs.lft.map(e => (typeof e === 'object' ? e.id : e));
-      equivEntries.push('LFT: ' + lftNames.join(', '));
-    }
-    if (equivEntries.length > 0) {
-      const equivDiv = document.createElement('div');
-      equivDiv.style.cssText = 'margin-top:0.4rem;font-size:0.75rem;color:#888;';
-      equivDiv.textContent = 'Equivalences: ' + equivEntries.join('; ');
-      card.appendChild(equivDiv);
     }
 
     grid.appendChild(card);
