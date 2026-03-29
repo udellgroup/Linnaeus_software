@@ -399,6 +399,10 @@ body {
   border-left-color: #64b5f6;
 }
 
+.algo-card.consensus {
+  border-left-color: #9575cd;
+}
+
 .algo-card.distributed {
   border-left-color: #7c4dff;
 }

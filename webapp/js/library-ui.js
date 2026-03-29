@@ -47,10 +47,28 @@ const FILTERS = [
   { label: 'Projected', value: 'projected' },
   { label: 'prox_f + prox_g', value: 'proximal' },
   { label: '\u2207f + prox_g', value: 'mixed' },
+  { label: 'Consensus', value: 'consensus' },
   { label: 'Distributed', value: 'distributed' },
 ];
 
 let activeFilter = 'all';
+
+const CATEGORY_DESCRIPTIONS = {
+  gradient: 'Algorithms for unconstrained optimization using the gradient oracle <span class="ki" data-formula="\\nabla f"></span>.',
+  projected: 'Algorithms for constrained optimization using the gradient <span class="ki" data-formula="\\nabla f"></span> and projection <span class="ki" data-formula="P_C"></span> onto a convex set <span class="ki" data-formula="C"></span>.',
+  proximal: 'Algorithms using proximal oracles <span class="ki" data-formula="\\text{prox}_f"></span> and <span class="ki" data-formula="\\text{prox}_g"></span> for composite optimization.',
+  mixed: 'Algorithms combining the gradient oracle <span class="ki" data-formula="\\nabla f"></span> with a proximal oracle <span class="ki" data-formula="\\text{prox}_g"></span>.',
+  consensus: 'Consensus algorithms for agreement over a network, using only the mixing oracle <span class="ki" data-formula="W"></span> or Laplacian <span class="ki" data-formula="L"></span> with no objective function.',
+  distributed: 'Algorithms for distributed optimization over a network, using a linear mixing oracle <span class="ki" data-formula="W"></span> or graph Laplacian <span class="ki" data-formula="L"></span>. States represent the aggregate states of all nodes, and <span class="ki" data-formula="\\nabla f"></span> is the aggregated vector of local gradients.',
+};
+
+function _renderInlineKatex(container) {
+  container.querySelectorAll('.ki[data-formula]').forEach(el => {
+    try {
+      katex.render(el.getAttribute('data-formula'), el, { throwOnError: false });
+    } catch (e) { /* ignore */ }
+  });
+}
 
 function renderFilterChips(data) {
   const container = document.getElementById('library-controls');
@@ -69,16 +87,42 @@ function renderFilterChips(data) {
     });
     container.appendChild(chip);
   }
+
+  // Category description div (inserted after chips container)
+  let descDiv = document.getElementById('library-category-desc');
+  if (!descDiv) {
+    descDiv = document.createElement('div');
+    descDiv.id = 'library-category-desc';
+    descDiv.style.cssText =
+      'margin-top:0.5rem;margin-bottom:0.25rem;font-size:0.85rem;color:#555;' +
+      'line-height:1.5;display:none;';
+    container.parentNode.insertBefore(descDiv, container.nextSibling);
+  }
+}
+
+function _updateCategoryDesc() {
+  const descDiv = document.getElementById('library-category-desc');
+  if (!descDiv) return;
+  const html = CATEGORY_DESCRIPTIONS[activeFilter];
+  if (html) {
+    descDiv.innerHTML = html;
+    _renderInlineKatex(descDiv);
+    descDiv.style.display = '';
+  } else {
+    descDiv.style.display = 'none';
+  }
 }
 
 function applyFilter(data) {
+  _updateCategoryDesc();
   const cards = document.querySelectorAll('.algo-card');
   cards.forEach((card, i) => {
     const algo = data[i];
     if (activeFilter === 'all'
-        || (activeFilter === 'distributed' && algo.distributed)
-        || (activeFilter !== 'distributed' && !algo.distributed
-            && algo.oracleType === activeFilter)) {
+        || (activeFilter === 'consensus' && algo.consensus)
+        || (activeFilter === 'distributed' && algo.distributed && !algo.consensus)
+        || (activeFilter !== 'distributed' && activeFilter !== 'consensus'
+            && !algo.distributed && algo.oracleType === activeFilter)) {
       card.style.display = '';
     } else {
       card.style.display = 'none';
@@ -94,7 +138,8 @@ function renderLibraryCards(data) {
 
   for (const algo of data) {
     const card = document.createElement('div');
-    card.className = 'algo-card ' + (algo.distributed ? 'distributed' : (algo.oracleType || 'gradient'));
+    const cardType = algo.consensus ? 'consensus' : (algo.distributed ? 'distributed' : (algo.oracleType || 'gradient'));
+    card.className = 'algo-card ' + cardType;
 
     // Title
     const title = document.createElement('div');
@@ -181,25 +226,32 @@ function renderLibraryCards(data) {
       card.appendChild(eqDiv);
     }
 
-    // Transfer function — composition notation with KaTeX in display mode
-    if (algo.tf_latex && !algo.catalogOnly) {
+    // Transfer function or characteristic polynomial
+    if ((algo.tf_latex || algo.charPoly) && !algo.catalogOnly) {
       const tfDiv = document.createElement('div');
       tfDiv.className = 'transfer-function-display';
       tfDiv.style.marginTop = '0.6rem';
 
       const tfMath = document.createElement('div');
-      const compLatex = compositionLatex(algo.tf_latex, algo.oracles);
+      let displayLatex;
+      if (algo.consensus && algo.charPoly) {
+        // Consensus: show reciprocal of char poly (like a TF)
+        const cpLatex = sympy2Latex(algo.charPoly);
+        displayLatex = '\\frac{1}{' + cpLatex + '}';
+      } else {
+        displayLatex = compositionLatex(algo.tf_latex, algo.oracles);
+      }
       try {
-        katex.render(compLatex, tfMath, {
+        katex.render(displayLatex, tfMath, {
           throwOnError: false,
           displayMode: false,
         });
       } catch (e) {
-        tfMath.textContent = compLatex;
+        tfMath.textContent = displayLatex;
       }
       tfDiv.appendChild(tfMath);
 
-      const libLinOracle = linearOracleElement(algo.distributed);
+      const libLinOracle = linearOracleElement(algo.distributed && !algo.consensus);
       if (libLinOracle) tfDiv.appendChild(libLinOracle);
 
       card.appendChild(tfDiv);

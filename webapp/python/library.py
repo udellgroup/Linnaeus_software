@@ -50,6 +50,18 @@ def load_library(json_path):
         else:
             algo['tf'] = None
 
+        # Parse characteristic polynomial for consensus entries
+        cp_str = entry.get('charPoly', '')
+        if cp_str:
+            try:
+                algo['char_poly'] = parse_expr(
+                    cp_str, local_dict=local_dict,
+                    transformations=standard_transformations)
+            except Exception:
+                algo['char_poly'] = None
+        else:
+            algo['char_poly'] = None
+
         # Parse parameter symbols for this entry
         algo['param_symbols'] = [PARAMS[p] for p in entry.get('parameters', [])
                                   if p in PARAMS]
@@ -138,9 +150,32 @@ def _permute_tf(H, perm):
     return H_perm
 
 
+def _compute_gradf0_char_poly(equations, z_var):
+    """Compute characteristic polynomial of an algorithm with oracle calls set to 0.
+
+    Replaces all oracle calls (grad_f, prox_f, etc.) with 0, re-parses,
+    and computes the characteristic polynomial of the resulting oracle-free system.
+    """
+    import re
+    from parser import parse_equations, KNOWN_ORACLES
+    from compute import compute_char_poly
+
+    # Replace all oracle calls with 0
+    zeroed = list(equations)
+    for oracle in KNOWN_ORACLES:
+        # Match oracle_name(...) with nested parens
+        pattern = r'\b' + oracle + r'\([^)]*\)'
+        zeroed = [re.sub(pattern, '0', eq) for eq in zeroed]
+
+    parsed = parse_equations(zeroed)
+    return compute_char_poly(parsed['state_vars'], parsed['z_equations'],
+                             parsed['z_var'])
+
+
 def check_all_equivalences(H_user, user_oracles, library, z_var,
                            user_distributed=False, user_universal_params=None,
-                           user_has_projection=None):
+                           user_has_projection=None,
+                           user_char_poly=None, user_equations=None):
     """Check user's H(z) against all library entries.
 
     Args:
@@ -149,6 +184,9 @@ def check_all_equivalences(H_user, user_oracles, library, z_var,
             (must match for ALL values, e.g. Symbol('lambda') for distributed).
         user_has_projection: True if the user's algorithm uses P_C oracle.
             Auto-detected from user_oracles if not provided.
+        user_char_poly: SymPy expr for user's characteristic polynomial
+            (for consensus algorithms with no oracles).
+        user_equations: original equation strings (needed for grad_f=0 reduction).
 
     Returns list of match results sorted by strength (oracle > shift > LFT).
     """
@@ -156,7 +194,7 @@ def check_all_equivalences(H_user, user_oracles, library, z_var,
                               check_shift_equivalence,
                               check_lft_equivalence,
                               build_block_m_hat)
-    from sympy import cancel as _cancel
+    from sympy import cancel as _cancel, Poly, symbols as _symbols
 
     if user_universal_params is None:
         user_universal_params = []
@@ -166,15 +204,102 @@ def check_all_equivalences(H_user, user_oracles, library, z_var,
     if user_has_projection is None:
         user_has_projection = any(o == 'P_C' for o in user_oracles)
 
+    user_is_consensus = (len(user_oracles) == 0)
+
     matches = []
     for algo in library:
+        lib_oracles = algo.get('oracles', [])
+        lib_is_consensus = algo.get('consensus', False)
+        lib_distributed = algo.get('distributed', False)
+
+        # --- Consensus cross-category matching ---
+        # One side has oracles, the other is consensus (no oracles).
+        # Compare characteristic polynomials under grad_f=0 condition.
+        if user_is_consensus != lib_is_consensus:
+            if user_is_consensus and user_char_poly is not None:
+                # User is consensus, library has oracles
+                lib_eqs = algo.get('equations', [])
+                if not lib_eqs:
+                    continue
+                try:
+                    lib_cp = _compute_gradf0_char_poly(lib_eqs, z_var)
+                except Exception:
+                    continue
+                user_cp = user_char_poly.subs(z, z_var)
+                # Compare as polynomials in z with lambda as universal param
+                diff = _cancel(user_cp - lib_cp.subs(z, z_var))
+                if diff == 0:
+                    matches.append({
+                        'algorithm': algo,
+                        'type': 'oracle',
+                        'details': {
+                            'match': True,
+                            'params': {},
+                            'user_params': {},
+                            'free_params': [],
+                            'condition_note': (
+                                '\\text{Equivalent when } '
+                                '\\nabla f = 0 \\text{ (trivial functions)}'),
+                        },
+                        'permuted': False,
+                        'conditional': True,
+                    })
+            elif lib_is_consensus and algo.get('char_poly') is not None:
+                # Library is consensus, user has oracles
+                if user_equations is None:
+                    continue
+                try:
+                    user_cp = _compute_gradf0_char_poly(
+                        user_equations, z_var)
+                except Exception:
+                    continue
+                lib_cp = algo['char_poly'].subs(z, z_var)
+                diff = _cancel(user_cp - lib_cp)
+                if diff == 0:
+                    matches.append({
+                        'algorithm': algo,
+                        'type': 'oracle',
+                        'details': {
+                            'match': True,
+                            'params': {},
+                            'user_params': {},
+                            'free_params': [],
+                            'condition_note': (
+                                '\\text{Equivalent when } '
+                                '\\nabla f = 0 \\text{ (trivial functions)}'),
+                        },
+                        'permuted': False,
+                        'conditional': True,
+                    })
+            continue  # Skip normal matching for consensus cross-category
+
+        # Both consensus: compare char polys directly
+        if user_is_consensus and lib_is_consensus:
+            if user_char_poly is not None and algo.get('char_poly') is not None:
+                user_cp = user_char_poly.subs(z, z_var)
+                lib_cp = algo['char_poly'].subs(z, z_var)
+                diff = _cancel(user_cp - lib_cp)
+                if diff == 0:
+                    matches.append({
+                        'algorithm': algo,
+                        'type': 'oracle',
+                        'details': {
+                            'match': True,
+                            'params': {},
+                            'user_params': {},
+                            'free_params': [],
+                        },
+                        'permuted': False,
+                        'conditional': False,
+                    })
+            continue
+
         if algo['tf'] is None:
             continue
 
         # Library TFs use symbols('z'), but user TFs may use a different z symbol.
         # Substitute library's z with the user's z_var for comparison.
         H_lib = algo['tf'].subs(z, z_var)
-        lib_oracles = algo.get('oracles', [])
         lib_distributed = algo.get('distributed', False)
 
         # --- Detect cross-category situations ---

@@ -1,5 +1,5 @@
 """Transfer function computation from z-domain linear equations."""
-from sympy import Matrix, cancel, zeros
+from sympy import Matrix, cancel, zeros, Poly, fraction
 
 
 def compute_transfer_function(state_vars, oracle_inputs, oracle_outputs,
@@ -70,3 +70,45 @@ def compute_transfer_function(state_vars, oracle_inputs, oracle_outputs,
             H[i, j] = cancel(H[i, j])
 
     return H
+
+
+def compute_char_poly(state_vars, z_equations, z_var):
+    """Compute characteristic polynomial for an oracle-free system.
+
+    For consensus algorithms (no oracle calls), the system is purely
+    state-driven: M * state = 0. The characteristic polynomial is det(M),
+    cleared of any z-denominators from time shifts.
+
+    Args:
+        state_vars: list of state variable names
+        z_equations: list of dicts mapping variable name -> coefficient
+        z_var: the z Symbol
+
+    Returns:
+        SymPy expression: the characteristic polynomial in z_var
+    """
+    if not state_vars:
+        raise ValueError("No state variables found. Check your equations.")
+
+    n_vars = len(state_vars)
+    n_eq = len(z_equations)
+
+    # Build coefficient matrix for state variables only
+    M = zeros(n_eq, n_vars)
+    for i, eq in enumerate(z_equations):
+        for j, var_name in enumerate(state_vars):
+            M[i, j] = eq.get(var_name, 0)
+
+    if M.rows != M.cols:
+        raise ValueError(
+            f"System is {'underdetermined' if n_eq < n_vars else 'overdetermined'}: "
+            f"{n_eq} equations for {n_vars} state variables."
+        )
+
+    det_expr = cancel(M.det())
+
+    # Clear z-denominators: det may contain negative powers of z
+    # from time shifts (e.g., x[k-1] -> x/z gives 1/z coefficients).
+    num, den = fraction(det_expr)
+    # den should be a power of z; the numerator is the char poly.
+    return cancel(num)

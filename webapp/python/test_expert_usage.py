@@ -12,22 +12,30 @@ from sympy import symbols, cancel, Matrix, Rational
 def run_pipeline(equations):
     """Full pipeline: parse -> compute TF -> check against library."""
     from parser import parse_equations
-    from compute import compute_transfer_function
+    from compute import compute_transfer_function, compute_char_poly
     from library import load_library, check_all_equivalences
 
     parsed = parse_equations(equations)
     z = parsed['z_var']
-    H = compute_transfer_function(
-        parsed['state_vars'],
-        parsed['oracle_inputs'],
-        parsed['oracle_outputs'],
-        parsed['z_equations'],
-        z
-    )
+    if len(parsed['oracle_types']) == 0:
+        H = None
+        char_poly = compute_char_poly(
+            parsed['state_vars'], parsed['z_equations'], z)
+    else:
+        H = compute_transfer_function(
+            parsed['state_vars'],
+            parsed['oracle_inputs'],
+            parsed['oracle_outputs'],
+            parsed['z_equations'],
+            z
+        )
+        char_poly = None
 
     json_path = os.path.join(os.path.dirname(__file__), '..', 'data', 'algorithms.json')
     library = load_library(json_path)
-    matches = check_all_equivalences(H, parsed['oracle_types'], library, z)
+    matches = check_all_equivalences(
+        H, parsed['oracle_types'], library, z,
+        user_char_poly=char_poly, user_equations=equations)
 
     return H, matches
 

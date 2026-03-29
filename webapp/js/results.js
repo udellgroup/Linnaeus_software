@@ -19,7 +19,9 @@ function displayResults(result) {
   tfSection.appendChild(tfLabel);
 
   const tfMath = document.createElement('div');
-  const userCompLatex = compositionLatex(result.tf_latex, result.oracle_types);
+  const userCompLatex = result.user_is_consensus
+    ? result.tf_latex
+    : compositionLatex(result.tf_latex, result.oracle_types);
   try {
     katex.render(userCompLatex, tfMath, {
       throwOnError: false,
@@ -156,7 +158,10 @@ function displayResults(result) {
     if (match.lib_tf_latex) {
       const libMath = document.createElement('div');
       libMath.style.cssText = 'margin:0.5rem 0;';
-      const libCompLatex = compositionLatex(match.lib_tf_latex, match.lib_oracles);
+      const isConsensusLib = match.lib_oracles && match.lib_oracles.length === 0;
+      const libCompLatex = isConsensusLib
+        ? match.lib_tf_latex
+        : compositionLatex(match.lib_tf_latex, match.lib_oracles);
       try {
         katex.render(libCompLatex, libMath, {
           throwOnError: false,

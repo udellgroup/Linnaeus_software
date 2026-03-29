@@ -129,7 +129,10 @@ x2[k+1] = prox_g(2 * x1[k+1] - x3[k])
 x3[k+1] = x3[k] + x2[k+1] - x1[k+1]
 
 # EXTRA (distributed)
-x[k+1] = 2*W*x[k] - W*x[k-1] - alpha*(grad_f(x[k]) - grad_f(x[k-1]))</code></pre>
+x[k+1] = 2*W*x[k] - W*x[k-1] - alpha*(grad_f(x[k]) - grad_f(x[k-1]))
+
+# Standard Average Consensus
+x[k+1] = W*x[k]</code></pre>
 
       <h3>Supported Oracles</h3>
       <table class="oracle-table">

@@ -124,7 +124,7 @@ _library = load_library('algorithms.json')
 import json
 from sympy import symbols, latex, Symbol, Matrix as _Matrix
 from parser import parse_equations
-from compute import compute_transfer_function
+from compute import compute_transfer_function, compute_char_poly
 from library import check_all_equivalences
 
 _input_text = _raw_input
@@ -133,13 +133,21 @@ _lines = [l.strip() for l in _input_text.split('\\n')
 
 parsed = parse_equations(_lines)
 _z = parsed['z_var']
-H_user = compute_transfer_function(
-    parsed['state_vars'],
-    parsed['oracle_inputs'],
-    parsed['oracle_outputs'],
-    parsed['z_equations'],
-    _z
-)
+_user_is_consensus = (len(parsed['oracle_types']) == 0)
+
+if _user_is_consensus:
+    H_user = None
+    _user_char_poly = compute_char_poly(
+        parsed['state_vars'], parsed['z_equations'], _z)
+else:
+    H_user = compute_transfer_function(
+        parsed['state_vars'],
+        parsed['oracle_inputs'],
+        parsed['oracle_outputs'],
+        parsed['z_equations'],
+        _z
+    )
+    _user_char_poly = None
 
 _user_distributed = parsed.get('has_mixing_matrix', False)
 _user_universal = [symbols('lambda')] if _user_distributed else []
@@ -149,6 +157,8 @@ matches = check_all_equivalences(
     user_distributed=_user_distributed,
     user_universal_params=_user_universal,
     user_has_projection=_user_has_projection,
+    user_char_poly=_user_char_poly,
+    user_equations=_lines,
 )
 
 # For display, substitute the internal z symbol with a clean 'z'
@@ -324,7 +334,14 @@ _match_list = []
 for m in matches:
     algo = m['algorithm']
     _lib_tf = algo['tf']
-    if isinstance(_lib_tf, _Matrix) and _lib_tf.shape == (1, 1):
+    if _lib_tf is None:
+        # Consensus algorithm — show reciprocal of char poly (like a TF)
+        _lib_cp = algo.get('char_poly')
+        if _lib_cp is not None:
+            _lib_latex = _to_display_latex_scalar((1 / _lib_cp).subs(_z, _display_z))
+        else:
+            _lib_latex = ''
+    elif isinstance(_lib_tf, _Matrix) and _lib_tf.shape == (1, 1):
         _lib_latex = _to_display_latex_scalar(_lib_tf[0, 0].subs(_z, _display_z))
     elif isinstance(_lib_tf, _Matrix):
         _lib_latex = _to_display_latex(_lib_tf)
@@ -358,13 +375,24 @@ for m in matches:
         entry['conditional'] = True
     _match_list.append(entry)
 
-_result = {
-    'tf_latex': _to_display_latex(H_user),
-    'oracle_types': parsed['oracle_types'],
-    'user_params': [latex(symbols(p)) for p in parsed['parameters']],
-    'matches': _match_list,
-    'user_distributed': _user_distributed,
-}
+if _user_is_consensus:
+    _cp_display = _to_display_latex_scalar((1 / _user_char_poly).subs(_z, _display_z))
+    _result = {
+        'tf_latex': _cp_display,
+        'oracle_types': [],
+        'user_params': [latex(symbols(p)) for p in parsed['parameters']],
+        'matches': _match_list,
+        'user_distributed': _user_distributed,
+        'user_is_consensus': True,
+    }
+else:
+    _result = {
+        'tf_latex': _to_display_latex(H_user),
+        'oracle_types': parsed['oracle_types'],
+        'user_params': [latex(symbols(p)) for p in parsed['parameters']],
+        'matches': _match_list,
+        'user_distributed': _user_distributed,
+    }
 json.dumps(_result)
 `);
 

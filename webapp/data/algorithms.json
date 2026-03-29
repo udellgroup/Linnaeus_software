@@ -185,12 +185,12 @@
     ],
     "oracleType": "gradient",
     "equations": [
-      "x[k+1] = x[k] - 2 * eta * grad_f(x[k-1]) + eta * grad_f(x[k-2])"
+      "x[k+1] = x[k] - 2 * eta * grad_f(x[k]) + eta * grad_f(x[k-1])"
     ],
     "parameters": [
       "eta"
     ],
-    "transferFunction": "-eta*(2*z - 1)/(z**2*(z - 1))",
+    "transferFunction": "-eta*(2*z - 1)/(z*(z - 1))",
     "tfIsMatrix": false,
     "equivalences": {
       "oracle": [],
@@ -198,7 +198,7 @@
       "lft": []
     },
     "catalogOnly": false,
-    "tf_latex": "\\frac{-\\eta \\left(2 z -1\\right)}{z^{2} \\left(z -1\\right)}"
+    "tf_latex": "\\frac{-\\eta \\left(2 z -1\\right)}{z \\left(z -1\\right)}"
   },
   {
     "id": "extragradient",
@@ -677,6 +677,62 @@
     },
     "catalogOnly": false,
     "tf_latex": "\\begin{bmatrix} \\frac{-t}{z -1} & 0 & \\frac{t}{z -1} \\\\ 1 & 0 & 0 \\\\ \\frac{2 z + t - 2}{z -1} & -\\gamma & \\frac{-t}{z -1} \\end{bmatrix}"
+  },
+  {
+    "id": "average_consensus",
+    "name": "Standard Average Consensus",
+    "aliases": [],
+    "citation": "Olfati-Saber & Murray 2004",
+    "doi": "https://doi.org/10.1109/TAC.2004.834113",
+    "bibtex": "@article{OlfatiSaber2004,\n  author={Reza Olfati-Saber and Richard M. Murray},\n  title={Consensus Problems in Networks of Agents with Switching Topology and Time-Delays},\n  journal={IEEE Transactions on Automatic Control},\n  year={2004},\n  volume={49},\n  number={9},\n  pages={1520--1533},\n  doi={10.1109/TAC.2004.834113}\n}",
+    "oracles": [],
+    "oracleType": "consensus",
+    "consensus": true,
+    "distributed": true,
+    "equations": [
+      "x[k+1] = W * x[k]"
+    ],
+    "parameters": [],
+    "charPoly": "z + lam - 1",
+    "transferFunction": "",
+    "tfIsMatrix": false,
+    "equivalences": {
+      "oracle": [],
+      "shift": [],
+      "lft": []
+    },
+    "catalogOnly": false,
+    "tf_latex": ""
+  },
+  {
+    "id": "heavy_ball_consensus",
+    "name": "Heavy-Ball Consensus",
+    "aliases": [
+      "Momentum Consensus"
+    ],
+    "citation": "Oreshkin et al. 2010",
+    "doi": "https://doi.org/10.1109/TSP.2010.2043127",
+    "bibtex": "@article{Oreshkin2010,\n  author={Boris N. Oreshkin and Mark J. Coates and Michael G. Rabbat},\n  title={Optimization and Analysis of Distributed Averaging With Short Node Memory},\n  journal={IEEE Transactions on Signal Processing},\n  year={2010},\n  volume={58},\n  number={5},\n  pages={2850--2865},\n  doi={10.1109/TSP.2010.2043127}\n}",
+    "oracles": [],
+    "oracleType": "consensus",
+    "consensus": true,
+    "distributed": true,
+    "equations": [
+      "x[k+1] = (1 + beta) * W * x[k] - beta * x[k-1]"
+    ],
+    "parameters": [
+      "beta"
+    ],
+    "charPoly": "z**2 - (1 + beta)*(1 - lam)*z + beta",
+    "transferFunction": "",
+    "tfIsMatrix": false,
+    "equivalences": {
+      "oracle": [],
+      "shift": [],
+      "lft": []
+    },
+    "catalogOnly": false,
+    "tf_latex": ""
   },
   {
     "id": "distributed_gradient_descent",

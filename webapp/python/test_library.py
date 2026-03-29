@@ -35,14 +35,18 @@ def _get_library():
 
 def _run_pipeline(equations):
     from parser import parse_equations
-    from compute import compute_transfer_function
+    from compute import compute_transfer_function, compute_char_poly
     parsed = parse_equations(equations)
     z = parsed['z_var']
+    if len(parsed['oracle_types']) == 0:
+        # Consensus algorithm — compute char poly instead of H(z)
+        cp = compute_char_poly(parsed['state_vars'], parsed['z_equations'], z)
+        return None, parsed['oracle_types'], z, cp, equations
     H = compute_transfer_function(
         parsed['state_vars'], parsed['oracle_inputs'],
         parsed['oracle_outputs'], parsed['z_equations'], z
     )
-    return H, parsed['oracle_types'], z
+    return H, parsed['oracle_types'], z, None, equations
 
 
 @pytest.fixture(scope='module')
@@ -75,12 +79,15 @@ class TestSelfMatch:
         'davis_yin', 'extragradient', 'projected_gradient',
         'extragradient_korpelevich', 'extragradient_tseng',
         'nids', 'exact_diffusion',
+        'average_consensus', 'heavy_ball_consensus',
     ])
     def test_self_match(self, lib, algo_id):
         from library import check_all_equivalences
         algo = next(a for a in lib if a['id'] == algo_id)
-        H, oracle_types, z = _run_pipeline(algo['equations'])
-        matches = check_all_equivalences(H, oracle_types, lib, z)
+        H, oracle_types, z, char_poly, eqs = _run_pipeline(algo['equations'])
+        matches = check_all_equivalences(
+            H, oracle_types, lib, z,
+            user_char_poly=char_poly, user_equations=eqs)
         match_names = [m['algorithm']['name'] for m in matches]
         assert algo['name'] in match_names, (
             f"{algo['name']} did not match itself. Matches: {match_names}"
