@@ -349,8 +349,7 @@ for m in matches:
         _lib_latex = _to_display_latex_scalar(_lib_tf.subs(_z, _display_z) if hasattr(_lib_tf, 'subs') else _lib_tf)
     entry = {
         'name': algo['name'],
-        'citation': algo.get('citation', ''),
-        'doi': algo.get('doi', ''),
+        'citations': algo.get('citations', []),
         'bibtex': algo.get('bibtex', ''),
         'type': m['type'],
         'lib_tf_latex': _lib_latex,
@@ -373,6 +372,8 @@ for m in matches:
         entry['condition_note'] = details['condition_note']
     if m.get('conditional'):
         entry['conditional'] = True
+    if details.get('func_mapping'):
+        entry['func_mapping'] = details['func_mapping']
     _match_list.append(entry)
 
 if _user_is_consensus:

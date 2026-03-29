@@ -4,7 +4,12 @@ from sympy import symbols, expand
 from sympy.parsing.sympy_parser import parse_expr
 
 # Known oracle types
-KNOWN_ORACLES = {'grad_f', 'prox_f', 'prox_g', 'prox_fstar', 'prox_gstar', 'subgrad_f', 'P_C'}
+KNOWN_ORACLES = {
+    'grad_f', 'grad_g', 'grad_h',
+    'prox_f', 'prox_g', 'prox_h',
+    'prox_fstar', 'prox_gstar', 'prox_hstar',
+    'P_C',
+}
 
 # Regex patterns
 VAR_REF_PATTERN = re.compile(r'(\w+)\[k([+-]\d+)?\]')

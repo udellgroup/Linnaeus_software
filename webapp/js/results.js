@@ -45,7 +45,7 @@ function displayResults(result) {
 
   panel.appendChild(tfSection);
 
-  // Matches section
+  // Matches section — split into equivalences and conditional equivalences
   if (!result.matches || result.matches.length === 0) {
     const noMatch = document.createElement('div');
     noMatch.style.cssText =
@@ -56,12 +56,31 @@ function displayResults(result) {
     return;
   }
 
-  const matchesHeader = document.createElement('h3');
-  matchesHeader.style.cssText = 'margin-top:1.25rem;margin-bottom:0.75rem;font-size:1rem;color:#1a1a2e;';
-  matchesHeader.textContent = 'Matches (' + result.matches.length + ')';
-  panel.appendChild(matchesHeader);
+  const exactMatches = result.matches.filter(m => !m.conditional);
+  const condMatches = result.matches.filter(m => m.conditional);
 
-  for (const match of result.matches) {
+  if (exactMatches.length > 0) {
+    const header = document.createElement('h3');
+    header.style.cssText = 'margin-top:1.25rem;margin-bottom:0.75rem;font-size:1rem;color:#1a1a2e;';
+    header.textContent = 'Equivalences (' + exactMatches.length + ')';
+    panel.appendChild(header);
+    for (const match of exactMatches) {
+      panel.appendChild(_buildMatchCard(match));
+    }
+  }
+
+  if (condMatches.length > 0) {
+    const header = document.createElement('h3');
+    header.style.cssText = 'margin-top:1.25rem;margin-bottom:0.75rem;font-size:1rem;color:#1a1a2e;';
+    header.textContent = 'Conditional equivalences (' + condMatches.length + ')';
+    panel.appendChild(header);
+    for (const match of condMatches) {
+      panel.appendChild(_buildMatchCard(match));
+    }
+  }
+}
+
+function _buildMatchCard(match) {
     const card = document.createElement('div');
     card.style.cssText =
       'margin-bottom:1rem;padding:1rem;background:#fafafa;border:1px solid #e0e0e0;border-radius:6px;';
@@ -70,21 +89,25 @@ function displayResults(result) {
     const nameEl = document.createElement('div');
     nameEl.style.cssText = 'font-weight:600;font-size:0.95rem;margin-bottom:0.4rem;';
     nameEl.textContent = match.name;
-    if (match.citation) {
+    const citations = match.citations || [];
+    if (citations.length > 0) {
       const citSpan = document.createElement('span');
       citSpan.style.cssText = 'font-weight:400;font-size:0.85rem;margin-left:0.4rem;';
       citSpan.appendChild(document.createTextNode('('));
-      if (match.doi) {
-        const link = document.createElement('a');
-        link.href = match.doi;
-        link.target = '_blank';
-        link.rel = 'noopener noreferrer';
-        link.className = 'citation-link';
-        link.textContent = match.citation;
-        citSpan.appendChild(link);
-      } else {
-        citSpan.appendChild(document.createTextNode(match.citation));
-      }
+      citations.forEach((cit, idx) => {
+        if (idx > 0) citSpan.appendChild(document.createTextNode(' / '));
+        if (cit.doi) {
+          const link = document.createElement('a');
+          link.href = cit.doi;
+          link.target = '_blank';
+          link.rel = 'noopener noreferrer';
+          link.className = 'citation-link';
+          link.textContent = cit.label;
+          citSpan.appendChild(link);
+        } else {
+          citSpan.appendChild(document.createTextNode(cit.label));
+        }
+      });
       citSpan.appendChild(document.createTextNode(')'));
       if (match.bibtex) {
         const btn = document.createElement('button');
@@ -243,6 +266,31 @@ function displayResults(result) {
       }
     }
 
+    // Function mapping (oracle renaming)
+    if (match.func_mapping) {
+      const funcDiv = document.createElement('div');
+      funcDiv.style.cssText =
+        'margin-top:0.5rem;padding:0.5rem 0.75rem;background:#f0f4ff;' +
+        'border:1px solid #c5cae9;border-radius:4px;';
+      const funcLabel = document.createElement('div');
+      funcLabel.style.cssText = 'font-size:0.78rem;color:#666;margin-bottom:0.25rem;font-weight:600;';
+      funcLabel.textContent = 'Function mapping:';
+      funcDiv.appendChild(funcLabel);
+      const funcMath = document.createElement('div');
+      const funcEntries = Object.entries(match.func_mapping)
+        .filter(([k, v]) => k !== v)
+        .map(([k, v]) => k + '_{\\text{lib}} = ' + v);
+      if (funcEntries.length > 0) {
+        try {
+          katex.render(funcEntries.join(', \\quad '), funcMath, { throwOnError: false, displayMode: false });
+        } catch (e) {
+          funcMath.textContent = funcEntries.join(', ');
+        }
+        funcDiv.appendChild(funcMath);
+        card.appendChild(funcDiv);
+      }
+    }
+
     // Shift vector
     if (match.shift_vector && match.shift_vector.some(v => v !== 0)) {
       const shiftDiv = document.createElement('div');
@@ -281,6 +329,5 @@ function displayResults(result) {
       card.appendChild(condDiv);
     }
 
-    panel.appendChild(card);
-  }
+    return card;
 }

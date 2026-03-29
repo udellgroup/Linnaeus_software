@@ -7,7 +7,7 @@
     "oracles": [
       "grad_f"
     ],
-    "oracleType": "gradient",
+    "oracleType": "one-oracle",
     "equations": [
       "x[k+1] = x[k] - alpha * grad_f(x[k])"
     ],
@@ -22,19 +22,18 @@
       "lft": []
     },
     "catalogOnly": false,
-    "tf_latex": "\\frac{-\\alpha}{z -1}"
+    "tf_latex": "\\frac{-\\alpha}{z -1}",
+    "citations": []
   },
   {
     "id": "heavy_ball",
     "name": "Heavy Ball",
     "aliases": [],
-    "citation": "Polyak 1964",
-    "doi": "https://doi.org/10.1016/0041-5553(64)90137-5",
     "bibtex": "@article{polyak1964some,\n  title={Some methods of speeding up the convergence of iteration methods},\n  author={Polyak, Boris T},\n  journal={USSR Computational Mathematics and Mathematical Physics},\n  volume={4},\n  number={5},\n  pages={1--17},\n  year={1964},\n  publisher={Elsevier}\n}",
     "oracles": [
       "grad_f"
     ],
-    "oracleType": "gradient",
+    "oracleType": "one-oracle",
     "equations": [
       "x[k+1] = x[k] - alpha * grad_f(x[k]) + beta * (x[k] - x[k-1])"
     ],
@@ -50,18 +49,23 @@
       "lft": []
     },
     "catalogOnly": false,
-    "tf_latex": "\\frac{-\\alpha z}{\\left(z -1\\right) \\left(z - \\beta\\right)}"
+    "tf_latex": "\\frac{-\\alpha z}{\\left(z -1\\right) \\left(z - \\beta\\right)}",
+    "citations": [
+      {
+        "label": "Polyak 1964",
+        "doi": "https://doi.org/10.1016/0041-5553(64)90137-5"
+      }
+    ]
   },
   {
     "id": "nesterov",
     "name": "Nesterov's Accelerated Method",
     "aliases": [],
-    "citation": "Nesterov 1983",
     "bibtex": "@inproceedings{nesterov1983method,\n  title={A method for solving the convex programming problem with convergence rate {$O(1/k^2)$}},\n  author={Nesterov, Yurii},\n  booktitle={Dokl. Akad. Nauk SSSR},\n  volume={269},\n  pages={543--547},\n  year={1983}\n}",
     "oracles": [
       "grad_f"
     ],
-    "oracleType": "gradient",
+    "oracleType": "one-oracle",
     "equations": [
       "y[k] = x[k] + beta * (x[k] - x[k-1])",
       "x[k+1] = y[k] - alpha * grad_f(y[k])"
@@ -78,19 +82,23 @@
       "lft": []
     },
     "catalogOnly": false,
-    "tf_latex": "\\frac{-\\alpha \\left(\\left(\\beta + 1\\right) z - \\beta\\right)}{\\left(z -1\\right) \\left(z - \\beta\\right)}"
+    "tf_latex": "\\frac{-\\alpha \\left(\\left(\\beta + 1\\right) z - \\beta\\right)}{\\left(z -1\\right) \\left(z - \\beta\\right)}",
+    "citations": [
+      {
+        "label": "Nesterov 1983",
+        "doi": ""
+      }
+    ]
   },
   {
     "id": "triple_momentum",
     "name": "Triple Momentum Method",
     "aliases": [],
-    "citation": "Van Scoy et al. 2018",
-    "doi": "https://doi.org/10.1109/LCSYS.2017.2722406",
     "bibtex": "@article{vanscoy2018fastest,\n  title={The fastest known globally convergent first-order method for minimizing strongly convex functions},\n  author={Van Scoy, Bryan and Freeman, Randy A and Lynch, Kevin M},\n  journal={IEEE Control Systems Letters},\n  volume={2},\n  number={1},\n  pages={49--54},\n  year={2018},\n  publisher={IEEE}\n}",
     "oracles": [
       "grad_f"
     ],
-    "oracleType": "gradient",
+    "oracleType": "one-oracle",
     "equations": [
       "y[k] = x[k] + gamma * (x[k] - x[k-1])",
       "x[k+1] = x[k] - alpha * grad_f(y[k]) + beta * (x[k] - x[k-1])"
@@ -108,19 +116,23 @@
       "lft": []
     },
     "catalogOnly": false,
-    "tf_latex": "\\frac{-\\alpha \\left(\\left(\\gamma + 1\\right) z - \\gamma\\right)}{\\left(z -1\\right) \\left(z - \\beta\\right)}"
+    "tf_latex": "\\frac{-\\alpha \\left(\\left(\\gamma + 1\\right) z - \\gamma\\right)}{\\left(z -1\\right) \\left(z - \\beta\\right)}",
+    "citations": [
+      {
+        "label": "Van Scoy et al. 2018",
+        "doi": "https://doi.org/10.1109/LCSYS.2017.2722406"
+      }
+    ]
   },
   {
     "id": "quasi_hyperbolic_momentum",
     "name": "Quasi-Hyperbolic Momentum",
     "aliases": [],
-    "citation": "Ma & Yarats 2019",
-    "doi": "https://openreview.net/forum?id=S1fUpoR5FQ",
     "bibtex": "@inproceedings{ma2018quasihyperbolic,\n  title={Quasi-hyperbolic momentum and Adam for deep learning},\n  author={Jerry Ma and Denis Yarats},\n  booktitle={International Conference on Learning Representations},\n  year={2019},\n  url={https://openreview.net/forum?id=S1fUpoR5FQ}\n}",
     "oracles": [
       "grad_f"
     ],
-    "oracleType": "gradient",
+    "oracleType": "one-oracle",
     "equations": [
       "g[k+1] = beta * g[k] + (1 - beta) * grad_f(x[k])",
       "x[k+1] = x[k] - alpha * ((1 - nu) * grad_f(x[k]) + nu * g[k+1])"
@@ -138,19 +150,23 @@
       "lft": []
     },
     "catalogOnly": false,
-    "tf_latex": "\\frac{\\alpha \\left(\\left(\\beta \\nu - 1\\right) z - \\beta \\left(\\nu - 1\\right)\\right)}{\\left(z -1\\right) \\left(z - \\beta\\right)}"
+    "tf_latex": "\\frac{\\alpha \\left(\\left(\\beta \\nu - 1\\right) z - \\beta \\left(\\nu - 1\\right)\\right)}{\\left(z -1\\right) \\left(z - \\beta\\right)}",
+    "citations": [
+      {
+        "label": "Ma & Yarats 2019",
+        "doi": "https://openreview.net/forum?id=S1fUpoR5FQ"
+      }
+    ]
   },
   {
     "id": "stochastic_unified_momentum",
     "name": "Stochastic Unified Momentum",
     "aliases": [],
-    "citation": "Yan et al. 2018",
-    "doi": "https://doi.org/10.24963/ijcai.2018/410",
     "bibtex": "@inproceedings{ijcai2018p410,\n  title={A Unified Analysis of Stochastic Momentum Methods for Deep Learning},\n  author={Yan Yan and Tianbao Yang and Zhe Li and Qihang Lin and Yi Yang},\n  booktitle={Proceedings of the Twenty-Seventh International Joint Conference on Artificial Intelligence, {IJCAI-18}},\n  publisher={International Joint Conferences on Artificial Intelligence Organization},\n  pages={2955--2961},\n  year={2018},\n  month={7},\n  doi={10.24963/ijcai.2018/410},\n  url={https://doi.org/10.24963/ijcai.2018/410}\n}",
     "oracles": [
       "grad_f"
     ],
-    "oracleType": "gradient",
+    "oracleType": "one-oracle",
     "equations": [
       "y[k+1] = x[k] - alpha * grad_f(x[k])",
       "q[k+1] = x[k] - s * alpha * grad_f(x[k])",
@@ -169,7 +185,13 @@
       "lft": []
     },
     "catalogOnly": false,
-    "tf_latex": "\\frac{-\\alpha \\left(\\left(\\beta s + 1\\right) z - \\beta s\\right)}{\\left(z -1\\right) \\left(z - \\beta\\right)}"
+    "tf_latex": "\\frac{-\\alpha \\left(\\left(\\beta s + 1\\right) z - \\beta s\\right)}{\\left(z -1\\right) \\left(z - \\beta\\right)}",
+    "citations": [
+      {
+        "label": "Yan et al. 2018",
+        "doi": "https://doi.org/10.24963/ijcai.2018/410"
+      }
+    ]
   },
   {
     "id": "optimistic_mirror_descent",
@@ -177,13 +199,11 @@
     "aliases": [
       "OMD"
     ],
-    "citation": "Daskalakis et al. 2018",
-    "doi": "https://openreview.net/forum?id=SJJySbbAZ",
     "bibtex": "@inproceedings{daskalakis2018training,\n  title={Training {GAN}s with Optimism},\n  author={Constantinos Daskalakis and Andrew Ilyas and Vasilis Syrgkanis and Haoyang Zeng},\n  booktitle={International Conference on Learning Representations},\n  year={2018},\n  url={https://openreview.net/forum?id=SJJySbbAZ}\n}",
     "oracles": [
       "grad_f"
     ],
-    "oracleType": "gradient",
+    "oracleType": "one-oracle",
     "equations": [
       "x[k+1] = x[k] - 2 * eta * grad_f(x[k]) + eta * grad_f(x[k-1])"
     ],
@@ -198,7 +218,13 @@
       "lft": []
     },
     "catalogOnly": false,
-    "tf_latex": "\\frac{-\\eta \\left(2 z -1\\right)}{z \\left(z -1\\right)}"
+    "tf_latex": "\\frac{-\\eta \\left(2 z -1\\right)}{z \\left(z -1\\right)}",
+    "citations": [
+      {
+        "label": "Daskalakis et al. 2018",
+        "doi": "https://openreview.net/forum?id=SJJySbbAZ"
+      }
+    ]
   },
   {
     "id": "extragradient",
@@ -209,7 +235,7 @@
       "grad_f",
       "grad_f"
     ],
-    "oracleType": "gradient",
+    "oracleType": "one-oracle",
     "equations": [
       "y[k] = x[k] - t * grad_f(x[k])",
       "x[k+1] = x[k] - t * grad_f(y[k])"
@@ -225,7 +251,491 @@
       "lft": []
     },
     "catalogOnly": false,
-    "tf_latex": "\\begin{bmatrix} 0 & \\frac{-t}{z -1} \\\\ -t & \\frac{-t}{z -1} \\end{bmatrix}"
+    "tf_latex": "\\begin{bmatrix} 0 & \\frac{-t}{z -1} \\\\ -t & \\frac{-t}{z -1} \\end{bmatrix}",
+    "citations": []
+  },
+  {
+    "id": "proximal_point",
+    "name": "Proximal Point",
+    "aliases": [],
+    "citation": "",
+    "oracles": [
+      "prox_f"
+    ],
+    "oracleType": "one-oracle",
+    "equations": [
+      "x[k+1] = prox_f(x[k])"
+    ],
+    "parameters": [],
+    "transferFunction": "1/z",
+    "tfIsMatrix": false,
+    "equivalences": {
+      "oracle": [],
+      "shift": [],
+      "lft": []
+    },
+    "catalogOnly": false,
+    "tf_latex": "\\frac{1}{z}",
+    "citations": []
+  },
+  {
+    "id": "relaxed_proximal_point",
+    "name": "Relaxed Proximal Point",
+    "aliases": [],
+    "citation": "",
+    "oracles": [
+      "prox_f"
+    ],
+    "oracleType": "one-oracle",
+    "equations": [
+      "x[k+1] = (1 - alpha) * x[k] + alpha * prox_f(x[k])"
+    ],
+    "parameters": [
+      "alpha"
+    ],
+    "transferFunction": "alpha/(alpha + z - 1)",
+    "tfIsMatrix": false,
+    "equivalences": {
+      "oracle": [],
+      "shift": [],
+      "lft": []
+    },
+    "catalogOnly": false,
+    "tf_latex": "\\frac{\\alpha}{z + \\alpha - 1}",
+    "citations": []
+  },
+  {
+    "id": "douglas_rachford",
+    "name": "Douglas-Rachford Splitting",
+    "aliases": [],
+    "bibtex": "@article{lions1979splitting,\n  title={Splitting algorithms for the sum of two nonlinear operators},\n  author={Lions, Pierre-Louis and Mercier, Bertrand},\n  journal={SIAM Journal on Numerical Analysis},\n  volume={16},\n  number={6},\n  pages={964--979},\n  year={1979},\n  publisher={SIAM}\n}",
+    "notes": "Parameter alpha is the relaxation (alpha=1 is the standard form).",
+    "oracles": [
+      "prox_f",
+      "prox_g"
+    ],
+    "oracleType": "two-oracle",
+    "equations": [
+      "x1[k+1] = prox_f(x3[k])",
+      "x2[k+1] = prox_g(2 * x1[k+1] - x3[k])",
+      "x3[k+1] = x3[k] + alpha * (x2[k+1] - x1[k+1])"
+    ],
+    "parameters": [
+      "alpha"
+    ],
+    "transferFunction": "Matrix([[-alpha/(z-1), alpha/(z-1)], [(alpha+2*z-2)/(z-1), -alpha/(z-1)]])",
+    "tfIsMatrix": true,
+    "equivalences": {
+      "oracle": [],
+      "shift": [
+        "admm"
+      ],
+      "lft": []
+    },
+    "catalogOnly": false,
+    "tf_latex": "\\begin{bmatrix} \\frac{-\\alpha}{z -1} & \\frac{\\alpha}{z -1} \\\\ \\frac{2 z + \\alpha - 2}{z -1} & \\frac{-\\alpha}{z -1} \\end{bmatrix}",
+    "citations": [
+      {
+        "label": "Lions & Mercier 1979",
+        "doi": "https://doi.org/10.1137/0716071"
+      }
+    ]
+  },
+  {
+    "id": "admm",
+    "name": "ADMM",
+    "aliases": [
+      "Alternating Direction Method of Multipliers"
+    ],
+    "bibtex": "@article{boyd2011distributed,\n  title={Distributed optimization and statistical learning via the alternating direction method of multipliers},\n  author={Boyd, Stephen and Parikh, Neal and Chu, Eric and Peleato, Borja and Eckstein, Jonathan},\n  journal={Foundations and Trends in Machine Learning},\n  volume={3},\n  number={1},\n  pages={1--122},\n  year={2011},\n  publisher={Now Publishers}\n}",
+    "notes": "Parameter rho is the penalty parameter in the augmented Lagrangian.",
+    "oracles": [
+      "prox_g",
+      "prox_f"
+    ],
+    "oracleType": "two-oracle",
+    "equations": [
+      "x1[k+1] = prox_g(x2[k] - x3[k])",
+      "x2[k+1] = prox_f(x1[k+1] + x3[k])",
+      "x3[k+1] = x3[k] + rho * (x1[k+1] - x2[k+1])"
+    ],
+    "parameters": [
+      "rho"
+    ],
+    "transferFunction": "Matrix([[-rho/(z - 1), (rho*z + z - 1)/(z**2 - z)], [(rho + z - 1)/(z - 1), -rho/(z - 1)]])",
+    "tfIsMatrix": true,
+    "equivalences": {
+      "oracle": [],
+      "shift": [
+        "douglas_rachford"
+      ],
+      "lft": []
+    },
+    "catalogOnly": false,
+    "tf_latex": "\\begin{bmatrix} \\frac{-\\rho}{z -1} & \\frac{\\left(\\rho + 1\\right) z -1}{z \\left(z -1\\right)} \\\\ \\frac{z + \\rho - 1}{z -1} & \\frac{-\\rho}{z -1} \\end{bmatrix}",
+    "citations": [
+      {
+        "label": "Boyd et al. 2011",
+        "doi": "https://doi.org/10.1561/2200000016"
+      }
+    ]
+  },
+  {
+    "id": "peaceman_rachford",
+    "name": "Peaceman-Rachford Splitting",
+    "aliases": [],
+    "bibtex": "@article{peaceman1955numerical,\n  title={The numerical solution of parabolic and elliptic differential equations},\n  author={Peaceman, Donald W and Rachford, Jr, Henry H},\n  journal={Journal of the Society for Industrial and Applied Mathematics},\n  volume={3},\n  number={1},\n  pages={28--41},\n  year={1955},\n  publisher={SIAM}\n}",
+    "oracles": [
+      "prox_f",
+      "prox_g"
+    ],
+    "oracleType": "two-oracle",
+    "equations": [
+      "x1[k+1] = prox_f(x3[k])",
+      "x2[k+1] = prox_g(2 * x1[k+1] - x3[k])",
+      "x3[k+1] = 2 * x2[k+1] - x3[k]"
+    ],
+    "parameters": [],
+    "transferFunction": "Matrix([[0, 2/(z+1)], [2, -2/(z+1)]])",
+    "tfIsMatrix": true,
+    "equivalences": {
+      "oracle": [],
+      "shift": [],
+      "lft": []
+    },
+    "catalogOnly": false,
+    "tf_latex": "\\begin{bmatrix} 0 & \\frac{2}{z + 1} \\\\ 2 & \\frac{-2}{z + 1} \\end{bmatrix}",
+    "citations": [
+      {
+        "label": "Peaceman & Rachford 1955",
+        "doi": "https://doi.org/10.1137/0103003"
+      }
+    ]
+  },
+  {
+    "id": "chambolle_pock",
+    "name": "Chambolle-Pock",
+    "aliases": [
+      "Primal-Dual Algorithm"
+    ],
+    "bibtex": "@article{chambolle2011first,\n  title={A first-order primal-dual algorithm for convex problems with applications to imaging},\n  author={Chambolle, Antonin and Pock, Thomas},\n  journal={Journal of Mathematical Imaging and Vision},\n  volume={40},\n  pages={120--145},\n  year={2011},\n  publisher={Springer}\n}",
+    "notes": "Shown for the case where the linear operator is the identity (L = I). Parameters sigma and tau are the primal and dual step sizes; theta is the relaxation parameter.",
+    "oracles": [
+      "prox_f",
+      "prox_gstar"
+    ],
+    "oracleType": "two-oracle",
+    "equations": [
+      "x1[k+1] = prox_f(x1[k] - tau * x2[k])",
+      "x2[k+1] = prox_gstar(x2[k] + sigma * ((1 + theta) * x1[k+1] - theta * x1[k]))"
+    ],
+    "parameters": [
+      "sigma",
+      "tau",
+      "theta"
+    ],
+    "transferFunction": "Matrix([[1/z, -tau/z], [(sigma*theta*z + sigma*z - sigma*theta)/z, 1/z]])",
+    "tfIsMatrix": true,
+    "equivalences": {
+      "oracle": [],
+      "shift": [],
+      "lft": []
+    },
+    "catalogOnly": false,
+    "tf_latex": "\\begin{bmatrix} \\frac{1}{z} & \\frac{-\\tau}{z} \\\\ \\frac{\\sigma \\left(\\left(\\theta + 1\\right) z - \\theta\\right)}{z} & \\frac{1}{z} \\end{bmatrix}",
+    "citations": [
+      {
+        "label": "Chambolle & Pock 2011",
+        "doi": "https://doi.org/10.1007/s10851-010-0251-1"
+      }
+    ]
+  },
+  {
+    "id": "proximal_gradient",
+    "name": "Proximal Gradient",
+    "aliases": [],
+    "citation": "",
+    "oracles": [
+      "grad_f",
+      "prox_g"
+    ],
+    "oracleType": "two-oracle",
+    "equations": [
+      "y[k] = x[k] - t * grad_f(x[k])",
+      "x[k+1] = prox_g(y[k])"
+    ],
+    "parameters": [
+      "t"
+    ],
+    "transferFunction": "Matrix([[0, 1/z], [-t, 1/z]])",
+    "tfIsMatrix": true,
+    "equivalences": {
+      "oracle": [],
+      "shift": [],
+      "lft": []
+    },
+    "catalogOnly": false,
+    "tf_latex": "\\begin{bmatrix} 0 & \\frac{1}{z} \\\\ -t & \\frac{1}{z} \\end{bmatrix}",
+    "citations": []
+  },
+  {
+    "id": "conjugate_proximal_gradient",
+    "name": "Conjugate Proximal Gradient",
+    "aliases": [],
+    "citation": "",
+    "oracles": [
+      "grad_f",
+      "prox_gstar"
+    ],
+    "oracleType": "two-oracle",
+    "equations": [
+      "y[k] = x[k] - t * grad_f(x[k])",
+      "x[k+1] = y[k] - t * prox_gstar(y[k] / t)"
+    ],
+    "parameters": [
+      "t"
+    ],
+    "transferFunction": "Matrix([[-t/(z-1), -t/(z-1)], [-z/(z-1), -1/(z-1)]])",
+    "tfIsMatrix": true,
+    "equivalences": {
+      "oracle": [],
+      "shift": [],
+      "lft": [
+        {
+          "id": "proximal_gradient",
+          "relation": "moreau"
+        }
+      ]
+    },
+    "catalogOnly": false,
+    "tf_latex": "\\begin{bmatrix} \\frac{-t}{z -1} & \\frac{-t}{z -1} \\\\ \\frac{-z}{z -1} & \\frac{-1}{z -1} \\end{bmatrix}",
+    "citations": []
+  },
+  {
+    "id": "loris_verhoeven",
+    "name": "Loris-Verhoeven",
+    "aliases": [],
+    "bibtex": "@article{campoy2023remark,\n  title={A remark on the Condat-V\\~u and Loris-Verhoeven algorithms},\n  author={Campoy, Rub\\'en},\n  journal={Journal of Optimization Theory and Applications},\n  volume={198},\n  pages={871--880},\n  year={2023},\n  publisher={Springer}\n}\n\n@article{loris2011generalization,\n  title={On a generalization of the iterative soft-thresholding algorithm for the case of non-separable penalty},\n  author={Loris, Ignace and Verhoeven, Caroline},\n  journal={Inverse Problems},\n  volume={27},\n  number={12},\n  pages={125007},\n  year={2011},\n  publisher={IOP Publishing}\n}",
+    "oracles": [
+      "grad_h",
+      "prox_gstar"
+    ],
+    "oracleType": "two-oracle",
+    "equations": [
+      "x[k+1] = x[k] - tau * (z[k] + grad_h(x[k]))",
+      "z[k+1] = prox_gstar( (1 - sigma * tau) * z[k] + sigma * (x[k+1] - tau * grad_h(x[k])) )"
+    ],
+    "parameters": [
+      "tau",
+      "sigma"
+    ],
+    "transferFunction": "Matrix([[-tau/(z - 1), -tau/(z*(z - 1))], [(-2*z*sigma*tau + sigma*tau)/(z - 1), (-2*z*sigma*tau + z + sigma*tau - 1)/(z*(z - 1))]])",
+    "tfIsMatrix": true,
+    "equivalences": {
+      "oracle": [],
+      "shift": [],
+      "lft": []
+    },
+    "catalogOnly": false,
+    "tf_latex": "\\begin{bmatrix} \\frac{-\\tau}{z -1} & \\frac{-\\tau}{z \\left(z -1\\right)} \\\\ \\frac{-\\sigma \\tau \\left(2 z -1\\right)}{z -1} & \\frac{-2 \\sigma \\tau z + \\sigma \\tau + z -1}{z \\left(z -1\\right)} \\end{bmatrix}",
+    "citations": [
+      {
+        "label": "Campoy 2023",
+        "doi": "https://doi.org/10.1007/s10957-022-02125-9"
+      },
+      {
+        "label": "Loris & Verhoeven 2011",
+        "doi": "https://doi.org/10.1088/0266-5611/27/12/125007"
+      }
+    ]
+  },
+  {
+    "id": "davis_yin",
+    "name": "Davis-Yin Splitting",
+    "aliases": [
+      "Three-Operator Splitting"
+    ],
+    "bibtex": "@article{davis2017three,\n  title={A three-operator splitting scheme and its optimization applications},\n  author={Davis, Damek and Yin, Wotao},\n  journal={Set-Valued and Variational Analysis},\n  volume={25},\n  pages={829--858},\n  year={2017},\n  publisher={Springer}\n}",
+    "notes": "Minimizes f(x) + g(x) + h(x) where h is smooth (grad_h oracle) and f, g have proximal operators (prox_f, prox_g). Parameter gamma is the proximal step size; t is the relaxation parameter.",
+    "oracles": [
+      "prox_g",
+      "grad_h",
+      "prox_f"
+    ],
+    "oracleType": "three-oracle",
+    "equations": [
+      "xB[k+1] = prox_g(x[k])",
+      "v[k] = 2 * xB[k+1] - x[k] - gamma * grad_h(xB[k+1])",
+      "xA[k+1] = prox_f(v[k])",
+      "x[k+1] = x[k] + t * xA[k+1] - t * xB[k+1]"
+    ],
+    "parameters": [
+      "gamma",
+      "t"
+    ],
+    "transferFunction": "Matrix([[-t/(z - 1), 0, t/(z - 1)], [1, 0, 0], [(t + 2*z - 2)/(z - 1), -gamma, -t/(z - 1)]])",
+    "tfIsMatrix": true,
+    "equivalences": {
+      "oracle": [],
+      "shift": [],
+      "lft": []
+    },
+    "catalogOnly": false,
+    "tf_latex": "\\begin{bmatrix} \\frac{-t}{z -1} & 0 & \\frac{t}{z -1} \\\\ 1 & 0 & 0 \\\\ \\frac{2 z + t - 2}{z -1} & -\\gamma & \\frac{-t}{z -1} \\end{bmatrix}",
+    "citations": [
+      {
+        "label": "Davis & Yin 2017",
+        "doi": "https://doi.org/10.1007/s11228-017-0421-z"
+      }
+    ]
+  },
+  {
+    "id": "pd3o",
+    "name": "PD3O",
+    "aliases": [],
+    "bibtex": "@article{yan2018new,\n  title={A new primal--dual algorithm for minimizing the sum of three functions with a linear operator},\n  author={Yan, Ming},\n  journal={Journal of Scientific Computing},\n  volume={76},\n  pages={1698--1717},\n  year={2018},\n  publisher={Springer}\n}",
+    "notes": "Minimizes f(x) + g(Ax) + h(x) where f, g have proximal operators and h is smooth.",
+    "oracles": [
+      "prox_f",
+      "prox_gstar",
+      "grad_h"
+    ],
+    "oracleType": "three-oracle",
+    "equations": [
+      "x[k] = prox_f(z[k])",
+      "s[k+1] = prox_gstar( (1 - tau * sigma) * s[k] + sigma * (2 * x[k] - z[k] - tau * grad_h(x[k])) )",
+      "z[k+1] = x[k] - tau * grad_h(x[k]) - tau * s[k+1]"
+    ],
+    "parameters": [
+      "tau",
+      "sigma"
+    ],
+    "transferFunction": "Matrix([[1/z, -tau/z, -tau/z], [(2*z*sigma - sigma)/z, 1/z, (-z*sigma*tau + sigma*tau)/z], [1, 0, 0]])",
+    "tfIsMatrix": true,
+    "equivalences": {
+      "oracle": [],
+      "shift": [],
+      "lft": []
+    },
+    "catalogOnly": false,
+    "tf_latex": "\\begin{bmatrix} \\frac{1}{z} & \\frac{-\\tau}{z} & \\frac{-\\tau}{z} \\\\ \\frac{\\sigma \\left(2 z -1\\right)}{z} & \\frac{1}{z} & \\frac{-\\sigma \\tau \\left(z -1\\right)}{z} \\\\ 1 & 0 & 0 \\end{bmatrix}",
+    "citations": [
+      {
+        "label": "Yan 2018",
+        "doi": "https://doi.org/10.1007/s10915-018-0680-3"
+      }
+    ]
+  },
+  {
+    "id": "condat_vu",
+    "name": "Condat-Vu",
+    "aliases": [],
+    "bibtex": "@article{condat2013primal,\n  title={A primal--dual splitting method for convex optimization involving Lipschitzian, proximable and linear composite terms},\n  author={Condat, Laurent},\n  journal={Journal of Optimization Theory and Applications},\n  volume={158},\n  number={2},\n  pages={460--479},\n  year={2013},\n  publisher={Springer}\n}\n\n@article{vu2013splitting,\n  title={A splitting algorithm for dual monotone inclusions involving cocoercive operators},\n  author={V\\~{u}, B\\u{a}ng C\\^{o}ng},\n  journal={Advances in Computational Mathematics},\n  volume={38},\n  number={3},\n  pages={667--681},\n  year={2013},\n  publisher={Springer}\n}",
+    "oracles": [
+      "prox_f",
+      "grad_h",
+      "prox_gstar"
+    ],
+    "oracleType": "three-oracle",
+    "equations": [
+      "x[k+1] = prox_f( x[k] - tau * (z[k] + grad_h(x[k])) )",
+      "z[k+1] = prox_gstar( z[k] + sigma * (2 * x[k+1] - x[k]) )"
+    ],
+    "parameters": [
+      "tau",
+      "sigma"
+    ],
+    "transferFunction": "Matrix([[1/z, -tau, -tau/z], [1/z, 0, 0], [(2*z*sigma - sigma)/z, 0, 1/z]])",
+    "tfIsMatrix": true,
+    "equivalences": {
+      "oracle": [],
+      "shift": [],
+      "lft": []
+    },
+    "catalogOnly": false,
+    "tf_latex": "\\begin{bmatrix} \\frac{1}{z} & -\\tau & \\frac{-\\tau}{z} \\\\ \\frac{1}{z} & 0 & 0 \\\\ \\frac{\\sigma \\left(2 z -1\\right)}{z} & 0 & \\frac{1}{z} \\end{bmatrix}",
+    "citations": [
+      {
+        "label": "Condat 2013",
+        "doi": "https://doi.org/10.1007/s10957-012-0245-9"
+      },
+      {
+        "label": "Vu 2013",
+        "doi": "https://doi.org/10.1007/s10444-011-9254-8"
+      }
+    ]
+  },
+  {
+    "id": "dual_condat_vu",
+    "name": "Dual Condat-Vu",
+    "aliases": [],
+    "bibtex": "@article{condat2013primal,\n  title={A primal--dual splitting method for convex optimization involving Lipschitzian, proximable and linear composite terms},\n  author={Condat, Laurent},\n  journal={Journal of Optimization Theory and Applications},\n  volume={158},\n  number={2},\n  pages={460--479},\n  year={2013},\n  publisher={Springer}\n}",
+    "oracles": [
+      "prox_gstar",
+      "prox_f",
+      "grad_h"
+    ],
+    "oracleType": "three-oracle",
+    "equations": [
+      "z[k+1] = prox_gstar( z[k] + sigma * x[k] )",
+      "x[k+1] = prox_f( x[k] - tau * (2 * z[k+1] - z[k] + grad_h(x[k])) )"
+    ],
+    "parameters": [
+      "tau",
+      "sigma"
+    ],
+    "transferFunction": "Matrix([[1/z, sigma/z, 0], [(-2*z*tau + tau)/z, 1/z, -tau], [0, 1/z, 0]])",
+    "tfIsMatrix": true,
+    "equivalences": {
+      "oracle": [],
+      "shift": [],
+      "lft": []
+    },
+    "catalogOnly": false,
+    "tf_latex": "\\begin{bmatrix} \\frac{1}{z} & \\frac{\\sigma}{z} & 0 \\\\ \\frac{-\\tau \\left(2 z -1\\right)}{z} & \\frac{1}{z} & -\\tau \\\\ 0 & \\frac{1}{z} & 0 \\end{bmatrix}",
+    "citations": [
+      {
+        "label": "Condat 2013",
+        "doi": "https://doi.org/10.1007/s10957-012-0245-9"
+      }
+    ]
+  },
+  {
+    "id": "pddy",
+    "name": "Primal-Dual Davis-Yin",
+    "aliases": [
+      "PDDY"
+    ],
+    "bibtex": "@article{salim2022optimal,\n  title={An optimal algorithm for strongly convex minimization under affine constraints},\n  author={Salim, Adil and Condat, Laurent and Mishchenko, Konstantin and Richt{\\'a}rik, Peter},\n  journal={Journal of Optimization Theory and Applications},\n  volume={195},\n  pages={446--473},\n  year={2022},\n  publisher={Springer}\n}",
+    "oracles": [
+      "prox_gstar",
+      "prox_f",
+      "grad_h"
+    ],
+    "oracleType": "three-oracle",
+    "equations": [
+      "z[k+1] = prox_gstar( z[k] + sigma * x[k] )",
+      "x[k+1] = prox_f( x[k] - tau * (2 * z[k+1] - z[k]) - tau * grad_h(x[k] + tau * (z[k] - z[k+1])) )"
+    ],
+    "parameters": [
+      "tau",
+      "sigma"
+    ],
+    "transferFunction": "Matrix([[1/z, sigma/z, 0], [(-2*z*tau + tau)/z, 1/z, -tau], [(-z*tau + tau)/z, 1/z, 0]])",
+    "tfIsMatrix": true,
+    "equivalences": {
+      "oracle": [],
+      "shift": [],
+      "lft": []
+    },
+    "catalogOnly": false,
+    "tf_latex": "\\begin{bmatrix} \\frac{1}{z} & \\frac{\\sigma}{z} & 0 \\\\ \\frac{-\\tau \\left(2 z -1\\right)}{z} & \\frac{1}{z} & -\\tau \\\\ \\frac{-\\tau \\left(z -1\\right)}{z} & \\frac{1}{z} & 0 \\end{bmatrix}",
+    "citations": [
+      {
+        "label": "Salim et al. 2022",
+        "doi": "https://doi.org/10.1007/s10957-022-02061-8"
+      }
+    ]
   },
   {
     "id": "projected_reflected_gradient",
@@ -233,8 +743,6 @@
     "aliases": [
       "Reflected Gradient Method"
     ],
-    "citation": "Malitsky 2015",
-    "doi": "https://doi.org/10.1137/14097238X",
     "bibtex": "@article{malitsky2015projected,\n  title={Projected reflected gradient methods for monotone variational inequalities},\n  author={Malitsky, Yura},\n  journal={SIAM Journal on Optimization},\n  volume={25},\n  number={1},\n  pages={502--520},\n  year={2015},\n  publisher={SIAM}\n}",
     "oracles": [
       "grad_f",
@@ -255,14 +763,18 @@
       "lft": []
     },
     "catalogOnly": false,
-    "tf_latex": "\\begin{bmatrix} 0 & \\frac{2 z -1}{z^{2}} \\\\ -\\eta & \\frac{1}{z} \\end{bmatrix}"
+    "tf_latex": "\\begin{bmatrix} 0 & \\frac{2 z -1}{z^{2}} \\\\ -\\eta & \\frac{1}{z} \\end{bmatrix}",
+    "citations": [
+      {
+        "label": "Malitsky 2015",
+        "doi": "https://doi.org/10.1137/14097238X"
+      }
+    ]
   },
   {
     "id": "modified_arrow_hurwicz",
     "name": "Modified Arrow-Hurwicz",
     "aliases": [],
-    "citation": "Popov 1980",
-    "doi": "https://doi.org/10.1007/BF01141092",
     "bibtex": "@article{popov1980modification,\n  title={A modification of the Arrow-Hurwicz method for search of saddle points},\n  author={Popov, L. D.},\n  journal={Mathematical Notes of the Academy of Sciences of the USSR},\n  volume={28},\n  number={5},\n  pages={845--848},\n  year={1980},\n  publisher={Springer}\n}",
     "oracles": [
       "grad_f",
@@ -285,14 +797,18 @@
       "lft": []
     },
     "catalogOnly": false,
-    "tf_latex": "\\begin{bmatrix} 0 & 0 & \\frac{1}{z} \\\\ -\\tau & \\frac{1}{z} & 0 \\\\ -\\tau & 1 & 0 \\end{bmatrix}"
+    "tf_latex": "\\begin{bmatrix} 0 & 0 & \\frac{1}{z} \\\\ -\\tau & \\frac{1}{z} & 0 \\\\ -\\tau & 1 & 0 \\end{bmatrix}",
+    "citations": [
+      {
+        "label": "Popov 1980",
+        "doi": "https://doi.org/10.1007/BF01141092"
+      }
+    ]
   },
   {
     "id": "extrapolation_from_past",
     "name": "Extrapolation from the Past",
     "aliases": [],
-    "citation": "Gidel et al. 2019",
-    "doi": "https://openreview.net/forum?id=r1laEnA5Ym",
     "bibtex": "@inproceedings{gidel2019variational,\n  title={A Variational Inequality Perspective on Generative Adversarial Networks},\n  author={Gauthier Gidel and Hugo Berard and Ga{\\\"e}tan Vignoud and Pascal Vincent and Simon Lacoste-Julien},\n  booktitle={International Conference on Learning Representations},\n  year={2019},\n  url={https://openreview.net/forum?id=r1laEnA5Ym}\n}",
     "oracles": [
       "grad_f",
@@ -315,7 +831,13 @@
       "lft": []
     },
     "catalogOnly": false,
-    "tf_latex": "\\begin{bmatrix} 0 & 1 & 0 \\\\ \\frac{-\\eta}{z} & 0 & \\frac{1}{z} \\\\ -\\eta & 0 & \\frac{1}{z} \\end{bmatrix}"
+    "tf_latex": "\\begin{bmatrix} 0 & 1 & 0 \\\\ \\frac{-\\eta}{z} & 0 & \\frac{1}{z} \\\\ -\\eta & 0 & \\frac{1}{z} \\end{bmatrix}",
+    "citations": [
+      {
+        "label": "Gidel et al. 2019",
+        "doi": "https://openreview.net/forum?id=r1laEnA5Ym"
+      }
+    ]
   },
   {
     "id": "projected_gradient",
@@ -341,13 +863,13 @@
       "lft": []
     },
     "catalogOnly": false,
-    "tf_latex": "\\begin{bmatrix} \\frac{1}{z} & -\\alpha \\\\ \\frac{1}{z} & 0 \\end{bmatrix}"
+    "tf_latex": "\\begin{bmatrix} \\frac{1}{z} & -\\alpha \\\\ \\frac{1}{z} & 0 \\end{bmatrix}",
+    "citations": []
   },
   {
     "id": "extragradient_korpelevich",
     "name": "Extragradient (Korpelevich)",
     "aliases": [],
-    "citation": "Korpelevich 1976",
     "bibtex": "@article{korpelevich1976extragradient,\n  title={The extragradient method for finding saddle points and other problems},\n  author={Korpelevich, Galina M},\n  journal={Matecon},\n  volume={12},\n  pages={747--756},\n  year={1976}\n}",
     "oracles": [
       "P_C",
@@ -371,7 +893,13 @@
       "lft": []
     },
     "catalogOnly": false,
-    "tf_latex": "\\begin{bmatrix} 0 & -\\tau & \\frac{1}{z} & 0 \\\\ 0 & 0 & \\frac{1}{z} & 0 \\\\ 0 & 0 & \\frac{1}{z} & -\\tau \\\\ 1 & 0 & 0 & 0 \\end{bmatrix}"
+    "tf_latex": "\\begin{bmatrix} 0 & -\\tau & \\frac{1}{z} & 0 \\\\ 0 & 0 & \\frac{1}{z} & 0 \\\\ 0 & 0 & \\frac{1}{z} & -\\tau \\\\ 1 & 0 & 0 & 0 \\end{bmatrix}",
+    "citations": [
+      {
+        "label": "Korpelevich 1976",
+        "doi": ""
+      }
+    ]
   },
   {
     "id": "extragradient_tseng",
@@ -379,8 +907,6 @@
     "aliases": [
       "Forward-Backward-Forward"
     ],
-    "citation": "Tseng 2000",
-    "doi": "https://doi.org/10.1137/S0363012998338806",
     "bibtex": "@article{tseng2000modified,\n  title={A modified forward-backward splitting method for maximal monotone mappings},\n  author={Tseng, Paul},\n  journal={SIAM Journal on Control and Optimization},\n  volume={38},\n  number={2},\n  pages={431--446},\n  year={2000},\n  publisher={SIAM}\n}",
     "oracles": [
       "P_C",
@@ -403,287 +929,18 @@
       "lft": []
     },
     "catalogOnly": false,
-    "tf_latex": "\\begin{bmatrix} \\frac{1}{z} & \\frac{-\\tau \\left(z -1\\right)}{z} & \\frac{-\\tau}{z} \\\\ \\frac{1}{z} & \\frac{\\tau}{z} & \\frac{-\\tau}{z} \\\\ 1 & 0 & 0 \\end{bmatrix}"
-  },
-  {
-    "id": "proximal_point",
-    "name": "Proximal Point",
-    "aliases": [],
-    "citation": "",
-    "oracles": [
-      "prox_f"
-    ],
-    "oracleType": "proximal",
-    "equations": [
-      "x[k+1] = prox_f(x[k])"
-    ],
-    "parameters": [],
-    "transferFunction": "1/z",
-    "tfIsMatrix": false,
-    "equivalences": {
-      "oracle": [],
-      "shift": [],
-      "lft": []
-    },
-    "catalogOnly": false,
-    "tf_latex": "\\frac{1}{z}"
-  },
-  {
-    "id": "relaxed_proximal_point",
-    "name": "Relaxed Proximal Point",
-    "aliases": [],
-    "citation": "",
-    "oracles": [
-      "prox_f"
-    ],
-    "oracleType": "proximal",
-    "equations": [
-      "x[k+1] = (1 - alpha) * x[k] + alpha * prox_f(x[k])"
-    ],
-    "parameters": [
-      "alpha"
-    ],
-    "transferFunction": "alpha/(alpha + z - 1)",
-    "tfIsMatrix": false,
-    "equivalences": {
-      "oracle": [],
-      "shift": [],
-      "lft": []
-    },
-    "catalogOnly": false,
-    "tf_latex": "\\frac{\\alpha}{z + \\alpha - 1}"
-  },
-  {
-    "id": "douglas_rachford",
-    "name": "Douglas-Rachford Splitting",
-    "aliases": [],
-    "citation": "Lions & Mercier 1979",
-    "doi": "https://doi.org/10.1137/0716071",
-    "bibtex": "@article{lions1979splitting,\n  title={Splitting algorithms for the sum of two nonlinear operators},\n  author={Lions, Pierre-Louis and Mercier, Bertrand},\n  journal={SIAM Journal on Numerical Analysis},\n  volume={16},\n  number={6},\n  pages={964--979},\n  year={1979},\n  publisher={SIAM}\n}",
-    "notes": "Parameter alpha is the relaxation (alpha=1 is the standard form).",
-    "oracles": [
-      "prox_f",
-      "prox_g"
-    ],
-    "oracleType": "proximal",
-    "equations": [
-      "x1[k+1] = prox_f(x3[k])",
-      "x2[k+1] = prox_g(2 * x1[k+1] - x3[k])",
-      "x3[k+1] = x3[k] + alpha * (x2[k+1] - x1[k+1])"
-    ],
-    "parameters": [
-      "alpha"
-    ],
-    "transferFunction": "Matrix([[-alpha/(z-1), alpha/(z-1)], [(alpha+2*z-2)/(z-1), -alpha/(z-1)]])",
-    "tfIsMatrix": true,
-    "equivalences": {
-      "oracle": [],
-      "shift": [
-        "admm"
-      ],
-      "lft": []
-    },
-    "catalogOnly": false,
-    "tf_latex": "\\begin{bmatrix} \\frac{-\\alpha}{z -1} & \\frac{\\alpha}{z -1} \\\\ \\frac{2 z + \\alpha - 2}{z -1} & \\frac{-\\alpha}{z -1} \\end{bmatrix}"
-  },
-  {
-    "id": "admm",
-    "name": "ADMM",
-    "aliases": [
-      "Alternating Direction Method of Multipliers"
-    ],
-    "citation": "Boyd et al. 2011",
-    "doi": "https://doi.org/10.1561/2200000016",
-    "bibtex": "@article{boyd2011distributed,\n  title={Distributed optimization and statistical learning via the alternating direction method of multipliers},\n  author={Boyd, Stephen and Parikh, Neal and Chu, Eric and Peleato, Borja and Eckstein, Jonathan},\n  journal={Foundations and Trends in Machine Learning},\n  volume={3},\n  number={1},\n  pages={1--122},\n  year={2011},\n  publisher={Now Publishers}\n}",
-    "notes": "Parameter rho is the penalty parameter in the augmented Lagrangian.",
-    "oracles": [
-      "prox_g",
-      "prox_f"
-    ],
-    "oracleType": "proximal",
-    "equations": [
-      "x1[k+1] = prox_g(x2[k] - x3[k])",
-      "x2[k+1] = prox_f(x1[k+1] + x3[k])",
-      "x3[k+1] = x3[k] + rho * (x1[k+1] - x2[k+1])"
-    ],
-    "parameters": [
-      "rho"
-    ],
-    "transferFunction": "Matrix([[-rho/(z - 1), (rho*z + z - 1)/(z**2 - z)], [(rho + z - 1)/(z - 1), -rho/(z - 1)]])",
-    "tfIsMatrix": true,
-    "equivalences": {
-      "oracle": [],
-      "shift": [
-        "douglas_rachford"
-      ],
-      "lft": []
-    },
-    "catalogOnly": false,
-    "tf_latex": "\\begin{bmatrix} \\frac{-\\rho}{z -1} & \\frac{\\left(\\rho + 1\\right) z -1}{z \\left(z -1\\right)} \\\\ \\frac{z + \\rho - 1}{z -1} & \\frac{-\\rho}{z -1} \\end{bmatrix}"
-  },
-  {
-    "id": "peaceman_rachford",
-    "name": "Peaceman-Rachford Splitting",
-    "aliases": [],
-    "citation": "Peaceman & Rachford 1955",
-    "doi": "https://doi.org/10.1137/0103003",
-    "bibtex": "@article{peaceman1955numerical,\n  title={The numerical solution of parabolic and elliptic differential equations},\n  author={Peaceman, Donald W and Rachford, Jr, Henry H},\n  journal={Journal of the Society for Industrial and Applied Mathematics},\n  volume={3},\n  number={1},\n  pages={28--41},\n  year={1955},\n  publisher={SIAM}\n}",
-    "oracles": [
-      "prox_f",
-      "prox_g"
-    ],
-    "oracleType": "proximal",
-    "equations": [
-      "x1[k+1] = prox_f(x3[k])",
-      "x2[k+1] = prox_g(2 * x1[k+1] - x3[k])",
-      "x3[k+1] = 2 * x2[k+1] - x3[k]"
-    ],
-    "parameters": [],
-    "transferFunction": "Matrix([[0, 2/(z+1)], [2, -2/(z+1)]])",
-    "tfIsMatrix": true,
-    "equivalences": {
-      "oracle": [],
-      "shift": [],
-      "lft": []
-    },
-    "catalogOnly": false,
-    "tf_latex": "\\begin{bmatrix} 0 & \\frac{2}{z + 1} \\\\ 2 & \\frac{-2}{z + 1} \\end{bmatrix}"
-  },
-  {
-    "id": "chambolle_pock",
-    "name": "Chambolle-Pock",
-    "aliases": [
-      "Primal-Dual Algorithm"
-    ],
-    "citation": "Chambolle & Pock 2011",
-    "doi": "https://doi.org/10.1007/s10851-010-0251-1",
-    "bibtex": "@article{chambolle2011first,\n  title={A first-order primal-dual algorithm for convex problems with applications to imaging},\n  author={Chambolle, Antonin and Pock, Thomas},\n  journal={Journal of Mathematical Imaging and Vision},\n  volume={40},\n  pages={120--145},\n  year={2011},\n  publisher={Springer}\n}",
-    "notes": "Shown for the case where the linear operator is the identity (L = I). Parameters sigma and tau are the primal and dual step sizes; theta is the relaxation parameter.",
-    "oracles": [
-      "prox_f",
-      "prox_gstar"
-    ],
-    "oracleType": "proximal",
-    "equations": [
-      "x1[k+1] = prox_f(x1[k] - tau * x2[k])",
-      "x2[k+1] = prox_gstar(x2[k] + sigma * ((1 + theta) * x1[k+1] - theta * x1[k]))"
-    ],
-    "parameters": [
-      "sigma",
-      "tau",
-      "theta"
-    ],
-    "transferFunction": "Matrix([[1/z, -tau/z], [(sigma*theta*z + sigma*z - sigma*theta)/z, 1/z]])",
-    "tfIsMatrix": true,
-    "equivalences": {
-      "oracle": [],
-      "shift": [],
-      "lft": []
-    },
-    "catalogOnly": false,
-    "tf_latex": "\\begin{bmatrix} \\frac{1}{z} & \\frac{-\\tau}{z} \\\\ \\frac{\\sigma \\left(\\left(\\theta + 1\\right) z - \\theta\\right)}{z} & \\frac{1}{z} \\end{bmatrix}"
-  },
-  {
-    "id": "proximal_gradient",
-    "name": "Proximal Gradient",
-    "aliases": [],
-    "citation": "",
-    "oracles": [
-      "grad_f",
-      "prox_g"
-    ],
-    "oracleType": "mixed",
-    "equations": [
-      "y[k] = x[k] - t * grad_f(x[k])",
-      "x[k+1] = prox_g(y[k])"
-    ],
-    "parameters": [
-      "t"
-    ],
-    "transferFunction": "Matrix([[0, 1/z], [-t, 1/z]])",
-    "tfIsMatrix": true,
-    "equivalences": {
-      "oracle": [],
-      "shift": [],
-      "lft": []
-    },
-    "catalogOnly": false,
-    "tf_latex": "\\begin{bmatrix} 0 & \\frac{1}{z} \\\\ -t & \\frac{1}{z} \\end{bmatrix}"
-  },
-  {
-    "id": "conjugate_proximal_gradient",
-    "name": "Conjugate Proximal Gradient",
-    "aliases": [],
-    "citation": "",
-    "oracles": [
-      "grad_f",
-      "prox_gstar"
-    ],
-    "oracleType": "mixed",
-    "equations": [
-      "y[k] = x[k] - t * grad_f(x[k])",
-      "x[k+1] = y[k] - t * prox_gstar(y[k] / t)"
-    ],
-    "parameters": [
-      "t"
-    ],
-    "transferFunction": "Matrix([[-t/(z-1), -t/(z-1)], [-z/(z-1), -1/(z-1)]])",
-    "tfIsMatrix": true,
-    "equivalences": {
-      "oracle": [],
-      "shift": [],
-      "lft": [
-        {
-          "id": "proximal_gradient",
-          "relation": "moreau"
-        }
-      ]
-    },
-    "catalogOnly": false,
-    "tf_latex": "\\begin{bmatrix} \\frac{-t}{z -1} & \\frac{-t}{z -1} \\\\ \\frac{-z}{z -1} & \\frac{-1}{z -1} \\end{bmatrix}"
-  },
-  {
-    "id": "davis_yin",
-    "name": "Davis-Yin Splitting",
-    "aliases": [
-      "Three-Operator Splitting"
-    ],
-    "citation": "Davis & Yin 2017",
-    "doi": "https://doi.org/10.1007/s11228-017-0421-z",
-    "bibtex": "@article{davis2017three,\n  title={A three-operator splitting scheme and its optimization applications},\n  author={Davis, Damek and Yin, Wotao},\n  journal={Set-Valued and Variational Analysis},\n  volume={25},\n  pages={829--858},\n  year={2017},\n  publisher={Springer}\n}",
-    "notes": "Minimizes f(x) + g(x) + h(x) where h is smooth (grad_f oracle) and f, g have proximal operators (prox_f, prox_g). Parameter gamma is the proximal step size; t is the relaxation parameter.",
-    "oracles": [
-      "prox_g",
-      "grad_f",
-      "prox_f"
-    ],
-    "oracleType": "mixed",
-    "equations": [
-      "xB[k+1] = prox_g(x[k])",
-      "v[k] = 2 * xB[k+1] - x[k] - gamma * grad_f(xB[k+1])",
-      "xA[k+1] = prox_f(v[k])",
-      "x[k+1] = x[k] + t * xA[k+1] - t * xB[k+1]"
-    ],
-    "parameters": [
-      "gamma",
-      "t"
-    ],
-    "transferFunction": "Matrix([[-t/(z - 1), 0, t/(z - 1)], [1, 0, 0], [(t + 2*z - 2)/(z - 1), -gamma, -t/(z - 1)]])",
-    "tfIsMatrix": true,
-    "equivalences": {
-      "oracle": [],
-      "shift": [],
-      "lft": []
-    },
-    "catalogOnly": false,
-    "tf_latex": "\\begin{bmatrix} \\frac{-t}{z -1} & 0 & \\frac{t}{z -1} \\\\ 1 & 0 & 0 \\\\ \\frac{2 z + t - 2}{z -1} & -\\gamma & \\frac{-t}{z -1} \\end{bmatrix}"
+    "tf_latex": "\\begin{bmatrix} \\frac{1}{z} & \\frac{-\\tau \\left(z -1\\right)}{z} & \\frac{-\\tau}{z} \\\\ \\frac{1}{z} & \\frac{\\tau}{z} & \\frac{-\\tau}{z} \\\\ 1 & 0 & 0 \\end{bmatrix}",
+    "citations": [
+      {
+        "label": "Tseng 2000",
+        "doi": "https://doi.org/10.1137/S0363012998338806"
+      }
+    ]
   },
   {
     "id": "average_consensus",
     "name": "Standard Average Consensus",
     "aliases": [],
-    "citation": "Olfati-Saber & Murray 2004",
-    "doi": "https://doi.org/10.1109/TAC.2004.834113",
     "bibtex": "@article{OlfatiSaber2004,\n  author={Reza Olfati-Saber and Richard M. Murray},\n  title={Consensus Problems in Networks of Agents with Switching Topology and Time-Delays},\n  journal={IEEE Transactions on Automatic Control},\n  year={2004},\n  volume={49},\n  number={9},\n  pages={1520--1533},\n  doi={10.1109/TAC.2004.834113}\n}",
     "oracles": [],
     "oracleType": "consensus",
@@ -702,7 +959,13 @@
       "lft": []
     },
     "catalogOnly": false,
-    "tf_latex": ""
+    "tf_latex": "",
+    "citations": [
+      {
+        "label": "Olfati-Saber & Murray 2004",
+        "doi": "https://doi.org/10.1109/TAC.2004.834113"
+      }
+    ]
   },
   {
     "id": "heavy_ball_consensus",
@@ -710,8 +973,6 @@
     "aliases": [
       "Momentum Consensus"
     ],
-    "citation": "Oreshkin et al. 2010",
-    "doi": "https://doi.org/10.1109/TSP.2010.2043127",
     "bibtex": "@article{Oreshkin2010,\n  author={Boris N. Oreshkin and Mark J. Coates and Michael G. Rabbat},\n  title={Optimization and Analysis of Distributed Averaging With Short Node Memory},\n  journal={IEEE Transactions on Signal Processing},\n  year={2010},\n  volume={58},\n  number={5},\n  pages={2850--2865},\n  doi={10.1109/TSP.2010.2043127}\n}",
     "oracles": [],
     "oracleType": "consensus",
@@ -732,7 +993,13 @@
       "lft": []
     },
     "catalogOnly": false,
-    "tf_latex": ""
+    "tf_latex": "",
+    "citations": [
+      {
+        "label": "Oreshkin et al. 2010",
+        "doi": "https://doi.org/10.1109/TSP.2010.2043127"
+      }
+    ]
   },
   {
     "id": "distributed_gradient_descent",
@@ -741,8 +1008,6 @@
       "DGD",
       "Distributed Subgradient Method"
     ],
-    "citation": "Nedić & Ozdaglar 2009",
-    "doi": "https://doi.org/10.1109/TAC.2008.2009515",
     "bibtex": "@article{nedic2009distributed,\n  title={Distributed subgradient methods for multi-agent optimization},\n  author={Nedi{\\'c}, Angelia and Ozdaglar, Asuman},\n  journal={IEEE Transactions on Automatic Control},\n  volume={54},\n  number={1},\n  pages={48--61},\n  year={2009},\n  publisher={IEEE}\n}",
     "notes": "Fundamental distributed optimization algorithm. Does not achieve exact convergence due to the consensus-optimization trade-off.",
     "oracles": [
@@ -764,14 +1029,18 @@
       "lft": []
     },
     "catalogOnly": false,
-    "tf_latex": "\\frac{-\\alpha}{z + \\lambda - 1}"
+    "tf_latex": "\\frac{-\\alpha}{z + \\lambda - 1}",
+    "citations": [
+      {
+        "label": "Nedić & Ozdaglar 2009",
+        "doi": "https://doi.org/10.1109/TAC.2008.2009515"
+      }
+    ]
   },
   {
     "id": "nids",
     "name": "NIDS",
     "aliases": [],
-    "citation": "Li et al. 2019",
-    "doi": "https://doi.org/10.1109/TSP.2019.2926022",
     "bibtex": "@article{li2019decentralized,\n  title={A decentralized proximal-gradient method with network independent step-sizes and separated convergence rates},\n  author={Li, Zhi and Shi, Wei and Yan, Ming},\n  journal={IEEE Transactions on Signal Processing},\n  volume={67},\n  number={17},\n  pages={4494--4506},\n  year={2019},\n  publisher={IEEE}\n}",
     "notes": "Decentralized algorithm. The transfer function characterizes behavior per spectral mode of the graph Laplacian L (eigenvalue λ).",
     "oracles": [
@@ -795,14 +1064,18 @@
       "lft": []
     },
     "catalogOnly": false,
-    "tf_latex": "\\frac{\\alpha \\left(\\lambda - 1\\right) \\left(z -1\\right)}{z^{2} + 2 \\left(\\lambda - 1\\right) z -\\left(\\lambda - 1\\right)}"
+    "tf_latex": "\\frac{\\alpha \\left(\\lambda - 1\\right) \\left(z -1\\right)}{z^{2} + 2 \\left(\\lambda - 1\\right) z -\\left(\\lambda - 1\\right)}",
+    "citations": [
+      {
+        "label": "Li et al. 2019",
+        "doi": "https://doi.org/10.1109/TSP.2019.2926022"
+      }
+    ]
   },
   {
     "id": "exact_diffusion",
     "name": "Exact Diffusion",
     "aliases": [],
-    "citation": "Yuan et al. 2018",
-    "doi": "https://doi.org/10.1109/TSP.2018.2875898",
     "bibtex": "@article{yuan2018exact,\n  title={Exact diffusion for distributed optimization and learning---{P}art {I}: Algorithm development},\n  author={Yuan, Kun and Ying, Bicheng and Zhao, Xiaochuan and Sayed, Ali H},\n  journal={IEEE Transactions on Signal Processing},\n  volume={67},\n  number={3},\n  pages={708--723},\n  year={2018},\n  publisher={IEEE}\n}",
     "notes": "Decentralized algorithm using adapt-correct-combine steps. The transfer function characterizes behavior per spectral mode of the graph Laplacian L (eigenvalue λ). Oracle-equivalent to NIDS.",
     "oracles": [
@@ -828,7 +1101,13 @@
       "lft": []
     },
     "catalogOnly": false,
-    "tf_latex": "\\frac{\\alpha \\left(\\lambda - 1\\right) \\left(z -1\\right)}{z^{2} + 2 \\left(\\lambda - 1\\right) z -\\left(\\lambda - 1\\right)}"
+    "tf_latex": "\\frac{\\alpha \\left(\\lambda - 1\\right) \\left(z -1\\right)}{z^{2} + 2 \\left(\\lambda - 1\\right) z -\\left(\\lambda - 1\\right)}",
+    "citations": [
+      {
+        "label": "Yuan et al. 2018",
+        "doi": "https://doi.org/10.1109/TSP.2018.2875898"
+      }
+    ]
   },
   {
     "id": "extra_distributed",
@@ -836,8 +1115,6 @@
     "aliases": [
       "Exact First-Order Algorithm"
     ],
-    "citation": "Shi et al. 2015",
-    "doi": "https://doi.org/10.1137/14096668X",
     "bibtex": "@article{shi2015extra,\n  title={{EXTRA}: An exact first-order algorithm for decentralized consensus optimization},\n  author={Shi, Wei and Ling, Qing and Wu, Gang and Yin, Wotao},\n  journal={SIAM Journal on Optimization},\n  volume={25},\n  number={2},\n  pages={944--966},\n  year={2015},\n  publisher={SIAM}\n}",
     "notes": "Decentralized algorithm using two gossip matrices W and W̃ = (I+W)/2. Achieves exact convergence.",
     "oracles": [
@@ -859,7 +1136,13 @@
       "lft": []
     },
     "catalogOnly": false,
-    "tf_latex": "\\frac{-2 \\alpha \\left(z -1\\right)}{2 z^{2} + 2 \\left(\\lambda - 2\\right) z -\\left(\\lambda - 2\\right)}"
+    "tf_latex": "\\frac{-2 \\alpha \\left(z -1\\right)}{2 z^{2} + 2 \\left(\\lambda - 2\\right) z -\\left(\\lambda - 2\\right)}",
+    "citations": [
+      {
+        "label": "Shi et al. 2015",
+        "doi": "https://doi.org/10.1137/14096668X"
+      }
+    ]
   },
   {
     "id": "diging",
@@ -867,8 +1150,6 @@
     "aliases": [
       "Distributed Inexact Gradient"
     ],
-    "citation": "Nedić et al. 2017",
-    "doi": "https://doi.org/10.1137/16M1084316",
     "bibtex": "@article{nedic2017achieving,\n  title={Achieving geometric convergence for distributed optimization over time-varying graphs},\n  author={Nedi{\\'c}, Angelia and Olshevsky, Alex and Shi, Wei},\n  journal={SIAM Journal on Optimization},\n  volume={27},\n  number={4},\n  pages={2597--2633},\n  year={2017},\n  publisher={SIAM}\n}",
     "notes": "Gradient tracking algorithm for decentralized optimization. Uses W̃ = W.",
     "oracles": [
@@ -891,7 +1172,13 @@
       "lft": []
     },
     "catalogOnly": false,
-    "tf_latex": "\\frac{-\\alpha \\left(z -1\\right)}{\\left(z + \\lambda - 1\\right)^{2}}"
+    "tf_latex": "\\frac{-\\alpha \\left(z -1\\right)}{\\left(z + \\lambda - 1\\right)^{2}}",
+    "citations": [
+      {
+        "label": "Nedić et al. 2017",
+        "doi": "https://doi.org/10.1137/16M1084316"
+      }
+    ]
   },
   {
     "id": "augdgm",
@@ -899,8 +1186,6 @@
     "aliases": [
       "Aug-DGM"
     ],
-    "citation": "Xu et al. 2015",
-    "doi": "https://doi.org/10.1109/CDC.2015.7402509",
     "bibtex": "@inproceedings{xu2015augmented,\n  title={Augmented distributed gradient methods for multi-agent optimization under uncoordinated constant stepsizes},\n  author={Xu, Jinming and Zhu, Shanying and Soh, Yeng Chai and Xie, Lihua},\n  booktitle={54th IEEE Conference on Decision and Control (CDC)},\n  pages={2055--2060},\n  year={2015},\n  organization={IEEE}\n}",
     "notes": "Gradient tracking with the mixing matrix applied jointly to the state and gradient step.",
     "oracles": [
@@ -923,14 +1208,18 @@
       "lft": []
     },
     "catalogOnly": false,
-    "tf_latex": "\\frac{\\alpha \\left(\\lambda - 1\\right) \\left(z -1\\right)}{\\left(z + \\lambda - 1\\right)^{2}}"
+    "tf_latex": "\\frac{\\alpha \\left(\\lambda - 1\\right) \\left(z -1\\right)}{\\left(z + \\lambda - 1\\right)^{2}}",
+    "citations": [
+      {
+        "label": "Xu et al. 2015",
+        "doi": "https://doi.org/10.1109/CDC.2015.7402509"
+      }
+    ]
   },
   {
     "id": "svl",
     "name": "SVL",
     "aliases": [],
-    "citation": "Sundararajan et al. 2020",
-    "doi": "https://doi.org/10.1109/TCNS.2020.2988009",
     "bibtex": "@article{sundararajan2020analysis,\n  title={Analysis and design of first-order distributed optimization algorithms over time-varying graphs},\n  author={Sundararajan, Akhil and Van Scoy, Bryan and Lessard, Laurent},\n  journal={IEEE Transactions on Control of Network Systems},\n  volume={7},\n  number={4},\n  pages={1597--1608},\n  year={2020},\n  publisher={IEEE}\n}",
     "notes": "General distributed algorithm template with four tunable parameters. Achieves optimal worst-case convergence rate for time-varying graphs.",
     "oracles": [
@@ -958,7 +1247,13 @@
       "lft": []
     },
     "catalogOnly": false,
-    "tf_latex": "\\frac{\\alpha \\left(\\delta \\lambda - 1\\right) \\left(z -1\\right)}{z^{2} + \\left(\\gamma \\lambda - 2\\right) z + \\beta \\lambda - \\gamma \\lambda + 1}"
+    "tf_latex": "\\frac{\\alpha \\left(\\delta \\lambda - 1\\right) \\left(z -1\\right)}{z^{2} + \\left(\\gamma \\lambda - 2\\right) z + \\beta \\lambda - \\gamma \\lambda + 1}",
+    "citations": [
+      {
+        "label": "Sundararajan et al. 2020",
+        "doi": "https://doi.org/10.1109/TCNS.2020.2988009"
+      }
+    ]
   },
   {
     "id": "unified_extra",
@@ -966,8 +1261,6 @@
     "aliases": [
       "uEXTRA"
     ],
-    "citation": "Jakovetić et al. 2019",
-    "doi": "https://doi.org/10.1109/TSIPN.2018.2846183",
     "bibtex": "@article{jakoveticunification2019,\n  title={Unification and generalization of diffusion-type algorithms for distributed optimization},\n  author={Jakoveti{\\'c}, Du{\\v{s}}an and Bajovi{\\'c}, Dragana and Xavier, Jo{\\~a}o and Moura, Jos{\\'e} M. F.},\n  journal={IEEE Transactions on Signal and Information Processing over Networks},\n  volume={5},\n  number={1},\n  pages={46--58},\n  year={2019},\n  publisher={IEEE}\n}",
     "notes": "Generalization of EXTRA with overrelaxation parameter mu and function parameter l. Reduces to EXTRA when mu=1/2, l=1/alpha.",
     "oracles": [
@@ -992,7 +1285,13 @@
       "lft": []
     },
     "catalogOnly": false,
-    "tf_latex": "\\frac{-\\alpha \\left(z -1\\right)}{z^{2} + 2 \\left(\\lambda \\mu - 1\\right) z - \\left(\\lambda \\mu - 1\\right) \\left(\\alpha l \\lambda \\mu - \\lambda \\mu + 1\\right)}"
+    "tf_latex": "\\frac{-\\alpha \\left(z -1\\right)}{z^{2} + 2 \\left(\\lambda \\mu - 1\\right) z - \\left(\\lambda \\mu - 1\\right) \\left(\\alpha l \\lambda \\mu - \\lambda \\mu + 1\\right)}",
+    "citations": [
+      {
+        "label": "Jakovetić et al. 2019",
+        "doi": "https://doi.org/10.1109/TSIPN.2018.2846183"
+      }
+    ]
   },
   {
     "id": "unified_diging",
@@ -1000,8 +1299,6 @@
     "aliases": [
       "uDIG"
     ],
-    "citation": "Jakovetić et al. 2019",
-    "doi": "https://doi.org/10.1109/TSIPN.2018.2846183",
     "bibtex": "@article{jakoveticunification2019,\n  title={Unification and generalization of diffusion-type algorithms for distributed optimization},\n  author={Jakoveti{\\'c}, Du{\\v{s}}an and Bajovi{\\'c}, Dragana and Xavier, Jo{\\~a}o and Moura, Jos{\\'e} M. F.},\n  journal={IEEE Transactions on Signal and Information Processing over Networks},\n  volume={5},\n  number={1},\n  pages={46--58},\n  year={2019},\n  publisher={IEEE}\n}",
     "notes": "Generalization of DIGing with overrelaxation parameter mu and function parameter l. Reduces to DIGing when mu=1, l=0.",
     "oracles": [
@@ -1026,6 +1323,12 @@
       "lft": []
     },
     "catalogOnly": false,
-    "tf_latex": "\\frac{-\\alpha \\left(z -1\\right)}{z^{2} + 2 \\left(\\lambda \\mu - 1\\right) z + \\alpha l \\lambda \\mu + \\lambda^{2} \\mu^{2} - 2 \\lambda \\mu + 1}"
+    "tf_latex": "\\frac{-\\alpha \\left(z -1\\right)}{z^{2} + 2 \\left(\\lambda \\mu - 1\\right) z + \\alpha l \\lambda \\mu + \\lambda^{2} \\mu^{2} - 2 \\lambda \\mu + 1}",
+    "citations": [
+      {
+        "label": "Jakovetić et al. 2019",
+        "doi": "https://doi.org/10.1109/TSIPN.2018.2846183"
+      }
+    ]
   }
 ]

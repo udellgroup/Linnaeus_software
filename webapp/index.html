@@ -140,9 +140,9 @@ x[k+1] = W*x[k]</code></pre>
           <tr><th>Syntax</th><th>Description</th></tr>
         </thead>
         <tbody>
-          <tr><td><code>grad_f(x)</code></td><td>Gradient of <span class="katex-inline" data-formula="f"></span></td></tr>
-          <tr><td><code>prox_f(x)</code>, <code>prox_g(x)</code></td><td>Proximal operator of <span class="katex-inline" data-formula="f"></span> or <span class="katex-inline" data-formula="g"></span></td></tr>
-          <tr><td><code>prox_fstar(x)</code>, <code>prox_gstar(x)</code></td><td>Proximal operator of the conjugate <span class="katex-inline" data-formula="f^*"></span> or <span class="katex-inline" data-formula="g^*"></span></td></tr>
+          <tr><td><code>grad_f(x)</code>, <code>grad_g(x)</code>, <code>grad_h(x)</code></td><td>Gradient of <span class="katex-inline" data-formula="f"></span>, <span class="katex-inline" data-formula="g"></span>, or <span class="katex-inline" data-formula="h"></span></td></tr>
+          <tr><td><code>prox_f(x)</code>, <code>prox_g(x)</code>, <code>prox_h(x)</code></td><td>Proximal operator of <span class="katex-inline" data-formula="f"></span>, <span class="katex-inline" data-formula="g"></span>, or <span class="katex-inline" data-formula="h"></span></td></tr>
+          <tr><td><code>prox_fstar(x)</code>, <code>prox_gstar(x)</code>, <code>prox_hstar(x)</code></td><td>Proximal operator of the conjugate <span class="katex-inline" data-formula="f^*"></span>, <span class="katex-inline" data-formula="g^*"></span>, or <span class="katex-inline" data-formula="h^*"></span></td></tr>
           <tr><td><code>P(x)</code> or <code>P_C(x)</code></td><td>Projection onto convex set <span class="katex-inline" data-formula="C"></span> (renders as <span class="katex-inline" data-formula="P_C"></span>)</td></tr>
           <tr><td><code>L</code></td><td>Graph Laplacian (linear oracle, eigenvalue <span class="katex-inline" data-formula="\lambda"></span>)</td></tr>
           <tr><td><code>W</code></td><td>Mixing matrix (linear oracle, <span class="katex-inline" data-formula="W = I - L"></span>)</td></tr>

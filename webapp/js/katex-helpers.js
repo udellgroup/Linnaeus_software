@@ -7,14 +7,13 @@ function oracleToLatex(name) {
   const map = {
     'prox_f': '\\text{prox}_f',
     'prox_g': '\\text{prox}_g',
+    'prox_h': '\\text{prox}_h',
     'prox_fstar': '\\text{prox}_{f^*}',
     'prox_gstar': '\\text{prox}_{g^*}',
+    'prox_hstar': '\\text{prox}_{h^*}',
     'grad_f': '\\nabla f',
     'grad_g': '\\nabla g',
-    'subgrad_f': '\\partial f',
-    'subgrad_g': '\\partial g',
-    'subgrad_fstar': '\\partial f^*',
-    'subgrad_gstar': '\\partial g^*',
+    'grad_h': '\\nabla h',
     'P_C': 'P_C',
   };
   return map[name] || '\\text{' + name.replace(/_/g, '\\_') + '}';

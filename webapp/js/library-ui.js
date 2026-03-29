@@ -43,10 +43,10 @@ function loadLibraryUI() {
 
 const FILTERS = [
   { label: 'All', value: 'all' },
-  { label: '\u2207f', value: 'gradient' },
+  { label: 'One oracle', value: 'one-oracle' },
+  { label: 'Two oracle', value: 'two-oracle' },
+  { label: 'Three oracle', value: 'three-oracle' },
   { label: 'Projected', value: 'projected' },
-  { label: 'prox_f + prox_g', value: 'proximal' },
-  { label: '\u2207f + prox_g', value: 'mixed' },
   { label: 'Consensus', value: 'consensus' },
   { label: 'Distributed', value: 'distributed' },
 ];
@@ -54,10 +54,10 @@ const FILTERS = [
 let activeFilter = 'all';
 
 const CATEGORY_DESCRIPTIONS = {
-  gradient: 'Algorithms for unconstrained optimization using the gradient oracle <span class="ki" data-formula="\\nabla f"></span>.',
+  'one-oracle': 'Algorithms using a single oracle: gradient <span class="ki" data-formula="\\nabla f"></span>, proximal <span class="ki" data-formula="\\text{prox}_f"></span>, or subgradient.',
+  'two-oracle': 'Algorithms using two distinct oracles, e.g. <span class="ki" data-formula="\\text{prox}_f + \\text{prox}_g"></span> or <span class="ki" data-formula="\\nabla f + \\text{prox}_g"></span>.',
+  'three-oracle': 'Algorithms for three-function optimization <span class="ki" data-formula="\\min\\, f + g + h"></span> using three distinct oracles.',
   projected: 'Algorithms for constrained optimization using the gradient <span class="ki" data-formula="\\nabla f"></span> and projection <span class="ki" data-formula="P_C"></span> onto a convex set <span class="ki" data-formula="C"></span>.',
-  proximal: 'Algorithms using proximal oracles <span class="ki" data-formula="\\text{prox}_f"></span> and <span class="ki" data-formula="\\text{prox}_g"></span> for composite optimization.',
-  mixed: 'Algorithms combining the gradient oracle <span class="ki" data-formula="\\nabla f"></span> with a proximal oracle <span class="ki" data-formula="\\text{prox}_g"></span>.',
   consensus: 'Consensus algorithms for agreement over a network, using only the mixing oracle <span class="ki" data-formula="W"></span> or Laplacian <span class="ki" data-formula="L"></span> with no objective function.',
   distributed: 'Algorithms for distributed optimization over a network, using a linear mixing oracle <span class="ki" data-formula="W"></span> or graph Laplacian <span class="ki" data-formula="L"></span>. States represent the aggregate states of all nodes, and <span class="ki" data-formula="\\nabla f"></span> is the aggregated vector of local gradients.',
 };
@@ -147,21 +147,25 @@ function renderLibraryCards(data) {
     title.textContent = algo.name;
     card.appendChild(title);
 
-    // Citation with DOI link + BibTeX copy button
-    if (algo.citation) {
+    // Citations with DOI links + BibTeX copy button
+    const citations = algo.citations || [];
+    if (citations.length > 0) {
       const meta = document.createElement('div');
       meta.className = 'algo-card-meta';
-      if (algo.doi) {
-        const link = document.createElement('a');
-        link.href = algo.doi;
-        link.target = '_blank';
-        link.rel = 'noopener noreferrer';
-        link.className = 'citation-link';
-        link.textContent = algo.citation;
-        meta.appendChild(link);
-      } else {
-        meta.appendChild(document.createTextNode(algo.citation));
-      }
+      citations.forEach((cit, idx) => {
+        if (idx > 0) meta.appendChild(document.createTextNode(' / '));
+        if (cit.doi) {
+          const link = document.createElement('a');
+          link.href = cit.doi;
+          link.target = '_blank';
+          link.rel = 'noopener noreferrer';
+          link.className = 'citation-link';
+          link.textContent = cit.label;
+          meta.appendChild(link);
+        } else {
+          meta.appendChild(document.createTextNode(cit.label));
+        }
+      });
       if (algo.bibtex) {
         const btn = document.createElement('button');
         btn.className = 'bibtex-copy-btn';

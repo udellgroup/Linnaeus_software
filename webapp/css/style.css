@@ -383,15 +383,15 @@ body {
   transform: translateY(-2px);
 }
 
-.algo-card.gradient {
+.algo-card.one-oracle {
   border-left-color: #4285f4;
 }
 
-.algo-card.proximal {
+.algo-card.two-oracle {
   border-left-color: #34a853;
 }
 
-.algo-card.mixed {
+.algo-card.three-oracle {
   border-left-color: #f9ab00;
 }
 

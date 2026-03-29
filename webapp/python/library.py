@@ -136,6 +136,137 @@ def _reduce_tf_for_identity_oracles(H, proj_indices):
     return H_reduced.applyfunc(lambda e: cancel(e))
 
 
+def _decompose_oracle(name):
+    """Decompose oracle name into (operator, function, is_conjugate).
+
+    Examples:
+        'grad_f'     -> ('grad', 'f', False)
+        'prox_gstar' -> ('prox', 'g', True)
+        'P_C'        -> ('proj', 'C', False)
+    """
+    if name == 'P_C':
+        return ('proj', 'C', False)
+    for prefix in ('prox_', 'grad_'):
+        if name.startswith(prefix):
+            suffix = name[len(prefix):]
+            if suffix.endswith('star'):
+                return (prefix[:-1], suffix[:-4], True)
+            return (prefix[:-1], suffix, False)
+    return (name, '', False)
+
+
+def _apply_func_renaming(oracle_list, mapping):
+    """Apply function renaming to an oracle list.
+
+    mapping: dict like {'h': 'f', 'f': 'h'}.
+    Returns new list with renamed function suffixes.
+    """
+    result = []
+    for name in oracle_list:
+        op, func, conj = _decompose_oracle(name)
+        if op == 'proj':
+            result.append(name)
+            continue
+        new_func = mapping.get(func, func)
+        suffix = new_func + ('star' if conj else '')
+        result.append(f'{op}_{suffix}')
+    return result
+
+
+def _find_function_renamings(user_oracles, lib_oracles):
+    """Find all consistent function renamings mapping user oracle types to lib.
+
+    Yields (renamed_user_oracles, func_mapping) pairs where func_mapping
+    is a dict like {'h': 'f', 'f': 'h'}.
+    Only yields non-identity renamings.
+    """
+    from itertools import permutations
+
+    user_ops = [_decompose_oracle(o) for o in user_oracles]
+    lib_ops = [_decompose_oracle(o) for o in lib_oracles]
+
+    # Get unique function names (excluding proj/C)
+    user_funcs = sorted(set(func for op, func, conj in user_ops if op != 'proj'))
+    lib_funcs = sorted(set(func for op, func, conj in lib_ops if op != 'proj'))
+
+    if len(user_funcs) != len(lib_funcs):
+        return
+
+    # Check operator-class counts match (ignoring function names)
+    from collections import Counter
+    user_shapes = Counter((op, conj) for op, func, conj in user_ops)
+    lib_shapes = Counter((op, conj) for op, func, conj in lib_ops)
+    if user_shapes != lib_shapes:
+        return
+
+    # Try all bijections from user_funcs to lib_funcs
+    for perm in permutations(lib_funcs):
+        mapping = dict(zip(user_funcs, perm))
+        # Skip identity
+        if all(mapping.get(f, f) == f for f in user_funcs):
+            continue
+        renamed = _apply_func_renaming(user_oracles, mapping)
+        if sorted(renamed) == sorted(lib_oracles):
+            yield renamed, mapping
+
+
+def _reduce_tf_for_zero_function(H, oracle_types, func_name):
+    """Reduce TF by setting function func_name to zero.
+
+    When func = 0:
+      - grad_func -> 0 (dead oracle): remove row/col
+      - prox_func -> identity (u = y): Schur complement
+      - prox_funcstar -> 0 (dead oracle): remove row/col
+
+    Returns (H_reduced, remaining_oracles) or None if reduction fails.
+    """
+    from sympy import Matrix, cancel
+
+    identity_indices = []
+    dead_indices = []
+
+    for i, otype in enumerate(oracle_types):
+        op, func, conj = _decompose_oracle(otype)
+        if func != func_name:
+            continue
+        if op == 'prox' and not conj:
+            identity_indices.append(i)  # prox_X -> identity
+        else:
+            dead_indices.append(i)  # grad_X, prox_Xstar -> zero
+
+    if not identity_indices and not dead_indices:
+        return None  # Function not used in this algorithm
+
+    n = H.rows
+    all_remove = set(dead_indices)
+
+    # Step 1: Handle identity oracles via Schur complement
+    H_work = H
+    current_oracle_types = list(oracle_types)
+    if identity_indices:
+        H_work = _reduce_tf_for_identity_oracles(H_work, identity_indices)
+        if H_work is None:
+            return None
+        # Remove identity indices from tracking
+        keep_after_identity = [i for i in range(n) if i not in identity_indices]
+        current_oracle_types = [oracle_types[i] for i in keep_after_identity]
+        # Remap dead indices to new positions
+        old_to_new = {old: new for new, old in enumerate(keep_after_identity)}
+        dead_indices = [old_to_new[i] for i in dead_indices if i in old_to_new]
+
+    # Step 2: Remove dead oracle rows/cols
+    if dead_indices:
+        n2 = H_work.rows
+        keep = [i for i in range(n2) if i not in dead_indices]
+        if not keep:
+            return None  # All oracles removed
+        H_work = Matrix([[H_work[i, j] for j in keep] for i in keep])
+        H_work = H_work.applyfunc(lambda e: cancel(e))
+        current_oracle_types = [current_oracle_types[i] for i in keep]
+
+    return H_work, current_oracle_types
+
+
 def _permute_tf(H, perm):
     """Permute rows and columns of a transfer function matrix.
 
@@ -148,6 +279,23 @@ def _permute_tf(H, perm):
         for j in range(n):
             H_perm[i, j] = H[perm[i], perm[j]]
     return H_perm
+
+
+def _is_trivial_match(details, algo):
+    """Reject matches where ALL library parameters map to zero.
+
+    When every step-size / parameter of the library algorithm is zero, the
+    algorithm degenerates and the match is meaningless.
+    """
+    from sympy import cancel
+    params = details.get('params', {})
+    lib_param_set = set(algo.get('param_symbols', []))
+    if not lib_param_set:
+        return False  # No params to check
+    lib_vals = [v for k, v in params.items() if k in lib_param_set]
+    if not lib_vals:
+        return False
+    return all(cancel(v) == 0 for v in lib_vals)
 
 
 def _compute_gradf0_char_poly(equations, z_var):
@@ -452,6 +600,133 @@ def check_all_equivalences(H_user, user_oracles, library, z_var,
         if found:
             continue
 
+        # --- Function renaming (oracle swapping) ---
+        # Try renaming functions (e.g., h->f) to match oracle types.
+        if not found and len(user_oracles) == len(lib_oracles):
+            for renamed_oracles, func_mapping in _find_function_renamings(
+                    user_oracles, lib_oracles):
+                for perm in _find_all_oracle_permutations(
+                        renamed_oracles, lib_oracles):
+                    H_check = _permute_tf(H_user, perm) \
+                        if perm != list(range(len(perm))) else H_user
+                    result = check_oracle_equivalence(
+                        H_check, H_lib, z_var,
+                        lib_params=algo.get('param_symbols'),
+                        universal_params=universal_params,
+                    )
+                    if result['match']:
+                        result['func_mapping'] = func_mapping
+                        matches.append({
+                            'algorithm': algo,
+                            'type': 'oracle',
+                            'details': result,
+                            'permuted': True,
+                        })
+                        found = True
+                        break
+                if found:
+                    break
+
+        if found:
+            continue
+
+        # --- Function zeroing conditional equivalence ---
+        # Try setting one function to zero (f=0, g=0, or h=0) to match.
+        if not found and user_equations is not None:
+            # Collect function names from both sides
+            all_funcs = set()
+            for o in user_oracles + lib_oracles:
+                _, func, _ = _decompose_oracle(o)
+                if func and func != 'C':
+                    all_funcs.add(func)
+
+            # Helper to try matching reduced TFs (with renaming + permutation)
+            def _try_match_reduced(H_u, u_orc, H_l, l_orc):
+                """Try oracle equiv with optional renaming + permutation."""
+                # Direct permutation
+                if sorted(u_orc) == sorted(l_orc):
+                    for perm in _find_all_oracle_permutations(u_orc, l_orc):
+                        H_c = _permute_tf(H_u, perm) \
+                            if perm != list(range(len(perm))) else H_u
+                        r = check_oracle_equivalence(
+                            H_c, H_l, z_var,
+                            lib_params=algo.get('param_symbols'))
+                        if r['match']:
+                            return r
+                # With function renaming
+                for renamed, fmap in _find_function_renamings(u_orc, l_orc):
+                    for perm in _find_all_oracle_permutations(
+                            renamed, l_orc):
+                        H_c = _permute_tf(H_u, perm) \
+                            if perm != list(range(len(perm))) else H_u
+                        r = check_oracle_equivalence(
+                            H_c, H_l, z_var,
+                            lib_params=algo.get('param_symbols'))
+                        if r['match']:
+                            r['func_mapping'] = fmap
+                            return r
+                return None
+
+            # Try all non-empty subsets of functions to zero
+            # (single functions first, then pairs, etc.)
+            from itertools import combinations
+            sorted_funcs = sorted(all_funcs)
+            for n_zero in range(1, len(sorted_funcs) + 1):
+                if found:
+                    break
+                for zero_combo in combinations(sorted_funcs, n_zero):
+                    # Reduce user side
+                    H_u_red, u_orc_red = H_user, list(user_oracles)
+                    ok = True
+                    for zf in zero_combo:
+                        if any(_decompose_oracle(o)[1] == zf
+                               for o in u_orc_red):
+                            res = _reduce_tf_for_zero_function(
+                                H_u_red, u_orc_red, zf)
+                            if res is None:
+                                ok = False
+                                break
+                            H_u_red, u_orc_red = res
+                    if not ok:
+                        continue
+
+                    # Reduce library side
+                    H_l_red, l_orc_red = H_lib, list(lib_oracles)
+                    for zf in zero_combo:
+                        if any(_decompose_oracle(o)[1] == zf
+                               for o in l_orc_red):
+                            res = _reduce_tf_for_zero_function(
+                                H_l_red, l_orc_red, zf)
+                            if res is None:
+                                ok = False
+                                break
+                            H_l_red, l_orc_red = res
+                    if not ok:
+                        continue
+
+                    result = _try_match_reduced(
+                        H_u_red, u_orc_red, H_l_red, l_orc_red)
+                    if result is not None:
+                        cond_parts = [f + ' = 0' for f in zero_combo]
+                        joiner = (' \\text{ and } '
+                                  if len(cond_parts) <= 2
+                                  else ' \\newline \\text{and } ')
+                        result['condition_note'] = (
+                            '\\text{Equivalent when } '
+                            + joiner.join(cond_parts))
+                        matches.append({
+                            'algorithm': algo,
+                            'type': 'oracle',
+                            'details': result,
+                            'permuted': True,
+                            'conditional': True,
+                        })
+                        found = True
+                        break
+
+        if found:
+            continue
+
         if len(user_oracles) == len(lib_oracles) and user_oracles != lib_oracles:
             # Different oracle types but same count: try LFT.
             # Try all permutations of library oracles and shift vectors,
@@ -526,5 +801,9 @@ def check_all_equivalences(H_user, user_oracles, library, z_var,
         1 if m.get('conditional') else 0,
         type_order[m['type']],
     ))
+
+    # Filter out trivial matches (all library params zero)
+    matches = [m for m in matches
+               if not _is_trivial_match(m.get('details', {}), m['algorithm'])]
 
     return matches
