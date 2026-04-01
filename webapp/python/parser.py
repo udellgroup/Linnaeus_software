@@ -143,6 +143,9 @@ def parse_equations(equations):
     # Normalize projection alias: P(...) -> P_C(...)
     equations = [re.sub(r'\bP\(', 'P_C(', eq) for eq in equations]
 
+    # Replace standalone I (identity matrix/operator) with 1.
+    equations = [re.sub(r'\bI\b', '1', eq) for eq in equations]
+
     # Detect linear oracles L (graph Laplacian) and W (mixing matrix).
     # L has eigenvalue lambda; W has eigenvalue 1-lambda (since W = I - L
     # in the simplest case, or W = I - mu*L with mu as a free parameter).
@@ -154,13 +157,11 @@ def parse_equations(equations):
     has_L = any(re.search(r'\bL\b', eq) for eq in equations)
     has_mixing_matrix = has_W or has_L
     if has_mixing_matrix:
-        # Replace L -> lam, W -> (1-lam), I -> 1
-        # Order matters: do W before I to avoid I in (1-lam) being replaced
+        # Replace L -> lam, W -> (1-lam)
         if has_W:
             equations = [re.sub(r'\bW\b', '(1-lam)', eq) for eq in equations]
         if has_L:
             equations = [re.sub(r'\bL\b', 'lam', eq) for eq in equations]
-        equations = [re.sub(r'\bI\b', '1', eq) for eq in equations]
 
     # Pre-process: merge shifted oracle calls into single oracles
     equations = _merge_shifted_oracles(equations)

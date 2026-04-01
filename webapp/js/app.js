@@ -349,6 +349,7 @@ for m in matches:
         _lib_latex = _to_display_latex_scalar(_lib_tf.subs(_z, _display_z) if hasattr(_lib_tf, 'subs') else _lib_tf)
     entry = {
         'name': algo['name'],
+        'shortName': algo.get('shortName', ''),
         'citations': algo.get('citations', []),
         'bibtex': algo.get('bibtex', ''),
         'type': m['type'],

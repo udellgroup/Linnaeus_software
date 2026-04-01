@@ -141,10 +141,12 @@ function renderLibraryCards(data) {
     const cardType = algo.consensus ? 'consensus' : (algo.distributed ? 'distributed' : (algo.oracleType || 'gradient'));
     card.className = 'algo-card ' + cardType;
 
-    // Title
+    // Title: "Full Name (ShortName)" or just "Full Name"
     const title = document.createElement('div');
     title.className = 'algo-card-title';
-    title.textContent = algo.name;
+    title.textContent = algo.shortName
+      ? algo.name + ' (' + algo.shortName + ')'
+      : algo.name;
     card.appendChild(title);
 
     // Citations with DOI links + BibTeX copy button
@@ -277,7 +279,10 @@ function renderExampleChips(data) {
   for (const algo of examples) {
     const chip = document.createElement('button');
     chip.className = 'chip';
-    chip.textContent = algo.name;
+    chip.textContent = algo.shortName || algo.name;
+    if (algo.shortName) {
+      chip.title = algo.name;  // tooltip shows full name
+    }
     chip.addEventListener('click', () => {
       // Load equations into textarea
       const textarea = document.getElementById('algo-input');

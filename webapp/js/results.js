@@ -88,7 +88,9 @@ function _buildMatchCard(match) {
     // Name
     const nameEl = document.createElement('div');
     nameEl.style.cssText = 'font-weight:600;font-size:0.95rem;margin-bottom:0.4rem;';
-    nameEl.textContent = match.name;
+    nameEl.textContent = match.shortName
+      ? match.name + ' (' + match.shortName + ')'
+      : match.name;
     const citations = match.citations || [];
     if (citations.length > 0) {
       const citSpan = document.createElement('span');

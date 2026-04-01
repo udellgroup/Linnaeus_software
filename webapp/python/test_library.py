@@ -76,11 +76,11 @@ class TestSelfMatch:
         'proximal_point', 'relaxed_proximal_point',
         'douglas_rachford', 'admm', 'peaceman_rachford',
         'chambolle_pock', 'proximal_gradient', 'conjugate_proximal_gradient',
-        'davis_yin', 'pd3o', 'condat_vu', 'loris_verhoeven',
+        'davis_yin', 'pd3o', 'condat_vu', 'loris_verhoeven', 'papc',
         'dual_condat_vu', 'pddy',
         'extragradient', 'projected_gradient',
         'extragradient_korpelevich', 'extragradient_tseng',
-        'nids', 'exact_diffusion',
+        'nids', 'exact_diffusion', 'pg_extra',
         'average_consensus', 'heavy_ball_consensus',
     ])
     def test_self_match(self, lib, algo_id):

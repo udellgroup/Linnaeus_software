@@ -33,6 +33,43 @@ def check_oracle_equivalence(H1, H2, z, lib_params=None, universal_params=None):
     if H2.shape != (rows, cols):
         return {'match': False}
 
+    # Quick structural pre-filter: reject early if H1 and H2 have
+    # incompatible structure.
+    lib_param_set = set(lib_params) if lib_params else set()
+    univ_set = set(universal_params) if universal_params else set()
+    from sympy import fraction, Poly
+    for i in range(rows):
+        for j in range(cols):
+            h1 = cancel(H1[i, j])
+            h2 = cancel(H2[i, j])
+            h1_zero = (h1 == 0)
+            h2_zero = (h2 == 0)
+            # If H1 is zero but H2 has no free params, can't match
+            if h1_zero and not h2_zero:
+                h2_free = h2.free_symbols - {z} - univ_set
+                if not (h2_free & lib_param_set) and not h2_free:
+                    return {'match': False}
+            if h2_zero and not h1_zero:
+                h1_free = h1.free_symbols - {z} - univ_set
+                if not h1_free:
+                    return {'match': False}
+            # Check z-polynomial degree compatibility for non-zero entries.
+            # If H1 has no free params in an entry, the numerator/denominator
+            # degrees must match exactly (params can't change degree).
+            if not h1_zero and not h2_zero:
+                n1, d1 = fraction(h1)
+                n2, d2 = fraction(h2)
+                try:
+                    deg_n1 = Poly(n1, z).degree()
+                    deg_d1 = Poly(d1, z).degree()
+                    deg_n2 = Poly(n2, z).degree()
+                    deg_d2 = Poly(d2, z).degree()
+                    # Degrees must match (params multiply by z^0)
+                    if deg_n1 - deg_d1 != deg_n2 - deg_d2:
+                        return {'match': False}
+                except Exception:
+                    pass
+
     # Direct comparison (no free params)
     if lib_params is None or len(lib_params) == 0:
         for i in range(rows):
@@ -474,11 +511,13 @@ def check_shift_equivalence(H1, H2, z, lib_params=None, universal_params=None):
         return _check_shift_exact(H1, H2, z, p)
 
     # Parametric: try candidate shift vectors and solve for all free symbols.
-    # For p oracles, m[0]=0 (anchor), m[1],...,m[p-1] range over small integers.
+    # Collect ALL valid candidates and pick the best (fewest zero params).
     from sympy import Poly
-    MAX_SHIFT = 3
+    MAX_SHIFT = 2
 
     import itertools
+    shift_candidates = []
+
     for shifts in itertools.product(range(-MAX_SHIFT, MAX_SHIFT + 1), repeat=p - 1):
         m = [0] + list(shifts)
         if all(mi == 0 for mi in m):
@@ -513,7 +552,8 @@ def check_shift_equivalence(H1, H2, z, lib_params=None, universal_params=None):
 
         if not equations:
             # Trivially satisfied
-            return {'match': True, 'shift_vector': m, 'params': {}}
+            shift_candidates.append((m, {}, {}))
+            continue
 
         unknowns = sorted(all_free - universal_params, key=str)
         try:
@@ -521,58 +561,79 @@ def check_shift_equivalence(H1, H2, z, lib_params=None, universal_params=None):
         except Exception:
             continue
 
-        if not solutions:
-            continue
+        for sol in solutions:
+            # Verify no z in solution
+            if any(v.has(z) for v in sol.values()):
+                continue
 
-        sol = solutions[0]
-
-        # Verify no z in solution
-        if any(v.has(z) for v in sol.values()):
-            continue
-
-        # Verify substitution works and reject trivially-zero TFs
-        ok = True
-        all_zero = True
-        for i in range(p):
-            for j in range(p):
-                shift_power = m[i] - m[j]
-                diff = cancel(
-                    (H1[i, j] - z**shift_power * H2_fresh[i, j]).subs(sol)
-                )
-                if diff != 0:
-                    ok = False
+            # Verify substitution works and reject trivially-zero TFs
+            ok = True
+            all_zero = True
+            for i in range(p):
+                for j in range(p):
+                    shift_power = m[i] - m[j]
+                    diff = cancel(
+                        (H1[i, j] - z**shift_power * H2_fresh[i, j]).subs(sol)
+                    )
+                    if diff != 0:
+                        ok = False
+                        break
+                    if cancel(H1[i, j].subs(sol)) != 0:
+                        all_zero = False
+                if not ok:
                     break
-                if cancel(H1[i, j].subs(sol)) != 0:
-                    all_zero = False
-            if not ok:
+
+            if ok and not all_zero:
+                # Map fresh dummies back to original lib param names
+                dummy_to_orig = {d: orig for d, orig in reverse_map.items()}
+                lib_solved = {}
+                user_solved = {}
+                for k, v in sol.items():
+                    v = v.subs(dummy_to_orig)
+                    if k in reverse_map:
+                        lib_solved[reverse_map[k]] = v
+                    else:
+                        user_solved[k] = v
+                # Prune redundant reverse equations
+                lib_reverse = {lv: lp for lp, lv in lib_solved.items()}
+                for up in list(user_solved.keys()):
+                    uv = user_solved[up]
+                    if up in lib_reverse and lib_reverse[up] == uv:
+                        del user_solved[up]
+                shift_candidates.append((m, lib_solved, user_solved))
+                # Early exit: if no params are zero, this is a good match
+                all_nonzero = all(cancel(v) != 0
+                                  for v in lib_solved.values())
+                if all_nonzero:
+                    break  # inner sol loop
+
+        # Break outer shift loop if we have a good candidate
+        if shift_candidates:
+            _, ls, us = shift_candidates[-1]
+            if all(cancel(v) != 0 for v in ls.values()):
                 break
 
-        if ok and not all_zero:
-            # Normalize shift vector
-            min_m = min(m)
-            m = [mi - min_m for mi in m]
-            # Map fresh dummies back to original lib param names
-            dummy_to_orig = {d: orig for d, orig in reverse_map.items()}
-            lib_solved = {}
-            user_solved = {}
-            for k, v in sol.items():
-                v = v.subs(dummy_to_orig)
-                if k in reverse_map:
-                    lib_solved[reverse_map[k]] = v
-                else:
-                    user_solved[k] = v
-            # Prune redundant reverse equations
-            lib_reverse = {lv: lp for lp, lv in lib_solved.items()}
-            for up in list(user_solved.keys()):
-                uv = user_solved[up]
-                if up in lib_reverse and lib_reverse[up] == uv:
-                    del user_solved[up]
-            result = {'match': True, 'shift_vector': m, 'params': lib_solved}
-            if user_solved:
-                result['user_params'] = user_solved
-            return result
+    if not shift_candidates:
+        return {'match': False, 'shift_vector': None}
 
-    return {'match': False, 'shift_vector': None}
+    # Score candidates: prefer more non-zero param values (fewer zeros)
+    def _score(candidate):
+        m, lib_s, user_s = candidate
+        n_zero = sum(1 for v in lib_s.values() if cancel(v) == 0)
+        n_zero += sum(1 for v in user_s.values() if cancel(v) == 0)
+        return n_zero
+
+    shift_candidates.sort(key=_score)
+    m, lib_solved, user_solved = shift_candidates[0]
+
+    # Normalize shift vector
+    min_m = min(m)
+    m = [mi - min_m for mi in m]
+
+    result = {'match': True, 'shift_vector': m, 'params': lib_solved}
+    if user_solved:
+        result['user_params'] = user_solved
+    return result
 
 
 def _check_shift_exact(H1, H2, z, p):

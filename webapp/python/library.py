@@ -76,24 +76,78 @@ def load_library(json_path):
     return algorithms
 
 
-def _find_all_oracle_permutations(user_oracles, lib_oracles):
+def _operator_class_counts(oracle_list, merge_conjugates=False):
+    """Count oracles by operator class: grad, prox, proxstar, proj.
+
+    If merge_conjugates=True, prox and proxstar are counted together
+    (useful for Moreau-aware matching where prox_f <-> prox_fstar).
+    """
+    from collections import Counter
+    counts = Counter()
+    for o in oracle_list:
+        op, func, conj = _decompose_oracle(o)
+        if merge_conjugates and op == 'prox':
+            counts['prox_any'] += 1
+        elif op == 'prox' and conj:
+            counts['proxstar'] += 1
+        else:
+            counts[op] += 1
+    return counts
+
+
+def _moreau_dual(oracle_name):
+    """Return the Moreau dual of an oracle, or None if not applicable.
+
+    Moreau identity: prox_f + prox_fstar = I, so prox_f <-> prox_fstar.
+    """
+    op, func, conj = _decompose_oracle(oracle_name)
+    if op == 'prox':
+        suffix = func + ('star' if not conj else '')
+        return f'prox_{suffix}'
+    return None
+
+
+def _find_all_oracle_permutations(user_oracles, lib_oracles,
+                                   allow_moreau=False):
     """Find all permutations mapping user oracle order to library oracle order.
 
     Yields lists perm where user_oracles[perm[i]] == lib_oracles[i].
     When oracle types repeat (e.g., two grad_f), there are multiple valid
     permutations; the correct one depends on the transfer function structure.
+
+    If allow_moreau=True, also match Moreau-dual pairs (prox_X <-> prox_Xstar).
     """
-    if sorted(user_oracles) != sorted(lib_oracles):
-        return
+    if not allow_moreau:
+        if sorted(user_oracles) != sorted(lib_oracles):
+            return
 
     n = len(lib_oracles)
+    if len(user_oracles) != n:
+        return
+
+    def _compatible(user_o, lib_o):
+        if user_o == lib_o:
+            return True
+        if allow_moreau:
+            dual = _moreau_dual(user_o)
+            if dual is not None and dual == lib_o:
+                return True
+        return False
+
+    # Quick check: can all lib oracles be matched?
+    if allow_moreau:
+        from collections import Counter
+        # For each lib oracle, at least one user oracle must be compatible
+        for lo in lib_oracles:
+            if not any(_compatible(uo, lo) for uo in user_oracles):
+                return
 
     def _backtrack(pos, used, perm):
         if pos == n:
             yield list(perm)
             return
         for j in range(n):
-            if j not in used and user_oracles[j] == lib_oracles[pos]:
+            if j not in used and _compatible(user_oracles[j], lib_oracles[pos]):
                 used.add(j)
                 perm.append(j)
                 yield from _backtrack(pos + 1, used, perm)
@@ -354,6 +408,30 @@ def check_all_equivalences(H_user, user_oracles, library, z_var,
 
     user_is_consensus = (len(user_oracles) == 0)
 
+    # Pre-compute user-side function reductions (cache expensive Schur
+    # complements so they aren't recomputed for every library entry).
+    # Key: frozenset of zeroed function names → (H_reduced, oracle_list)
+    _user_reductions = {}
+    if H_user is not None and len(user_oracles) > 0:
+        user_funcs = sorted(set(
+            f for o in user_oracles
+            for _, f, _ in [_decompose_oracle(o)]
+            if f and f != 'C'))
+        from itertools import combinations as _combs
+        for n in range(1, len(user_funcs) + 1):
+            for combo in _combs(user_funcs, n):
+                H_r, o_r = H_user, list(user_oracles)
+                ok = True
+                for zf in combo:
+                    if any(_decompose_oracle(o)[1] == zf for o in o_r):
+                        res = _reduce_tf_for_zero_function(H_r, o_r, zf)
+                        if res is None:
+                            ok = False
+                            break
+                        H_r, o_r = res
+                if ok:
+                    _user_reductions[frozenset(combo)] = (H_r, o_r)
+
     matches = []
     for algo in library:
         lib_oracles = algo.get('oracles', [])
@@ -602,13 +680,18 @@ def check_all_equivalences(H_user, user_oracles, library, z_var,
 
         # --- Function renaming (oracle swapping) ---
         # Try renaming functions (e.g., h->f) to match oracle types.
-        if not found and len(user_oracles) == len(lib_oracles):
+        # Pre-filter: operator class counts must match (renaming only
+        # changes function names, not operator types).
+        if (not found and len(user_oracles) == len(lib_oracles)
+                and _operator_class_counts(user_oracles)
+                    == _operator_class_counts(lib_oracles)):
             for renamed_oracles, func_mapping in _find_function_renamings(
                     user_oracles, lib_oracles):
                 for perm in _find_all_oracle_permutations(
                         renamed_oracles, lib_oracles):
                     H_check = _permute_tf(H_user, perm) \
                         if perm != list(range(len(perm))) else H_user
+                    # Try oracle equivalence
                     result = check_oracle_equivalence(
                         H_check, H_lib, z_var,
                         lib_params=algo.get('param_symbols'),
@@ -624,6 +707,110 @@ def check_all_equivalences(H_user, user_oracles, library, z_var,
                         })
                         found = True
                         break
+                    # Try shift equivalence
+                    if H_check.rows > 1:
+                        result = check_shift_equivalence(
+                            H_check, H_lib, z_var,
+                            lib_params=algo.get('param_symbols'),
+                            universal_params=universal_params,
+                        )
+                        if result['match']:
+                            result['func_mapping'] = func_mapping
+                            matches.append({
+                                'algorithm': algo,
+                                'type': 'shift',
+                                'details': result,
+                                'permuted': True,
+                            })
+                            found = True
+                            break
+                if found:
+                    break
+
+        if found:
+            continue
+
+        # --- Moreau-dual oracle matching ---
+        # Try matching prox_X <-> prox_Xstar (Moreau identity).
+        # Pre-filter: operator counts must match when merging conjugates.
+        if (not found and len(user_oracles) == len(lib_oracles)
+                and _operator_class_counts(user_oracles, merge_conjugates=True)
+                    == _operator_class_counts(lib_oracles, merge_conjugates=True)
+                and _operator_class_counts(user_oracles)
+                    != _operator_class_counts(lib_oracles)):
+            # Build oracle variants: original + all function renamings
+            moreau_variants = [(user_oracles, {})]
+            u_ops = [_decompose_oracle(o) for o in user_oracles]
+            l_ops = [_decompose_oracle(o) for o in lib_oracles]
+            u_fns = sorted(set(f for _, f, _ in u_ops if f != 'C'))
+            l_fns = sorted(set(f for _, f, _ in l_ops if f != 'C'))
+            if len(u_fns) == len(l_fns):
+                from itertools import permutations as _perms2
+                for perm in _perms2(l_fns):
+                    fmap = dict(zip(u_fns, perm))
+                    if all(fmap.get(f, f) == f for f in u_fns):
+                        continue
+                    renamed = _apply_func_renaming(user_oracles, fmap)
+                    moreau_variants.append((renamed, fmap))
+
+            for u_orc_variant, func_mapping in moreau_variants:
+                for perm in _find_all_oracle_permutations(
+                        u_orc_variant, lib_oracles, allow_moreau=True):
+                    # Identify Moreau dual pairs and real permutation
+                    moreau_pairs = {}
+                    for i in range(len(perm)):
+                        u_o = u_orc_variant[perm[i]]
+                        l_o = lib_oracles[i]
+                        if u_o != l_o:
+                            # This position uses Moreau duality
+                            _, u_func, u_conj = _decompose_oracle(u_o)
+                            _, l_func, l_conj = _decompose_oracle(l_o)
+                            # Record: lib function = user function*
+                            if u_conj and not l_conj:
+                                moreau_pairs[l_func] = u_func + '^*'
+                            elif not u_conj and l_conj:
+                                moreau_pairs[l_func + '^*'] = u_func
+                    if not moreau_pairs:
+                        continue  # Pure permutation, already tried above
+                    is_reordered = (perm != list(range(len(perm))))
+                    H_check = _permute_tf(H_user, perm) if is_reordered \
+                        else H_user
+
+                    def _add_moreau_match(result, match_type):
+                        if func_mapping:
+                            result['func_mapping'] = dict(func_mapping)
+                        # Merge Moreau pairs into func_mapping
+                        fm = result.get('func_mapping', {})
+                        fm.update(moreau_pairs)
+                        result['func_mapping'] = fm
+                        matches.append({
+                            'algorithm': algo,
+                            'type': match_type,
+                            'details': result,
+                            'permuted': is_reordered,
+                        })
+
+                    # Try oracle equivalence
+                    result = check_oracle_equivalence(
+                        H_check, H_lib, z_var,
+                        lib_params=algo.get('param_symbols'),
+                        universal_params=universal_params,
+                    )
+                    if result['match']:
+                        _add_moreau_match(result, 'oracle')
+                        found = True
+                        break
+                    # Try shift equivalence
+                    if H_check.rows > 1:
+                        result = check_shift_equivalence(
+                            H_check, H_lib, z_var,
+                            lib_params=algo.get('param_symbols'),
+                            universal_params=universal_params,
+                        )
+                        if result['match']:
+                            _add_moreau_match(result, 'shift')
+                            found = True
+                            break
                 if found:
                     break
 
@@ -667,47 +854,93 @@ def check_all_equivalences(H_user, user_oracles, library, z_var,
                             return r
                 return None
 
-            # Try all non-empty subsets of functions to zero
-            # (single functions first, then pairs, etc.)
+            # Try all non-empty subsets of functions to zero.
+            # For each subset, try zeroing on: both sides, user only, lib only.
+            # This handles cases where function names differ between sides
+            # (e.g., user's grad_f plays the role of library's grad_h).
             from itertools import combinations
             sorted_funcs = sorted(all_funcs)
+
+            def _try_zero_combo(zero_combo, zero_user, zero_lib):
+                """Try zeroing a combo of functions on specified sides.
+                Returns (result, zeroed_info) or (None, None).
+                Uses pre-computed user reductions from _user_reductions cache.
+                """
+                # User side: use cache if zeroing user
+                if zero_user:
+                    u_key = frozenset(
+                        zf for zf in zero_combo
+                        if any(_decompose_oracle(o)[1] == zf
+                               for o in user_oracles))
+                    if u_key and u_key in _user_reductions:
+                        H_u_r, u_o_r = _user_reductions[u_key]
+                    elif u_key:
+                        return None, None  # Pre-compute failed
+                    else:
+                        H_u_r, u_o_r = H_user, list(user_oracles)
+                else:
+                    H_u_r, u_o_r = H_user, list(user_oracles)
+
+                # Library side: compute on the fly (varies per entry)
+                H_l_r, l_o_r = H_lib, list(lib_oracles)
+                if zero_lib:
+                    for zf in zero_combo:
+                        if any(_decompose_oracle(o)[1] == zf
+                               for o in l_o_r):
+                            res = _reduce_tf_for_zero_function(
+                                H_l_r, l_o_r, zf)
+                            if res is None:
+                                return None, None
+                            H_l_r, l_o_r = res
+
+                # Track which side each function was actually zeroed on
+                zeroed_info = []
+                for zf in zero_combo:
+                    u_had = any(_decompose_oracle(o)[1] == zf
+                                for o in user_oracles)
+                    l_had = any(_decompose_oracle(o)[1] == zf
+                                for o in lib_oracles)
+                    if u_had and l_had:
+                        zeroed_info.append((zf, 'both'))
+                    elif l_had:
+                        zeroed_info.append((zf, 'lib'))
+                    elif u_had:
+                        zeroed_info.append((zf, 'user'))
+                # Quick check: oracle counts must match after reduction
+                if len(u_o_r) != len(l_o_r):
+                    return None, None
+                # Quick check: operator class counts must be compatible
+                # (exact or Moreau-mergeable)
+                if (_operator_class_counts(u_o_r) !=
+                        _operator_class_counts(l_o_r) and
+                    _operator_class_counts(u_o_r, True) !=
+                        _operator_class_counts(l_o_r, True)):
+                    return None, None
+                r = _try_match_reduced(H_u_r, u_o_r, H_l_r, l_o_r)
+                return r, zeroed_info
+
             for n_zero in range(1, len(sorted_funcs) + 1):
                 if found:
                     break
                 for zero_combo in combinations(sorted_funcs, n_zero):
-                    # Reduce user side
-                    H_u_red, u_orc_red = H_user, list(user_oracles)
-                    ok = True
-                    for zf in zero_combo:
-                        if any(_decompose_oracle(o)[1] == zf
-                               for o in u_orc_red):
-                            res = _reduce_tf_for_zero_function(
-                                H_u_red, u_orc_red, zf)
-                            if res is None:
-                                ok = False
-                                break
-                            H_u_red, u_orc_red = res
-                    if not ok:
-                        continue
-
-                    # Reduce library side
-                    H_l_red, l_orc_red = H_lib, list(lib_oracles)
-                    for zf in zero_combo:
-                        if any(_decompose_oracle(o)[1] == zf
-                               for o in l_orc_red):
-                            res = _reduce_tf_for_zero_function(
-                                H_l_red, l_orc_red, zf)
-                            if res is None:
-                                ok = False
-                                break
-                            H_l_red, l_orc_red = res
-                    if not ok:
-                        continue
-
-                    result = _try_match_reduced(
-                        H_u_red, u_orc_red, H_l_red, l_orc_red)
+                    result = None
+                    zeroed_info = None
+                    for zero_user, zero_lib in [(True, True),
+                                                 (False, True),
+                                                 (True, False)]:
+                        result, zeroed_info = _try_zero_combo(
+                            zero_combo, zero_user, zero_lib)
+                        if result is not None:
+                            break
                     if result is not None:
-                        cond_parts = [f + ' = 0' for f in zero_combo]
+                        # Build condition note with side annotation
+                        cond_parts = []
+                        for zf, side in zeroed_info:
+                            if side == 'lib':
+                                cond_parts.append(
+                                    zf + '_{\\text{lib}} = 0')
+                            else:
+                                cond_parts.append(zf + ' = 0')
                         joiner = (' \\text{ and } '
                                   if len(cond_parts) <= 2
                                   else ' \\newline \\text{and } ')
@@ -724,74 +957,103 @@ def check_all_equivalences(H_user, user_oracles, library, z_var,
                         found = True
                         break
 
-        if found:
+        # Don't skip LFT if we only found conditional (zeroing) matches —
+        # a non-conditional LFT match is better.
+        if found and not any(
+                m.get('conditional') and m['algorithm'] is algo
+                for m in matches):
             continue
 
         if len(user_oracles) == len(lib_oracles) and user_oracles != lib_oracles:
             # Different oracle types but same count: try LFT.
-            # Try all permutations of library oracles and shift vectors,
-            # since equivalence may require permutation + LFT + shift.
-            # Collect ALL valid matches and pick the best (fewest zero params).
+            # Pre-filter: LFT can relate prox<->grad within the same function
+            # but can't bridge completely different operator structures.
+            # Skip if grad counts differ (LFT preserves grad count).
+            u_grad_cnt = sum(1 for o in user_oracles
+                             if _decompose_oracle(o)[0] == 'grad')
+            l_grad_cnt = sum(1 for o in lib_oracles
+                             if _decompose_oracle(o)[0] == 'grad')
+            if u_grad_cnt != l_grad_cnt:
+                continue  # Skip LFT entirely for this library entry
+
             import itertools
             p = len(lib_oracles)
             MAX_SHIFT = 2
-            tried_orderings = set()
-            lft_candidates = []
-            for perm_indices in itertools.permutations(range(p)):
-                perm_lib_oracles = [lib_oracles[i] for i in perm_indices]
-                key = tuple(perm_lib_oracles)
-                if key in tried_orderings:
-                    continue
-                tried_orderings.add(key)
-                try:
-                    M_hat, internal_syms = build_block_m_hat(
-                        user_oracles, perm_lib_oracles)
-                except ValueError:
-                    continue
-                perm_list = list(perm_indices)
-                H_lib_perm = _permute_tf(H_lib, perm_list) \
-                    if perm_list != list(range(p)) else H_lib
 
-                # Try LFT with each candidate shift vector applied to H_lib
-                for shifts in itertools.product(
-                        range(-MAX_SHIFT, MAX_SHIFT + 1), repeat=p - 1):
-                    m = [0] + list(shifts)
-                    # Apply shift: H_lib_shifted[i,j] = z^{m_i-m_j} * H_lib_perm[i,j]
-                    from sympy import zeros as _zeros
-                    H_lib_shifted = _zeros(p, p)
-                    for i in range(p):
-                        for j in range(p):
-                            H_lib_shifted[i, j] = \
-                                z_var**(m[i] - m[j]) * H_lib_perm[i, j]
-                    result = check_lft_equivalence(
-                        H_user, H_lib_shifted, M_hat, z_var,
-                        lib_params=algo.get('param_symbols'),
-                        internal_syms=internal_syms,
-                        universal_params=universal_params,
-                    )
-                    if result['match']:
-                        # Normalize shift
-                        min_m = min(m)
-                        m_norm = [mi - min_m for mi in m]
-                        if any(mi != 0 for mi in m_norm):
-                            result['shift_vector'] = m_norm
-                        # Score: fewer zero-valued params = better
-                        n_zeros = sum(
-                            1 for v in result.get('params', {}).values()
-                            if v == 0
-                        ) + sum(
-                            1 for v in result.get('user_params', {}).values()
-                            if v == 0
+            # Build list of (user_oracles_variant, func_mapping) to try:
+            # original oracles + all function bijections (relaxed — we
+            # don't require operator shapes to match since LFT can relate
+            # different operator types like prox_gstar <-> prox_g).
+            oracle_variants = [(user_oracles, {})]
+            from itertools import permutations as _perms
+            user_ops = [_decompose_oracle(o) for o in user_oracles]
+            lib_ops = [_decompose_oracle(o) for o in lib_oracles]
+            u_funcs = sorted(set(f for _, f, _ in user_ops if f != 'C'))
+            l_funcs = sorted(set(f for _, f, _ in lib_ops if f != 'C'))
+            if len(u_funcs) == len(l_funcs):
+                for perm in _perms(l_funcs):
+                    fmap = dict(zip(u_funcs, perm))
+                    if all(fmap.get(f, f) == f for f in u_funcs):
+                        continue  # skip identity
+                    renamed = _apply_func_renaming(user_oracles, fmap)
+                    oracle_variants.append((renamed, fmap))
+
+            lft_candidates = []
+            for u_oracles_variant, func_mapping in oracle_variants:
+                tried_orderings = set()
+                for perm_indices in itertools.permutations(range(p)):
+                    perm_lib_oracles = [lib_oracles[i] for i in perm_indices]
+                    key = tuple(perm_lib_oracles)
+                    if key in tried_orderings:
+                        continue
+                    tried_orderings.add(key)
+                    try:
+                        M_hat, internal_syms = build_block_m_hat(
+                            u_oracles_variant, perm_lib_oracles)
+                    except ValueError:
+                        continue
+                    perm_list = list(perm_indices)
+                    H_lib_perm = _permute_tf(H_lib, perm_list) \
+                        if perm_list != list(range(p)) else H_lib
+
+                    # Try LFT with each candidate shift vector
+                    for shifts in itertools.product(
+                            range(-MAX_SHIFT, MAX_SHIFT + 1), repeat=p - 1):
+                        m = [0] + list(shifts)
+                        from sympy import zeros as _zeros
+                        H_lib_shifted = _zeros(p, p)
+                        for i in range(p):
+                            for j in range(p):
+                                H_lib_shifted[i, j] = \
+                                    z_var**(m[i] - m[j]) * H_lib_perm[i, j]
+                        result = check_lft_equivalence(
+                            H_user, H_lib_shifted, M_hat, z_var,
+                            lib_params=algo.get('param_symbols'),
+                            internal_syms=internal_syms,
+                            universal_params=universal_params,
                         )
-                        lft_candidates.append((n_zeros, {
-                            'algorithm': algo,
-                            'type': 'lft',
-                            'details': result,
-                            'permuted': perm_list != list(range(p)),
-                        }))
+                        if result['match']:
+                            min_m = min(m)
+                            m_norm = [mi - min_m for mi in m]
+                            if any(mi != 0 for mi in m_norm):
+                                result['shift_vector'] = m_norm
+                            if func_mapping:
+                                result['func_mapping'] = func_mapping
+                            n_zeros = sum(
+                                1 for v in result.get('params', {}).values()
+                                if v == 0
+                            ) + sum(
+                                1 for v in result.get('user_params', {}).values()
+                                if v == 0
+                            )
+                            lft_candidates.append((n_zeros, {
+                                'algorithm': algo,
+                                'type': 'lft',
+                                'details': result,
+                                'permuted': perm_list != list(range(p)),
+                            }))
 
             if lft_candidates:
-                # Pick the best candidate (fewest zero params)
                 lft_candidates.sort(key=lambda x: x[0])
                 matches.append(lft_candidates[0][1])
 
@@ -805,5 +1067,13 @@ def check_all_equivalences(H_user, user_oracles, library, z_var,
     # Filter out trivial matches (all library params zero)
     matches = [m for m in matches
                if not _is_trivial_match(m.get('details', {}), m['algorithm'])]
+
+    # Remove conditional matches when a non-conditional match for the
+    # same algorithm already exists (the conditional is subsumed).
+    non_cond_algos = set(
+        id(m['algorithm']) for m in matches if not m.get('conditional'))
+    matches = [m for m in matches
+               if not m.get('conditional')
+               or id(m['algorithm']) not in non_cond_algos]
 
     return matches

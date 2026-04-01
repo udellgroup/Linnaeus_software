@@ -122,7 +122,8 @@
         "label": "Van Scoy et al. 2018",
         "doi": "https://doi.org/10.1109/LCSYS.2017.2722406"
       }
-    ]
+    ],
+    "shortName": "TMM"
   },
   {
     "id": "quasi_hyperbolic_momentum",
@@ -224,7 +225,8 @@
         "label": "Daskalakis et al. 2018",
         "doi": "https://openreview.net/forum?id=SJJySbbAZ"
       }
-    ]
+    ],
+    "shortName": "OMD"
   },
   {
     "id": "extragradient",
@@ -339,11 +341,12 @@
         "label": "Lions & Mercier 1979",
         "doi": "https://doi.org/10.1137/0716071"
       }
-    ]
+    ],
+    "shortName": "DRS"
   },
   {
     "id": "admm",
-    "name": "ADMM",
+    "name": "Alternating Direction Method of Multipliers",
     "aliases": [
       "Alternating Direction Method of Multipliers"
     ],
@@ -378,7 +381,8 @@
         "label": "Boyd et al. 2011",
         "doi": "https://doi.org/10.1561/2200000016"
       }
-    ]
+    ],
+    "shortName": "ADMM"
   },
   {
     "id": "peaceman_rachford",
@@ -410,7 +414,8 @@
         "label": "Peaceman & Rachford 1955",
         "doi": "https://doi.org/10.1137/0103003"
       }
-    ]
+    ],
+    "shortName": "PRS"
   },
   {
     "id": "chambolle_pock",
@@ -452,7 +457,7 @@
   },
   {
     "id": "proximal_gradient",
-    "name": "Proximal Gradient",
+    "name": "Proximal Gradient / Forward-Backward Splitting",
     "aliases": [],
     "citation": "",
     "oracles": [
@@ -476,7 +481,8 @@
     },
     "catalogOnly": false,
     "tf_latex": "\\begin{bmatrix} 0 & \\frac{1}{z} \\\\ -t & \\frac{1}{z} \\end{bmatrix}",
-    "citations": []
+    "citations": [],
+    "shortName": "FBS"
   },
   {
     "id": "conjugate_proximal_gradient",
@@ -591,7 +597,7 @@
   },
   {
     "id": "pd3o",
-    "name": "PD3O",
+    "name": "Primal-Dual Three-Operator Splitting",
     "aliases": [],
     "bibtex": "@article{yan2018new,\n  title={A new primal--dual algorithm for minimizing the sum of three functions with a linear operator},\n  author={Yan, Ming},\n  journal={Journal of Scientific Computing},\n  volume={76},\n  pages={1698--1717},\n  year={2018},\n  publisher={Springer}\n}",
     "notes": "Minimizes f(x) + g(Ax) + h(x) where f, g have proximal operators and h is smooth.",
@@ -624,11 +630,12 @@
         "label": "Yan 2018",
         "doi": "https://doi.org/10.1007/s10915-018-0680-3"
       }
-    ]
+    ],
+    "shortName": "PD3O"
   },
   {
     "id": "condat_vu",
-    "name": "Condat-Vu",
+    "name": "Condat-Vũ",
     "aliases": [],
     "bibtex": "@article{condat2013primal,\n  title={A primal--dual splitting method for convex optimization involving Lipschitzian, proximable and linear composite terms},\n  author={Condat, Laurent},\n  journal={Journal of Optimization Theory and Applications},\n  volume={158},\n  number={2},\n  pages={460--479},\n  year={2013},\n  publisher={Springer}\n}\n\n@article{vu2013splitting,\n  title={A splitting algorithm for dual monotone inclusions involving cocoercive operators},\n  author={V\\~{u}, B\\u{a}ng C\\^{o}ng},\n  journal={Advances in Computational Mathematics},\n  volume={38},\n  number={3},\n  pages={667--681},\n  year={2013},\n  publisher={Springer}\n}",
     "oracles": [
@@ -667,7 +674,7 @@
   },
   {
     "id": "dual_condat_vu",
-    "name": "Dual Condat-Vu",
+    "name": "Dual Condat-Vũ",
     "aliases": [],
     "bibtex": "@article{condat2013primal,\n  title={A primal--dual splitting method for convex optimization involving Lipschitzian, proximable and linear composite terms},\n  author={Condat, Laurent},\n  journal={Journal of Optimization Theory and Applications},\n  volume={158},\n  number={2},\n  pages={460--479},\n  year={2013},\n  publisher={Springer}\n}",
     "oracles": [
@@ -735,7 +742,8 @@
         "label": "Salim et al. 2022",
         "doi": "https://doi.org/10.1007/s10957-022-02061-8"
       }
-    ]
+    ],
+    "shortName": "PDDY"
   },
   {
     "id": "projected_reflected_gradient",
@@ -939,7 +947,7 @@
   },
   {
     "id": "average_consensus",
-    "name": "Standard Average Consensus",
+    "name": "Average Consensus",
     "aliases": [],
     "bibtex": "@article{OlfatiSaber2004,\n  author={Reza Olfati-Saber and Richard M. Murray},\n  title={Consensus Problems in Networks of Agents with Switching Topology and Time-Delays},\n  journal={IEEE Transactions on Automatic Control},\n  year={2004},\n  volume={49},\n  number={9},\n  pages={1520--1533},\n  doi={10.1109/TAC.2004.834113}\n}",
     "oracles": [],
@@ -1035,11 +1043,12 @@
         "label": "Nedić & Ozdaglar 2009",
         "doi": "https://doi.org/10.1109/TAC.2008.2009515"
       }
-    ]
+    ],
+    "shortName": "DGD"
   },
   {
     "id": "nids",
-    "name": "NIDS",
+    "name": "Network Independent Stepsize Method",
     "aliases": [],
     "bibtex": "@article{li2019decentralized,\n  title={A decentralized proximal-gradient method with network independent step-sizes and separated convergence rates},\n  author={Li, Zhi and Shi, Wei and Yan, Ming},\n  journal={IEEE Transactions on Signal Processing},\n  volume={67},\n  number={17},\n  pages={4494--4506},\n  year={2019},\n  publisher={IEEE}\n}",
     "notes": "Decentralized algorithm. The transfer function characterizes behavior per spectral mode of the graph Laplacian L (eigenvalue λ).",
@@ -1070,7 +1079,8 @@
         "label": "Li et al. 2019",
         "doi": "https://doi.org/10.1109/TSP.2019.2926022"
       }
-    ]
+    ],
+    "shortName": "NIDS"
   },
   {
     "id": "exact_diffusion",
@@ -1111,7 +1121,7 @@
   },
   {
     "id": "extra_distributed",
-    "name": "EXTRA",
+    "name": "Exact First-Order Algorithm",
     "aliases": [
       "Exact First-Order Algorithm"
     ],
@@ -1142,11 +1152,12 @@
         "label": "Shi et al. 2015",
         "doi": "https://doi.org/10.1137/14096668X"
       }
-    ]
+    ],
+    "shortName": "EXTRA"
   },
   {
     "id": "diging",
-    "name": "DIGing",
+    "name": "Distributed Inexact Gradients with Gradient Tracking",
     "aliases": [
       "Distributed Inexact Gradient"
     ],
@@ -1178,11 +1189,12 @@
         "label": "Nedić et al. 2017",
         "doi": "https://doi.org/10.1137/16M1084316"
       }
-    ]
+    ],
+    "shortName": "DIGing"
   },
   {
     "id": "augdgm",
-    "name": "AugDGM",
+    "name": "Augmented Distributed Gradient Method",
     "aliases": [
       "Aug-DGM"
     ],
@@ -1214,11 +1226,12 @@
         "label": "Xu et al. 2015",
         "doi": "https://doi.org/10.1109/CDC.2015.7402509"
       }
-    ]
+    ],
+    "shortName": "AugDGM"
   },
   {
     "id": "svl",
-    "name": "SVL",
+    "name": "Sundararajan, Van Scoy, and Lessard",
     "aliases": [],
     "bibtex": "@article{sundararajan2020analysis,\n  title={Analysis and design of first-order distributed optimization algorithms over time-varying graphs},\n  author={Sundararajan, Akhil and Van Scoy, Bryan and Lessard, Laurent},\n  journal={IEEE Transactions on Control of Network Systems},\n  volume={7},\n  number={4},\n  pages={1597--1608},\n  year={2020},\n  publisher={IEEE}\n}",
     "notes": "General distributed algorithm template with four tunable parameters. Achieves optimal worst-case convergence rate for time-varying graphs.",
@@ -1253,7 +1266,43 @@
         "label": "Sundararajan et al. 2020",
         "doi": "https://doi.org/10.1109/TCNS.2020.2988009"
       }
-    ]
+    ],
+    "shortName": "SVL"
+  },
+  {
+    "id": "pg_extra",
+    "name": "Proximal Gradient Exact First-Order Algorithm",
+    "shortName": "PG-EXTRA",
+    "aliases": [],
+    "citations": [
+      {
+        "label": "Shi et al. 2015",
+        "doi": "https://doi.org/10.1109/TSP.2015.2461520"
+      }
+    ],
+    "bibtex": "@article{shi2015proximal,\n  title={Proximal gradient algorithm with communication compression},\n  author={Shi, Wei and Ling, Qing and Wu, Gang and Yin, Wotao},\n  journal={IEEE Transactions on Signal Processing},\n  volume={63},\n  number={22},\n  pages={5977--5989},\n  year={2015},\n  publisher={IEEE}\n}",
+    "oracles": [
+      "grad_f",
+      "prox_g"
+    ],
+    "oracleType": "two-oracle",
+    "distributed": true,
+    "equations": [
+      "q[k+1] = W * x[k+1] + q[k] - (W + I) / 2 * x[k] - alpha * (grad_f(x[k+1]) - grad_f(x[k]))",
+      "x[k+2] = prox_g(q[k+1])"
+    ],
+    "parameters": [
+      "alpha"
+    ],
+    "transferFunction": "Matrix([[0, 1/z**2], [-z*alpha, (-2*z*lam + 2*z + lam - 2)/(2*z**2 - 2*z)]])",
+    "tfIsMatrix": true,
+    "equivalences": {
+      "oracle": [],
+      "shift": [],
+      "lft": []
+    },
+    "catalogOnly": false,
+    "tf_latex": "\\begin{bmatrix} 0 & \\frac{1}{z^{2}} \\\\ -\\alpha z & \\frac{-2 \\lambda z + 2 z + \\lambda - 2}{2 z \\left(z -1\\right)} \\end{bmatrix}"
   },
   {
     "id": "unified_extra",
